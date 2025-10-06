@@ -1,0 +1,1328 @@
+# Copyright (C) 2025 Utsav Patel, Ahmar Zaidi, rtCamp
+# This file is distributed under the same license as the OneMedia plugin.
+msgid ""
+msgstr ""
+"Project-Id-Version: OneMedia 1.0.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/onemedia\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2025-10-06T08:30:49+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.10.0\n"
+"X-Domain: onemedia\n"
+
+#. Plugin Name of the plugin
+#: onemedia.php
+#: inc/classes/class-settings.php:102
+#: inc/classes/class-settings.php:103
+#: inc/templates/notices/no-build-assets.php:16
+#: assets/build/js/plugin.js:1
+#: assets/src/admin/plugin/index.js:80
+msgid "OneMedia"
+msgstr ""
+
+#. Description of the plugin
+#: onemedia.php
+msgid "A unified, scalable and centralized Media Library that stores brand assets once and automatically propagates them to every connected site."
+msgstr ""
+
+#. Author of the plugin
+#: onemedia.php
+msgid "Utsav Patel, Ahmar Zaidi, rtCamp"
+msgstr ""
+
+#. Author URI of the plugin
+#: onemedia.php
+msgid "https://rtcamp.com"
+msgstr ""
+
+#: inc/classes/admin/class-media-taxonomy.php:76
+msgid "Failed to assign taxonomy term to attachment."
+msgstr ""
+
+#: inc/classes/admin/class-media-taxonomy.php:89
+#: inc/classes/admin/class-media-taxonomy.php:165
+#: inc/classes/admin/class-media-taxonomy.php:166
+msgid "Image Type"
+msgstr ""
+
+#: inc/classes/admin/class-media-taxonomy.php:107
+msgid "Not assigned"
+msgstr ""
+
+#: inc/classes/admin/class-media-taxonomy.php:167
+msgid "All Image Types"
+msgstr ""
+
+#: inc/classes/admin/class-media-taxonomy.php:168
+msgid "Edit Image Type"
+msgstr ""
+
+#: inc/classes/admin/class-media-taxonomy.php:169
+msgid "View Image Type"
+msgstr ""
+
+#: inc/classes/admin/class-media-taxonomy.php:170
+msgid "Update Image Type"
+msgstr ""
+
+#: inc/classes/admin/class-media-taxonomy.php:171
+msgid "Add New Image Type"
+msgstr ""
+
+#: inc/classes/admin/class-media-taxonomy.php:172
+msgid "New Image Type Name"
+msgstr ""
+
+#: inc/classes/admin/class-media-taxonomy.php:173
+msgid "Search Image Types"
+msgstr ""
+
+#: inc/classes/admin/class-media-taxonomy.php:174
+msgid "No image types found"
+msgstr ""
+
+#: inc/classes/admin/class-media-taxonomy.php:221
+msgid "To indicate media type which can not be deleted."
+msgstr ""
+
+#: inc/classes/admin/class-media-taxonomy.php:240
+msgid "modify"
+msgstr ""
+
+#: inc/classes/admin/class-media-taxonomy.php:287
+msgid "Adding new terms to this taxonomy is not allowed."
+msgstr ""
+
+#: inc/classes/admin/class-media-taxonomy.php:303
+msgid "delete"
+msgstr ""
+
+#: inc/classes/admin/class-media-taxonomy.php:318
+msgid "edit"
+msgstr ""
+
+#: inc/classes/admin/class-media-taxonomy.php:377
+msgid "You cannot delete media that is assigned to the \"onemedia\" term."
+msgstr ""
+
+#: inc/classes/admin/class-media-taxonomy.php:402
+msgid "Editing"
+msgstr ""
+
+#: inc/classes/admin/class-media-taxonomy.php:405
+msgid "Deletion"
+msgstr ""
+
+#: inc/classes/admin/class-media-taxonomy.php:408
+msgid "Modification"
+msgstr ""
+
+#: inc/classes/admin/class-media-taxonomy.php:411
+msgid "Action"
+msgstr ""
+
+#. translators: %s: action being performed (edit, delete, or modify)
+#: inc/classes/admin/class-media-taxonomy.php:417
+msgid "You cannot %s the default \"onemedia\" term."
+msgstr ""
+
+#. translators: %s: action being performed (edit, delete, or modify)
+#: inc/classes/admin/class-media-taxonomy.php:422
+msgid "Term %s Blocked"
+msgstr ""
+
+#: inc/classes/brand-site/class-admin-hooks.php:192
+msgid "This file is synced from Governing Site, please delete it from there first."
+msgstr ""
+
+#: inc/classes/brand-site/class-admin-hooks.php:203
+#: inc/classes/brand-site/class-admin-hooks.php:271
+msgid "This file is synced from Governing site, please edit it over there."
+msgstr ""
+
+#: inc/classes/brand-site/class-admin-hooks.php:315
+#: inc/classes/class-assets.php:158
+msgid "Sync Status"
+msgstr ""
+
+#: inc/classes/brand-site/class-admin-hooks.php:346
+msgid "Source"
+msgstr ""
+
+#: inc/classes/brand-site/class-admin-hooks.php:371
+#: inc/classes/brand-site/class-admin-hooks.php:375
+#: assets/build/js/plugin.js:1
+#: assets/src/admin/plugin/index.js:38
+msgid "Governing Site"
+msgstr ""
+
+#: inc/classes/brand-site/class-admin-hooks.php:381
+msgid "(no author)"
+msgstr ""
+
+#: inc/classes/class-admin.php:48
+msgid "You do not have permission to replace media."
+msgstr ""
+
+#: inc/classes/class-admin.php:52
+#: inc/classes/class-admin.php:168
+msgid "No file uploaded."
+msgstr ""
+
+#: inc/classes/class-admin.php:57
+msgid "Invalid media ID."
+msgstr ""
+
+#: inc/classes/class-admin.php:76
+#: inc/classes/class-admin.php:183
+msgid "Invalid file type. Only JPG, PNG, WEBP, BMP, SVG and GIF files are allowed."
+msgstr ""
+
+#: inc/classes/class-admin.php:82
+msgid "Invalid attachment."
+msgstr ""
+
+#: inc/classes/class-admin.php:94
+#: inc/classes/class-admin.php:190
+msgid "Failed to move uploaded file."
+msgstr ""
+
+#: inc/classes/class-admin.php:121
+msgid "Failed to update attachment."
+msgstr ""
+
+#: inc/classes/class-admin.php:128
+#: inc/classes/class-admin.php:212
+#: inc/classes/rest/class-media-sharing.php:1778
+msgid "Failed to generate attachment metadata."
+msgstr ""
+
+#: inc/classes/class-admin.php:150
+msgid "Media replaced successfully."
+msgstr ""
+
+#: inc/classes/class-admin.php:164
+msgid "You do not have permission to upload sync media."
+msgstr ""
+
+#: inc/classes/class-admin.php:204
+msgid "Failed to insert attachment into media library."
+msgstr ""
+
+#: inc/classes/class-admin.php:228
+msgid "Sync media uploaded successfully."
+msgstr ""
+
+#: inc/classes/class-assets.php:155
+#: inc/templates/brand-site/sync-status.php:12
+msgid "All media"
+msgstr ""
+
+#: inc/classes/class-assets.php:156
+#: inc/templates/brand-site/sync-status.php:13
+msgid "Synced"
+msgstr ""
+
+#: inc/classes/class-assets.php:157
+#: inc/templates/brand-site/sync-status.php:14
+msgid "Not Synced"
+msgstr ""
+
+#: inc/classes/class-hooks.php:142
+#: assets/build/js/media-frame.js:1
+#: assets/build/js/media-sharing.js:1
+#: assets/src/admin/media-sharing/browser-uploader.js:31
+msgid "Replace Media"
+msgstr ""
+
+#. translators: %1$s is the site URL, %2$s is the error message.
+#: inc/classes/class-hooks.php:228
+#: inc/classes/class-hooks.php:235
+msgid "Failed to delete media metadata on site %1$s: %2$s"
+msgstr ""
+
+#: inc/classes/class-settings.php:61
+msgid "Overview"
+msgstr ""
+
+#: inc/classes/class-settings.php:70
+msgid "How to Share"
+msgstr ""
+
+#: inc/classes/class-settings.php:79
+msgid "Sharing Modes"
+msgstr ""
+
+#: inc/classes/class-settings.php:88
+#: inc/templates/help/best-practices.php:11
+msgid "Tips & Best Practices"
+msgstr ""
+
+#: inc/classes/class-settings.php:114
+#: inc/classes/class-settings.php:115
+#: inc/classes/class-settings.php:144
+msgid "Media Sharing"
+msgstr ""
+
+#: inc/classes/class-settings.php:124
+#: inc/classes/class-settings.php:125
+#: inc/classes/class-settings.php:158
+#: inc/helpers/custom-hooks.php:16
+msgid "Settings"
+msgstr ""
+
+#: inc/classes/class-utils.php:73
+msgid "Invalid request to set governing site URL."
+msgstr ""
+
+#: inc/classes/class-utils.php:86
+msgid "Failed to save governing site URL."
+msgstr ""
+
+#: inc/classes/plugin-configs/class-secret-key.php:96
+msgid "Secret key regenerated successfully."
+msgstr ""
+
+#: inc/classes/rest/class-basic-options.php:206
+msgid "Invalid site type provided. It should be either \"governing\" or \"brand\"."
+msgstr ""
+
+#: inc/classes/rest/class-basic-options.php:222
+msgid "Failed to update site type."
+msgstr ""
+
+#: inc/classes/rest/class-basic-options.php:249
+msgid "Brand sites retrieved successfully."
+msgstr ""
+
+#: inc/classes/rest/class-basic-options.php:281
+msgid "Each site must have a valid site name, site URL, and API key."
+msgstr ""
+
+#: inc/classes/rest/class-basic-options.php:293
+msgid "Invalid site URL provided."
+msgstr ""
+
+#: inc/classes/rest/class-basic-options.php:305
+msgid "Brand Site already exists."
+msgstr ""
+
+#: inc/classes/rest/class-basic-options.php:323
+msgid "Failed to update brand sites."
+msgstr ""
+
+#: inc/classes/rest/class-basic-options.php:351
+#: inc/helpers/custom-functions.php:354
+#: assets/build/js/settings.js:1
+#: assets/src/components/api.js:122
+msgid "Health check failed. Please ensure the site is accessible."
+msgstr ""
+
+#: inc/classes/rest/class-basic-options.php:411
+msgid "Failed to remove governing site."
+msgstr ""
+
+#: inc/classes/rest/class-basic-options.php:423
+msgid "Governing site removed successfully."
+msgstr ""
+
+#: inc/classes/rest/class-media-sharing.php:307
+msgid "Unknown Site"
+msgstr ""
+
+#: inc/classes/rest/class-media-sharing.php:334
+#: inc/classes/rest/class-media-sharing.php:372
+#: inc/classes/rest/class-media-sharing.php:384
+#: inc/classes/rest/class-media-sharing.php:1251
+#: inc/classes/rest/class-media-sharing.php:1262
+msgid "Invalid data provided."
+msgstr ""
+
+#: inc/classes/rest/class-media-sharing.php:349
+msgid "Media metadata deleted successfully."
+msgstr ""
+
+#: inc/classes/rest/class-media-sharing.php:404
+msgid "Invalid attachment data provided."
+msgstr ""
+
+#: inc/classes/rest/class-media-sharing.php:446
+msgid "Failed to download file from URL."
+msgstr ""
+
+#: inc/classes/rest/class-media-sharing.php:481
+msgid "Failed to update attachment post."
+msgstr ""
+
+#: inc/classes/rest/class-media-sharing.php:509
+msgid "Media file updated successfully."
+msgstr ""
+
+#: inc/classes/rest/class-media-sharing.php:546
+msgid "Invalid image type provided."
+msgstr ""
+
+#: inc/classes/rest/class-media-sharing.php:644
+msgid "Invalid brand sites provided."
+msgstr ""
+
+#: inc/classes/rest/class-media-sharing.php:661
+msgid "Invalid site URL(s) provided."
+msgstr ""
+
+#: inc/classes/rest/class-media-sharing.php:674
+#: inc/classes/rest/class-media-sharing.php:953
+msgid "Invalid sync option provided."
+msgstr ""
+
+#: inc/classes/rest/class-media-sharing.php:686
+msgid "Invalid media details provided"
+msgstr ""
+
+#: inc/classes/rest/class-media-sharing.php:714
+#: inc/classes/rest/class-media-sharing.php:1007
+msgid "Invalid media details provided."
+msgstr ""
+
+#: inc/classes/rest/class-media-sharing.php:726
+msgid "Invalid mime type provided."
+msgstr ""
+
+#. translators: %s: site URL
+#: inc/classes/rest/class-media-sharing.php:777
+msgid "Invalid site URL: %s"
+msgstr ""
+
+#: inc/classes/rest/class-media-sharing.php:833
+#: inc/classes/rest/class-media-sharing.php:1432
+msgid "Failed to sync media files."
+msgstr ""
+
+#: inc/classes/rest/class-media-sharing.php:903
+#: inc/classes/rest/class-media-sharing.php:1485
+msgid "Failed to update synced media."
+msgstr ""
+
+#: inc/classes/rest/class-media-sharing.php:918
+#: inc/classes/rest/class-media-sharing.php:1500
+msgid "Failed to sync media files to some brand sites."
+msgstr ""
+
+#: inc/classes/rest/class-media-sharing.php:929
+msgid "Media files synced successfully."
+msgstr ""
+
+#: inc/classes/rest/class-media-sharing.php:965
+msgid "Invalid media files provided."
+msgstr ""
+
+#: inc/classes/rest/class-media-sharing.php:1067
+msgid "Invalid attachment ID provided for converted media."
+msgstr ""
+
+#: inc/classes/rest/class-media-sharing.php:1076
+msgid "Attachment ID does not match the saved attachment ID for the parent media."
+msgstr ""
+
+#: inc/classes/rest/class-media-sharing.php:1134
+#: inc/classes/rest/class-media-sharing.php:1666
+msgid "Failed to delete temporary file."
+msgstr ""
+
+#: inc/classes/rest/class-media-sharing.php:1144
+msgid "Unknown error occurred while creating attachment."
+msgstr ""
+
+#: inc/classes/rest/class-media-sharing.php:1169
+msgid "Failed to update attachment key map option."
+msgstr ""
+
+#. translators: %1$s: Site name, %2$s: Unsupported file types.
+#: inc/classes/rest/class-media-sharing.php:1195
+msgid "%1$s site doesn't support the following file type(s): %2$s."
+msgstr ""
+
+#. translators: %s: Site name
+#: inc/classes/rest/class-media-sharing.php:1215
+msgid "Some media files failed to upload to %s site."
+msgstr ""
+
+#: inc/classes/rest/class-media-sharing.php:1229
+msgid "Media files added."
+msgstr ""
+
+#: inc/classes/rest/class-media-sharing.php:1277
+msgid "Invalid attachment file type provided."
+msgstr ""
+
+#: inc/classes/rest/class-media-sharing.php:1293
+msgid "Failed to assign term to attachment."
+msgstr ""
+
+#: inc/classes/rest/class-media-sharing.php:1307
+#: assets/build/js/media-frame.js:1
+#: assets/build/js/media-sharing.js:1
+#: assets/src/admin/media-sharing/browser-uploader.js:137
+msgid "Media has been added already."
+msgstr ""
+
+#: inc/classes/rest/class-media-sharing.php:1345
+msgid "Invalid site URL."
+msgstr ""
+
+#: inc/classes/rest/class-media-sharing.php:1368
+msgid "Invalid child ID data."
+msgstr ""
+
+#: inc/classes/rest/class-media-sharing.php:1512
+#: assets/build/js/media-frame.js:1
+#: assets/build/js/media-sharing.js:1
+#: assets/src/admin/media-sharing/browser-uploader.js:89
+msgid "Sync media added successfully!"
+msgstr ""
+
+#: inc/classes/rest/class-media-sharing.php:1530
+msgid "Attachment marked as sync media."
+msgstr ""
+
+#: inc/classes/rest/class-media-sharing.php:1551
+msgid "Invalid attachment ID provided."
+msgstr ""
+
+#: inc/classes/rest/class-media-sharing.php:1585
+msgid "URL does not contain a valid path"
+msgstr ""
+
+#. translators: %s: server status
+#: inc/classes/rest/class-media-sharing.php:1673
+msgid "Failed to download file from remote URL. Server status: %s"
+msgstr ""
+
+#: inc/classes/rest/class-media-sharing.php:1732
+msgid "Failed to copy file to uploads directory"
+msgstr ""
+
+#: inc/classes/rest/class-media-sharing.php:1758
+msgid "Failed to delete file after failed attachment insert."
+msgstr ""
+
+#: inc/classes/rest/class-media-sharing.php:1805
+msgid "Attachment created with some errors."
+msgstr ""
+
+#: inc/helpers/custom-functions.php:227
+msgid "Health check passed successfully."
+msgstr ""
+
+#: inc/helpers/custom-functions.php:235
+msgid "This Brand Site is already connected to another Governing Site."
+msgstr ""
+
+#: inc/helpers/custom-functions.php:266
+msgid "Health check failed. Please ensure the API key is correct."
+msgstr ""
+
+#: inc/helpers/custom-functions.php:284
+msgid "Health check failed. Please ensure the site type is set."
+msgstr ""
+
+#: inc/templates/help/best-practices.php:13
+msgid "Choose Sync Mode when:"
+msgstr ""
+
+#: inc/templates/help/best-practices.php:13
+msgid "You need consistent branding and centralized control."
+msgstr ""
+
+#: inc/templates/help/best-practices.php:14
+msgid "Choose Non-Sync Mode when:"
+msgstr ""
+
+#: inc/templates/help/best-practices.php:14
+msgid "Brand sites need flexibility to customize media."
+msgstr ""
+
+#: inc/templates/help/best-practices.php:15
+msgid "Media can be shared to multiple brand sites at once."
+msgstr ""
+
+#: inc/templates/help/best-practices.php:16
+msgid "Review your sharing mode choice carefully—it affects behavior post-sharing."
+msgstr ""
+
+#: inc/templates/help/how-to-share.php:11
+msgid "How to Share Media"
+msgstr ""
+
+#: inc/templates/help/how-to-share.php:13
+msgid "Select Sharing Mode:"
+msgstr ""
+
+#: inc/templates/help/how-to-share.php:13
+msgid "Share media from \"Non-Sync Media\" tab for Non Sync mode and from the \"Sync Media\" tab for Sync mode."
+msgstr ""
+
+#: inc/templates/help/how-to-share.php:14
+msgid "Select Media:"
+msgstr ""
+
+#: inc/templates/help/how-to-share.php:14
+msgid "Add/Upload media using \"Add Non Sync Media\" or \"Add Sync Media\" Button. Choose one or multiple images/media files you want to share. Only JPG, PNG, WEBP, BMP, SVG and GIF files are supported."
+msgstr ""
+
+#: inc/templates/help/how-to-share.php:15
+msgid "Click Share Button:"
+msgstr ""
+
+#: inc/templates/help/how-to-share.php:15
+msgid "Click on \"Share Selected Media\" button."
+msgstr ""
+
+#: inc/templates/help/how-to-share.php:16
+msgid "Select Brand Sites:"
+msgstr ""
+
+#: inc/templates/help/how-to-share.php:16
+msgid "Check the boxes for brand sites where you want to share this media."
+msgstr ""
+
+#: inc/templates/help/how-to-share.php:17
+msgid "Confirm Sharing:"
+msgstr ""
+
+#: inc/templates/help/how-to-share.php:17
+msgid "Complete the sharing process."
+msgstr ""
+
+#: inc/templates/help/overview.php:11
+msgid "Media Sharing Overview"
+msgstr ""
+
+#: inc/templates/help/overview.php:12
+msgid "The Central Media Library allows you to share media from your governing site to connected brand sites. You can control how media behaves after sharing using two different sharing modes."
+msgstr ""
+
+#: inc/templates/help/sharing-modes.php:11
+msgid "Sharing Modes Explained"
+msgstr ""
+
+#: inc/templates/help/sharing-modes.php:14
+msgid "Non-Sync Mode"
+msgstr ""
+
+#: inc/templates/help/sharing-modes.php:15
+#: inc/templates/help/sharing-modes.php:30
+msgid "What it does:"
+msgstr ""
+
+#: inc/templates/help/sharing-modes.php:17
+msgid "Media is copied as independent files."
+msgstr ""
+
+#: inc/templates/help/sharing-modes.php:18
+msgid "No auto-updates from governing."
+msgstr ""
+
+#: inc/templates/help/sharing-modes.php:19
+msgid "Each brand site manages its own copy."
+msgstr ""
+
+#: inc/templates/help/sharing-modes.php:21
+msgid "Flexibility:"
+msgstr ""
+
+#: inc/templates/help/sharing-modes.php:23
+msgid "Brand sites can edit title, caption, and metadata."
+msgstr ""
+
+#: inc/templates/help/sharing-modes.php:24
+msgid "Governing changes won't affect brand site copies."
+msgstr ""
+
+#: inc/templates/help/sharing-modes.php:26
+#: inc/templates/help/sharing-modes.php:41
+msgid "Best for:"
+msgstr ""
+
+#: inc/templates/help/sharing-modes.php:26
+msgid "Stock photos, customizable content."
+msgstr ""
+
+#: inc/templates/help/sharing-modes.php:29
+msgid "Sync Mode"
+msgstr ""
+
+#: inc/templates/help/sharing-modes.php:32
+msgid "Media stays synchronized between governing and brand sites."
+msgstr ""
+
+#: inc/templates/help/sharing-modes.php:33
+msgid "Any changes made in governing site automatically update on brand sites."
+msgstr ""
+
+#: inc/templates/help/sharing-modes.php:34
+msgid "Updates include: title, caption, alt text, and even media replacement."
+msgstr ""
+
+#: inc/templates/help/sharing-modes.php:36
+msgid "Restrictions:"
+msgstr ""
+
+#: inc/templates/help/sharing-modes.php:38
+msgid "Synced media cannot be modified on brand sites."
+msgstr ""
+
+#: inc/templates/help/sharing-modes.php:39
+msgid "Changes must be made from governing site."
+msgstr ""
+
+#: inc/templates/help/sharing-modes.php:41
+msgid "Logos, branding assets."
+msgstr ""
+
+#. translators: %s is the plugin name.
+#: inc/templates/notices/no-build-assets.php:15
+msgid "You are running the %s plugin from the GitHub repository. Please build the assets and install composer dependencies to use the plugin."
+msgstr ""
+
+#. translators: %s is the command to run.
+#: inc/templates/notices/no-build-assets.php:24
+msgid "Run the following commands in the plugin directory: %s"
+msgstr ""
+
+#. translators: %s is the plugin name.
+#: inc/templates/notices/no-build-assets.php:33
+msgid "Please refer to the %s for more information."
+msgstr ""
+
+#: inc/templates/notices/no-build-assets.php:38
+msgid "OneMedia GitHub repository"
+msgstr ""
+
+#: assets/build/js/media-frame.js:1
+#: assets/build/js/media-sharing.js:1
+#: assets/build/js/plugin.js:1
+#: assets/build/js/settings.js:1
+#: assets/src/components/api.js:61
+msgid "An unexpected error occurred"
+msgstr ""
+
+#: assets/build/js/media-frame.js:1
+#: assets/build/js/media-sharing.js:1
+#: assets/build/js/plugin.js:1
+#: assets/build/js/settings.js:1
+#: assets/src/components/api.js:63
+msgid "Resource not found"
+msgstr ""
+
+#: assets/build/js/media-frame.js:1
+#: assets/build/js/media-sharing.js:1
+#: assets/build/js/plugin.js:1
+#: assets/build/js/settings.js:1
+#: assets/src/components/api.js:76
+msgid "An error occurred"
+msgstr ""
+
+#: assets/build/js/media-frame.js:1
+#: assets/build/js/media-sharing.js:1
+#: assets/src/components/api.js:391
+msgid "Failed to check sync status."
+msgstr ""
+
+#: assets/build/js/media-frame.js:1
+#: assets/build/js/plugin.js:1
+#: assets/build/js/settings.js:1
+#: assets/src/components/api.js:151
+msgid "Error fetching site types."
+msgstr ""
+
+#: assets/build/js/media-frame.js:1
+#: assets/build/js/media-sharing.js:1
+#: assets/src/admin/media-sharing/browser-uploader.js:29
+msgid "Add Sync Media"
+msgstr ""
+
+#: assets/build/js/media-frame.js:1
+#: assets/build/js/media-sharing.js:1
+#: assets/src/admin/media-sharing/browser-uploader.js:33
+msgid "Add Non Sync Media"
+msgstr ""
+
+#: assets/build/js/media-frame.js:1
+#: assets/build/js/media-sharing.js:1
+#: assets/src/admin/media-sharing/browser-uploader.js:179
+msgid "Please select a valid image file."
+msgstr ""
+
+#: assets/build/js/media-frame.js:1
+#: assets/build/js/media-sharing.js:1
+#: assets/src/components/api.js:322
+msgid "An error occurred during media upload"
+msgstr ""
+
+#: assets/build/js/media-frame.js:1
+#: assets/build/js/media-sharing.js:1
+#: assets/src/admin/media-sharing/browser-uploader.js:241
+msgid "Upload failed"
+msgstr ""
+
+#: assets/build/js/media-frame.js:1
+#: assets/build/js/media-sharing.js:1
+#: assets/src/admin/media-sharing/browser-uploader.js:218
+msgid "Sync media uploaded successfully!"
+msgstr ""
+
+#: assets/build/js/media-frame.js:1
+#: assets/build/js/media-sharing.js:1
+#: assets/src/admin/media-sharing/browser-uploader.js:226
+msgid "Media replaced successfully!"
+msgstr ""
+
+#: assets/build/js/media-frame.js:1
+#: assets/build/js/media-sharing.js:1
+#: assets/src/admin/media-sharing/browser-uploader.js:234
+msgid "Media uploaded successfully!"
+msgstr ""
+
+#: assets/build/js/media-frame.js:1
+#: assets/build/js/media-sharing.js:1
+#: assets/src/admin/media-sharing/browser-uploader.js:249
+msgid "An error occurred during upload."
+msgstr ""
+
+#: assets/build/js/media-frame.js:1
+#: assets/build/js/media-sharing.js:1
+#: assets/src/admin/media-sharing/browser-uploader.js:40
+msgid "Media library is not available."
+msgstr ""
+
+#: assets/build/js/media-frame.js:1
+#: assets/build/js/media-sharing.js:1
+#: assets/src/admin/media-sharing/browser-uploader.js:53
+msgid "Select Sync Media"
+msgstr ""
+
+#: assets/build/js/media-frame.js:1
+#: assets/build/js/media-sharing.js:1
+#: assets/src/admin/media-sharing/browser-uploader.js:55
+msgid "Select"
+msgstr ""
+
+#: assets/build/js/media-frame.js:1
+#: assets/build/js/media-sharing.js:1
+#: assets/src/components/api.js:346
+msgid "Failed to update existing attachment."
+msgstr ""
+
+#: assets/build/js/media-frame.js:1
+#: assets/build/js/media-sharing.js:1
+#: assets/src/admin/media-sharing/browser-uploader.js:81
+#: assets/src/admin/media-sharing/browser-uploader.js:95
+msgid "Failed to update sync attachment."
+msgstr ""
+
+#: assets/build/js/media-frame.js:1
+#: assets/build/js/media-sharing.js:1
+#: assets/src/admin/media-sharing/browser-uploader.js:69
+#: assets/src/admin/media-sharing/browser-uploader.js:128
+msgid "No image selected."
+msgstr ""
+
+#: assets/build/js/media-frame.js:1
+#: assets/build/js/media-sharing.js:1
+#: assets/src/admin/media-sharing/browser-uploader.js:112
+#: assets/src/js/media-frame.js:37
+msgid "Upload Non-Sync Media"
+msgstr ""
+
+#: assets/build/js/media-frame.js:1
+#: assets/build/js/media-sharing.js:1
+#: assets/src/admin/media-sharing/browser-uploader.js:114
+msgid "Add"
+msgstr ""
+
+#: assets/build/js/media-frame.js:1
+#: assets/build/js/media-sharing.js:1
+#: assets/src/admin/media-sharing/browser-uploader.js:144
+msgid "Media is already added to \"Sync Media\" tab."
+msgstr ""
+
+#: assets/build/js/media-frame.js:1
+#: assets/build/js/media-sharing.js:1
+#: assets/src/admin/media-sharing/browser-uploader.js:149
+msgid "Media added successfully."
+msgstr ""
+
+#: assets/build/js/media-frame.js:1
+#: assets/build/js/media-sharing.js:1
+#: assets/src/admin/media-sharing/browser-uploader.js:282
+msgid "Adding…"
+msgstr ""
+
+#: assets/build/js/media-frame.js:1
+#: assets/build/js/media-sharing.js:3
+#: assets/src/admin/media-sharing/index.js:197
+#: assets/src/admin/media-sharing/index.js:443
+#: assets/src/js/media-frame.js:40
+msgid "Edit Media"
+msgstr ""
+
+#: assets/build/js/media-sharing.js:1
+#: assets/src/components/governing-settings/ShareMediaModal.js:34
+msgid "No brand sites found."
+msgstr ""
+
+#: assets/build/js/media-sharing.js:1
+#: assets/src/components/governing-settings/ShareMediaModal.js:40
+msgid "Select Sites for Sharing Media"
+msgstr ""
+
+#. translators: %1$d: number of selected media items, %2$s: sync or non-sync mode
+#: assets/build/js/media-sharing.js:2
+#: assets/src/components/governing-settings/ShareMediaModal.js:51
+msgid "Selected Media: %1$d items (%2$s Mode)"
+msgstr ""
+
+#: assets/build/js/media-sharing.js:2
+#: assets/src/components/governing-settings/ShareMediaModal.js:53
+msgid "Sync"
+msgstr ""
+
+#: assets/build/js/media-sharing.js:2
+#: assets/src/components/governing-settings/ShareMediaModal.js:53
+msgid "Non Sync"
+msgstr ""
+
+#: assets/build/js/media-sharing.js:2
+#: assets/src/components/governing-settings/ShareMediaModal.js:57
+msgid "Select the sites where you want to share these media assets."
+msgstr ""
+
+#: assets/build/js/media-sharing.js:2
+#: assets/src/components/governing-settings/ShareMediaModal.js:64
+msgid "Select All Sites"
+msgstr ""
+
+#: assets/build/js/media-sharing.js:2
+#: assets/src/components/governing-settings/ShareMediaModal.js:97
+msgid "Clear Selection"
+msgstr ""
+
+#: assets/build/js/media-sharing.js:2
+#: assets/build/js/settings.js:1
+#: assets/src/components/brand-settings/BrandSiteSettings.js:224
+#: assets/src/components/governing-settings/ShareMediaModal.js:158
+#: assets/src/components/governing-settings/SiteTable.js:129
+msgid "Cancel"
+msgstr ""
+
+#: assets/build/js/media-sharing.js:2
+#: assets/src/components/governing-settings/ShareMediaModal.js:166
+msgid "Share Media"
+msgstr ""
+
+#: assets/build/js/media-sharing.js:2
+#: assets/src/admin/media-sharing/index.js:66
+msgid "oneMediaMediaSharing object not found. Make sure it's properly localized."
+msgstr ""
+
+#: assets/build/js/media-sharing.js:2
+#: assets/src/components/api.js:232
+msgid "Failed to fetch synced sites."
+msgstr ""
+
+#: assets/build/js/media-sharing.js:2
+#: assets/src/components/api.js:267
+msgid "Failed to fetch media items."
+msgstr ""
+
+#: assets/build/js/media-sharing.js:2
+#: assets/build/js/settings.js:1
+#: assets/src/components/api.js:97
+msgid "Error fetching brand sites."
+msgstr ""
+
+#: assets/build/js/media-sharing.js:2
+#: assets/src/admin/media-sharing/index.js:511
+msgid "Search media…"
+msgstr ""
+
+#. translators: %d: number of selected items
+#: assets/build/js/media-sharing.js:3
+#: assets/src/admin/media-sharing/index.js:550
+msgid "%d items selected"
+msgstr ""
+
+#: assets/build/js/media-sharing.js:3
+#: assets/src/admin/media-sharing/index.js:381
+msgid "No media items found."
+msgstr ""
+
+#: assets/build/js/media-sharing.js:3
+#: assets/src/admin/media-sharing/index.js:199
+msgid "Update"
+msgstr ""
+
+#: assets/build/js/media-sharing.js:3
+#: assets/build/js/settings.js:1
+#: assets/src/admin/media-sharing/index.js:445
+#: assets/src/components/governing-settings/SiteTable.js:83
+msgid "Edit"
+msgstr ""
+
+#: assets/build/js/media-sharing.js:3
+#: assets/src/admin/media-sharing/index.js:575
+msgid "Previous"
+msgstr ""
+
+#. translators: %1$d: current page number, %2$d: total pages
+#: assets/build/js/media-sharing.js:4
+#: assets/src/admin/media-sharing/index.js:580
+msgid "%1$d of %2$d"
+msgstr ""
+
+#: assets/build/js/media-sharing.js:4
+#: assets/src/admin/media-sharing/index.js:592
+msgid "Next"
+msgstr ""
+
+#: assets/build/js/media-sharing.js:4
+#: assets/src/admin/media-sharing/index.js:261
+msgid "Please select at least one media item."
+msgstr ""
+
+#: assets/build/js/media-sharing.js:4
+#: assets/src/admin/media-sharing/index.js:245
+msgid "Please add at least one brand site from OneMedia Settings page"
+msgstr ""
+
+#: assets/build/js/media-sharing.js:4
+#: assets/src/admin/media-sharing/index.js:603
+msgid "Share Selected Media"
+msgstr ""
+
+#: assets/build/js/media-sharing.js:4
+#: assets/src/admin/media-sharing/index.js:285
+msgid "Please select at least one brand site."
+msgstr ""
+
+#: assets/build/js/media-sharing.js:4
+#: assets/src/components/api.js:284
+msgid "Failed to sync media."
+msgstr ""
+
+#: assets/build/js/media-sharing.js:4
+#: assets/src/admin/media-sharing/index.js:316
+msgid "Media synced successfully!"
+msgstr ""
+
+#: assets/build/js/media-sharing.js:4
+#: assets/src/admin/media-sharing/index.js:321
+msgid "Media shared successfully!"
+msgstr ""
+
+#: assets/build/js/media-sharing.js:4
+#: assets/src/admin/media-sharing/index.js:332
+msgid "Failed to sync media files to some brand sites:"
+msgstr ""
+
+#: assets/build/js/media-sharing.js:4
+#: assets/src/admin/media-sharing/index.js:635
+#: assets/src/admin/media-sharing/index.js:637
+msgid "Non-Sync Media"
+msgstr ""
+
+#: assets/build/js/media-sharing.js:4
+#: assets/src/admin/media-sharing/index.js:638
+msgid "This media will be shared in non synced mode."
+msgstr ""
+
+#: assets/build/js/media-sharing.js:4
+#: assets/src/admin/media-sharing/index.js:645
+#: assets/src/admin/media-sharing/index.js:647
+msgid "Sync Media"
+msgstr ""
+
+#: assets/build/js/media-sharing.js:4
+#: assets/src/admin/media-sharing/index.js:648
+msgid "This media will be shared in synced mode."
+msgstr ""
+
+#: assets/build/js/plugin.js:1
+#: assets/src/admin/plugin/index.js:26
+msgid "Site Type"
+msgstr ""
+
+#: assets/build/js/plugin.js:1
+#: assets/src/admin/plugin/index.js:28
+msgid "Choose your site's primary purpose. This setting cannot be changed later and affects available features and configurations."
+msgstr ""
+
+#: assets/build/js/plugin.js:1
+#: assets/src/admin/plugin/index.js:36
+msgid "Select…"
+msgstr ""
+
+#: assets/build/js/plugin.js:1
+#: assets/src/admin/plugin/index.js:37
+msgid "Brand Site"
+msgstr ""
+
+#: assets/build/js/plugin.js:1
+#: assets/src/admin/plugin/index.js:69
+#: assets/src/components/api.js:169
+msgid "Error saving site type."
+msgstr ""
+
+#: assets/build/js/plugin.js:1
+#: assets/src/admin/plugin/index.js:104
+msgid "Select Current Site Type"
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/api.js:189
+msgid "Error saving Brand sites."
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/governing-settings/SiteModal.js:122
+msgid "Edit Brand Site"
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/governing-settings/SiteModal.js:123
+#: assets/src/components/governing-settings/SiteTable.js:43
+msgid "Add Brand Site"
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/governing-settings/SiteModal.js:139
+msgid "Site Name*"
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/governing-settings/SiteModal.js:145
+msgid "This is the name of the site that will be registered."
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/governing-settings/SiteModal.js:153
+msgid "Site URL*"
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/governing-settings/SiteModal.js:159
+msgid "It must start with http or https and end with /, like: https://onemedia.com/"
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/governing-settings/SiteModal.js:167
+msgid "API Key*"
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/governing-settings/SiteModal.js:173
+msgid "This is the API key that will be used to authenticate the site for onemedia."
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/governing-settings/SiteModal.js:49
+msgid "Enter a valid URL (must start with http or https)."
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/governing-settings/SiteModal.js:47
+msgid "Site URL is required."
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/governing-settings/SiteModal.js:56
+msgid "Site Name is required."
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/governing-settings/SiteModal.js:58
+msgid "API Key is required."
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/governing-settings/SiteModal.js:64
+msgid "Site Name must be under 20 characters."
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/governing-settings/SiteModal.js:186
+msgid "Update Site"
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/governing-settings/SiteModal.js:187
+msgid "Add Site"
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/governing-settings/SiteTable.js:110
+msgid "Delete Brand Site"
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/governing-settings/SiteTable.js:115
+msgid "Are you sure you want to delete this Brand Site? This action cannot be undone."
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/governing-settings/SiteTable.js:90
+#: assets/src/components/governing-settings/SiteTable.js:121
+msgid "Delete"
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/governing-settings/SiteTable.js:37
+msgid "Brand Sites"
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/governing-settings/SiteTable.js:50
+msgid "Site Name"
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/governing-settings/SiteTable.js:51
+msgid "Site URL"
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/brand-settings/BrandSiteSettings.js:137
+#: assets/src/components/governing-settings/SiteTable.js:52
+msgid "API Key"
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/governing-settings/SiteTable.js:53
+msgid "Actions"
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/governing-settings/SiteTable.js:60
+msgid "No Brand Sites found."
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/api.js:203
+msgid "Failed to fetch api key."
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/brand-settings/BrandSiteSettings.js:40
+msgid "Failed to fetch api key. Please try again later."
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/api.js:217
+msgid "Failed to regenerate API key."
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/brand-settings/BrandSiteSettings.js:56
+msgid "API key regenerated successfully."
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/brand-settings/BrandSiteSettings.js:61
+msgid "Failed to regenerate API key. Please try after reloading the page."
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/brand-settings/BrandSiteSettings.js:84
+msgid "Governing site disconnected successfully."
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/brand-settings/BrandSiteSettings.js:89
+msgid "Failed to disconnect governing site. Please try again later."
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/api.js:136
+msgid "Failed to fetch multisite type."
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/brand-settings/BrandSiteSettings.js:106
+msgid "Failed to fetch multisite type. Please try again later."
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/brand-settings/BrandSiteSettings.js:147
+msgid "API key copied to clipboard."
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/brand-settings/BrandSiteSettings.js:153
+msgid "Failed to copy api key. Please try again."
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/brand-settings/BrandSiteSettings.js:158
+msgid "Copy API Key"
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/brand-settings/BrandSiteSettings.js:166
+msgid "Regenerate API Key"
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/brand-settings/BrandSiteSettings.js:175
+msgid "This key is used for secure communication with the Governing site."
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/brand-settings/BrandSiteSettings.js:184
+msgid "Governing Site Connection"
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/brand-settings/BrandSiteSettings.js:187
+msgid "Note: For subdirectory multisite setups, the Brand site (subsite) can only be connected to a Governing site within the same multisite network."
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/brand-settings/BrandSiteSettings.js:197
+#: assets/src/components/brand-settings/BrandSiteSettings.js:214
+msgid "Disconnect Governing Site"
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/brand-settings/BrandSiteSettings.js:202
+msgid "Governing Site URL"
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/brand-settings/BrandSiteSettings.js:205
+msgid "This is the URL of the Governing site this Brand site is connected to."
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/brand-settings/BrandSiteSettings.js:218
+msgid "Are you sure you want to disconnect from the governing site? This action cannot be undone."
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/components/brand-settings/BrandSiteSettings.js:231
+msgid "Disconnect"
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/admin/settings/index.js:91
+msgid "Brand Site deleted successfully."
+msgstr ""
+
+#: assets/build/js/settings.js:1
+#: assets/src/admin/settings/index.js:75
+msgid "Brand Site saved successfully."
+msgstr ""

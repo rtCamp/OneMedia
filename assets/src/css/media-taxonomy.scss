@@ -1,0 +1,48 @@
+/**
+ * Styles for the OneMedia image type taxonomy.
+ */
+
+.wp-list-table .column-image_type {
+	width: 120px;
+	max-width: 120px;
+
+	@media screen and (max-width: 782px) {
+		width: 100px;
+		max-width: 100px;
+	}
+}
+
+.onemedia-media-term-label {
+	color: #fff;
+	background: #ab3a6c;
+	padding: 0.35rem;
+	border-radius: 4px;
+	font-weight: 400;
+
+	&.empty {
+		background: #1c1c1c;
+	}
+}
+
+/* Hide the taxonomy term form in edit screen */
+.edit-tags-php.taxonomy-onemedia_media_type #col-left {
+	display: none !important;
+}
+
+.edit-tags-php.taxonomy-onemedia_media_type #col-right {
+	float: none !important;
+	width: 100% !important;
+}
+
+.edit-tags-php.taxonomy-onemedia_media_type .term-icons .row-actions .delete,
+.edit-tags-php.taxonomy-onemedia_media_type .term-icons .row-actions .edit,
+.edit-tags-php.taxonomy-onemedia_media_type .term-icons .check-column input {
+	display: none !important;
+}
+
+[id="toplevel_page_onemedia"] {
+
+	.dashicons-admin-generic::before {
+		content: url("../images/logo.svg") !important;
+	}
+}

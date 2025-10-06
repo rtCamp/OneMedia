@@ -1,0 +1,204 @@
+/**
+ * Utility functions
+ */
+
+import { fetchSiteType } from '../components/api';
+import { ONEMEDIA_PLUGIN_BRAND_SITE, ONEMEDIA_PLUGIN_GOVERNING_SITE } from '../components/constants';
+
+/**
+ * Checks if a string is a valid URL.
+ *
+ * @param {string} str - The string to check.
+ * @return {boolean} True if the string is a valid URL, false otherwise.
+ */
+const isURL = ( str ) => {
+	// Less extensive regex to reduce backtracking issues.
+	const pattern = new RegExp(
+		'^' +
+			'(https?:\\/\\/)?' +
+			'(' +
+			'([a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,}' +
+			'|\\d{1,3}(\\.\\d{1,3}){3}' +
+			')' +
+			'(\\:\\d{1,5})?' +
+			'(\\/[a-zA-Z0-9._~%!$&\'()*+,;=:@-]*)*' +
+			'(\\?[a-zA-Z0-9._~%!$&\'()*+,;=:@/?-]*)?' +
+			'(#[a-zA-Z0-9._~%!$&\'()*+,;=:@/?-]*)?' +
+			'$',
+		'i',
+	);
+	return pattern.test( str );
+};
+
+/**
+ * Checks if a URL is valid.
+ *
+ * @param {string} url - The URL to check.
+ * @return {boolean} True if the URL is valid, false otherwise.
+ */
+const isValidUrl = ( url ) => {
+	try {
+		const parsedUrl = new URL( url );
+		return isURL( parsedUrl.href );
+	} catch ( e ) {
+		return false;
+	}
+};
+
+/**
+ * Removes trailing slashes from a URL.
+ *
+ * @param {string} url - The URL to process.
+ * @return {string} The URL without trailing slashes.
+ */
+const removeTrailingSlash = ( url ) => url.replace( /\/+$/, '' );
+
+/**
+ * Returns the appropriate CSS class for a notice based on its type.
+ *
+ * @param {string} type - The type of notice ('error', 'warning', 'success').
+ * @return {string} The corresponding CSS class.
+ */
+const getNoticeClass = ( type ) => {
+	if ( 'error' === type ) {
+		return 'onemedia-error-notice';
+	}
+	if ( 'warning' === type ) {
+		return 'onemedia-warning-notice';
+	}
+	return 'onemedia-success-notice';
+};
+
+/**
+ * Trims a title to a specified maximum length, adding an ellipsis if trimmed.
+ *
+ * @param {string} title     - The title to trim.
+ * @param {number} maxLength - The maximum length of the title (default is 25).
+ * @return {string} The trimmed title.
+ */
+const trimTitle = ( title, maxLength = 25 ) => {
+	if ( typeof title !== 'string' ) {
+		return '';
+	}
+	return title.length > maxLength
+		? title.substring( 0, maxLength ) + '…'
+		: title;
+};
+
+/**
+ * Debounced function that delays invoking the provided function until after
+ * the specified wait time has elapsed since the last time it was invoked.
+ *
+ * @param {Function} func - The function to debounce.
+ * @param {number}   wait - The number of milliseconds to delay.
+ * @return {Function}        - The debounced function.
+ */
+const debounce = ( func, wait ) => {
+	let timeout;
+	return function executedFunction( ...args ) {
+		const later = () => {
+			clearTimeout( timeout );
+			func( ...args );
+		};
+		clearTimeout( timeout );
+		timeout = setTimeout( later, wait );
+	};
+};
+
+/**
+ * Check if the current site is a brand site.
+ *
+ * @return {Promise<boolean>} - True if brand site, false otherwise.
+ */
+const isBrandSite = async () => {
+	const siteType = await fetchSiteType();
+
+	if ( ! siteType || ( ONEMEDIA_PLUGIN_BRAND_SITE !== siteType && ONEMEDIA_PLUGIN_GOVERNING_SITE !== siteType ) ) {
+		return null;
+	}
+
+	return ONEMEDIA_PLUGIN_BRAND_SITE === siteType;
+};
+
+/**
+ * Observe for elements matching selector and run callback when found.
+ *
+ * @param {string}   selector      - CSS selector to observe for.
+ * @param {Function} onFound       - Callback when element is found.
+ * @param {number}   debounceDelay - Time to wait after last mutation before firing (default 200ms).
+ * @return {MutationObserver} The MutationObserver instance.
+ */
+const observeElement = ( selector, onFound, debounceDelay = 200 ) => {
+	const debouncedOnFound = debounce( () => {
+		const elements = document.querySelectorAll( selector );
+		if ( elements.length > 0 ) {
+			onFound( elements );
+		}
+	}, debounceDelay );
+
+	const observer = new MutationObserver( () => {
+		debouncedOnFound();
+	} );
+
+	observer.observe( document.body, {
+		childList: true,
+		subtree: true,
+	} );
+
+	// Run once in case elements already exist.
+	const existing = document.querySelectorAll( selector );
+	if ( existing.length > 0 ) {
+		onFound( existing );
+	}
+
+	return observer;
+};
+
+/**
+ * Retrieves a nested property from the window object based on a dot-separated path.
+ *
+ * @param {string} propertyPath - Dot-separated path to the property, e.g. 'wp.media.view.AttachmentDetails'
+ * @return {*} The value of the nested property, or undefined if not found.
+ */
+const getFrameProperty = ( propertyPath ) => {
+	if ( typeof propertyPath !== 'string' || ! propertyPath ) {
+		return undefined;
+	}
+
+	try {
+		// Split the path by dots and reduce to get the nested property.
+		return propertyPath.split( '.' ).reduce( ( obj, key ) => obj?.[ key ], window );
+	} catch ( error ) {
+		return undefined;
+	}
+};
+
+/**
+ * Retrieves the title of the current wp.media frame.
+ *
+ * @return {string} The title of the media frame, or an empty string if not found.
+ */
+const getFrameTitle = () => {
+	const frameTitleProperty = getFrameProperty( 'wp.media.frame' );
+
+	if ( ! frameTitleProperty || typeof frameTitleProperty?.state !== 'function' ) {
+		return '';
+	}
+
+	const frameTitle = frameTitleProperty?.state()?.get( 'title' );
+
+	return typeof frameTitle === 'string' ? frameTitle : '';
+};
+
+export {
+	isURL,
+	isValidUrl,
+	removeTrailingSlash,
+	getNoticeClass,
+	trimTitle,
+	debounce,
+	isBrandSite,
+	observeElement,
+	getFrameTitle,
+	getFrameProperty,
+};

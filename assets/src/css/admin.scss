@@ -1,0 +1,208 @@
+/**
+ * This will be loaded in the admin.
+ */
+
+/* Prevent pointer events on the sync status column */
+table.media {
+
+	tr:has(.dashicons-yes) {
+
+		.has-media-icon a {
+			pointer-events: none;
+		}
+	}
+}
+
+/* Style for sync overlay in grid view */
+.attachment.onemedia-synced-media .thumbnail::after {
+	content: "SYNCED" !important;
+	position: absolute;
+	top: 0;
+	right: 0;
+	background-color: #ab3a6c !important;
+	color: #fff !important;
+	height: 15%;
+	width: 100%;
+}
+
+/* Add a subtle border to synced media */
+.attachment.onemedia-synced-media .thumbnail {
+	border: 2px solid #ab3a6c;
+}
+
+/* Make the badge more visible in grid view */
+.attachment.onemedia-synced-media {
+	position: relative;
+}
+
+.onemedia-configured-site-type {
+	display: inline-block;
+	margin-top: 24px;
+	font-size: 16px;
+
+	strong {
+		font-weight: 500;
+	}
+}
+
+.onemedia-site-selection-modal,
+#onemedia-settings {
+
+	.components-snackbar {
+		position: fixed;
+		bottom: 20px;
+		right: 20px;
+		z-index: 1000000;
+	}
+
+	.components-notice__content {
+		white-space: pre-line !important;
+	}
+
+	.onemedia-warning-notice {
+		background-color: #ff8c00;
+		color: #fff;
+	}
+
+	.onemedia-success-notice {
+		background-color: #16a32d;
+		color: #fff;
+	}
+
+	.onemedia-error-notice {
+		background-color: #e11d1d;
+		color: #fff;
+	}
+}
+
+body {
+
+	&.onemedia-missing-brand-sites,
+	&.onemedia-brand-site {
+
+		.wp-first-item:has(.onemedia-media-sharing-page) {
+			display: none;
+		}
+	}
+
+	&.onemedia-governing-site-site {
+
+		.wp-first-item:has(.onemedia-media-sharing-page) {
+			display: inline-block;
+		}
+	}
+}
+
+[id="onemedia-site-selection-modal"] {
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	z-index: 10000;
+	min-width: 40vw;
+}
+
+body.onemedia-site-selection-modal {
+
+	&::before {
+		content: "";
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background-color: rgba(0, 0, 0, 0.5);
+		z-index: 9999;
+	}
+}
+
+[id="toplevel_page_onemedia"] {
+
+	.dashicons-admin-generic::before {
+		content: url("../images/logo.svg") !important;
+	}
+}
+
+.onemedia-hidden-file-input {
+	display: none;
+}
+
+.onemedia-sync-badge.dashicons.dashicons-yes {
+	background-color: #ab3a6c;
+	color: #fff;
+	padding: 2px;
+	border-radius: 3px;
+	display: inline-block;
+}
+
+.dashicons.dashicons-no {
+	background-color: #1c1c1c;
+	color: #fff;
+	padding: 2px;
+	border-radius: 3px;
+	display: inline-block;
+}
+
+.onemedia-site-type-button {
+	margin-top: 1.5rem;
+}
+
+.onemedia-brand-site-settings {
+	margin-top: 30px;
+}
+
+.onemedia-regenerate-api-key {
+	margin-left: 10px;
+}
+
+.onemedia-governing-site-connection {
+	margin-top: 30px;
+
+	&-header {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+
+		.onemedia-subdomain-note-text {
+			margin-top: calc(-8px);
+			margin-bottom: 0;
+			font-size: 12px;
+			font-style: normal;
+			color: #757575;
+		}
+	}
+}
+
+.onemedia-modal-actions {
+	display: flex;
+	justify-content: flex-end;
+	margin-top: 20px;
+	gap: 16px;
+}
+
+.onemedia-add-site-button {
+	margin-top: 12px;
+}
+
+.onemedia-site-table {
+	margin-top: 30px;
+
+	.onemedia-add-brand-site-button {
+		width: fit-content;
+	}
+
+	.onemedia-site-table-body {
+
+		.onemedia-site-table-empty {
+			text-align: center;
+		}
+
+		.onemedia-edit-site-button {
+			margin-right: 8px;
+		}
+	}
+}
+
+.onemedia-cancel-delete-button {
+	margin-left: 10px;
+}

@@ -1,0 +1,418 @@
+/**
+ * Main styles for the OneMedia plugin.
+ */
+
+/* Media Sharing App Styles */
+.onemedia-card-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	width: 100%;
+}
+
+.onemedia-media-edit-button {
+	position: absolute;
+	top: 8px;
+	right: 8px;
+	z-index: 12;
+
+	.components-button {
+		display: flex;
+		align-items: center;
+		background-color: rgba(255, 255, 255, 0.9);
+		font-weight: 500;
+		padding: 4px 8px;
+		border: 0.5px solid #2271b1;
+		transition: all 0.2s ease;
+		height: auto;
+		font-size: 12px;
+
+		.dashicon {
+			margin-right: 4px;
+		}
+	}
+}
+
+.onemedia-card-header-actions-container {
+	display: flex;
+	gap: 18px;
+
+	.onemedia-search-control {
+
+		.components-base-control__field {
+			height: 36px;
+		}
+
+		.components-text-control__input {
+			height: inherit;
+		}
+	}
+
+	.onemedia-card-header-actions {
+		display: flex;
+		flex-direction: column;
+		gap: 13px;
+		align-items: end;
+	}
+}
+
+/* Media Grid */
+.onemedia-media-grid {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 20px;
+	margin-bottom: 20px;
+}
+
+@media (max-width: 1200px) {
+
+	.onemedia-media-grid {
+		grid-template-columns: repeat(3, 1fr);
+	}
+}
+
+@media (max-width: 782px) {
+
+	.onemedia-card-header-actions-container {
+		flex-direction: column;
+		gap: 8px;
+		margin-top: 8px;
+
+		.onemedia-search-control {
+			width: 150px;
+		}
+
+		.components-text-control__input {
+			height: inherit;
+			font-size: 13px;
+		}
+	}
+
+	.onemedia-media-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+
+@media (max-width: 480px) {
+
+	.onemedia-media-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+/* Media Item */
+.onemedia-media-item {
+	position: relative;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	overflow: hidden;
+	transition: all 0.3s ease;
+}
+
+.onemedia-media-item.selected {
+	border-color: #2271b1;
+	box-shadow: 0 0 0 1px #2271b1;
+}
+
+.onemedia-media-thumbnail {
+	position: relative;
+	padding-top: 100%;
+	background-color: #f0f0f0;
+	cursor: pointer;
+
+	&::after {
+		content: "";
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		z-index: 11;
+	}
+}
+
+.onemedia-media-thumbnail img {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+.onemedia-media-checkbox {
+	position: absolute;
+	top: 10px;
+	left: 10px;
+	z-index: 10;
+}
+
+.onemedia-media-title {
+	padding: 10px;
+	font-size: 14px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	text-align: center;
+	background-color: #f9f9f9;
+	z-index: 10;
+	position: relative;
+}
+
+/* Pagination */
+.onemedia-pagination {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	margin: 20px 0;
+}
+
+.onemedia-page-indicator {
+	margin: 0 15px;
+}
+
+/* Actions Bar */
+.onemedia-actions {
+	display: flex;
+	justify-content: flex-end;
+	margin-top: 20px;
+}
+
+.onemedia-selection-count {
+	font-size: 14px;
+	color: #757575;
+	font-weight: 400;
+	min-height: 18px;
+}
+
+
+.onemedia-sync-options,
+.onemedia-sites-list {
+	margin-bottom: 20px;
+}
+
+.onemedia-sync-option-selector {
+	margin: 20px 0;
+}
+
+.onemedia-sites-checkboxes {
+	margin: 20px 0;
+	max-height: 300px;
+	overflow-y: auto;
+	border: 1px solid #ddd;
+	padding: 15px;
+	border-radius: 4px;
+}
+
+.onemedia-modal-buttons {
+	display: flex;
+	justify-content: space-between;
+	margin-top: 20px;
+}
+
+/* Loading State */
+.onemedia-loading {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	min-height: 200px;
+}
+
+/* Empty States */
+.onemedia-no-media,
+.onemedia-no-sites {
+	text-align: center;
+	padding: 40px 0;
+	color: #757575;
+	font-style: italic;
+}
+
+.onemedia-media-synced-indicator {
+	z-index: 12;
+	position: absolute;
+	bottom: 0;
+	right: 8px;
+
+	svg {
+		background: #1c1c1c;
+		border-radius: 4px;
+	}
+}
+
+.onemedia_page_onemedia-media-sharing,
+.media_page_onemedia-media-sharing {
+
+	.components-tooltip {
+		white-space: pre-line;
+	}
+
+	.media-toolbar:not(:has(.media-button-select)) {
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		align-items: center;
+
+		.media-toolbar-primary,
+		.media-toolbar-secondary {
+			float: none;
+		}
+
+		.media-toolbar-secondary .attachment-filters {
+			width: 100%;
+			max-width: 100%;
+		}
+	}
+}
+
+.onemedia-help-content {
+	line-height: 1.6;
+	max-width: 100%;
+}
+
+.onemedia-help-content h3 {
+	color: #23282d;
+	border-bottom: 2px solid #0073aa;
+	padding-bottom: 10px;
+}
+
+.onemedia-help-content h4 {
+	color: #0073aa;
+	margin-top: 25px;
+	margin-bottom: 15px;
+}
+
+.onemedia-help-content h5 {
+	color: #646970;
+	margin-bottom: 10px;
+}
+
+.onemedia-sharing-modes {
+	display: flex;
+	gap: 20px;
+	margin: 20px 0;
+}
+
+.sync-mode,
+.non-sync-mode {
+	flex: 1;
+	background: #f6f7f7;
+	padding: 15px;
+	border-radius: 5px;
+	border-left: 4px solid #0073aa;
+}
+
+.non-sync-mode {
+	border-left-color: #00a32a;
+}
+
+.onemedia-help-content ul,
+.onemedia-help-content ol {
+	margin-left: 20px;
+	margin-bottom: 15px;
+}
+
+.onemedia-help-content li {
+	margin-bottom: 5px;
+}
+
+@media (max-width: 768px) {
+
+	.onemedia-sharing-modes {
+		flex-direction: column;
+	}
+}
+
+.field {
+
+	&:has(.replace-media-react-container) {
+		width: 100%;
+	}
+}
+
+#onemedia-media-sharing {
+
+	.components-snackbar {
+		position: fixed;
+		bottom: 20px;
+		right: 20px;
+		z-index: 1000000;
+	}
+
+	.components-notice__content {
+		white-space: pre-line !important;
+	}
+
+	.onemedia-warning-notice {
+		background-color: #ff8c00;
+		color: #fff;
+	}
+
+	.onemedia-success-notice {
+		background-color: #16a32d;
+		color: #fff;
+	}
+
+	.onemedia-error-notice {
+		background-color: #e11d1d;
+		color: #fff;
+	}
+}
+
+[id="toplevel_page_onemedia"] {
+
+	.dashicons-admin-generic::before {
+		content: url("../images/logo.svg") !important;
+	}
+}
+
+.onemedia-hidden-file-input {
+	display: none;
+}
+
+.onemedia-sites-modal {
+
+	.onemedia-selected-media {
+
+		&-heading {
+			margin-bottom: 8px;
+		}
+
+		&-description {
+			color: #6c757d;
+			font-size: 14px;
+			margin: 0;
+		}
+	}
+
+	.onemedia-clear-selection-button {
+		margin-block-end: 0.5rem;
+	}
+
+	.onemedia-sites-container {
+		max-height: 300px;
+		overflow-y: auto;
+		border: 1px solid #e1e5e9;
+		border-radius: 8px;
+		padding: 16px;
+	}
+
+	.onemedia-site-item {
+		padding: 8px;
+		border: 1px solid #f0f0f1;
+		border-radius: 4px;
+		cursor: pointer;
+	}
+
+	.onemedia-site-checkbox {
+
+		&-item-name {
+			font-weight: 500;
+			color: #23282d;
+		}
+
+		&-item-url {
+			font-size: 12px;
+			color: #6c757d;
+		}
+	}
+}
