@@ -8,7 +8,7 @@ import { useState, useRef } from '@wordpress/element';
 /**
  * Internal dependencies
  */
-import { ONEMEDIA_MEDIA_SHARING, UPLOAD_NONCE, ALLOWED_MIME_TYPES } from '../../components/constants';
+import { UPLOAD_NONCE, ALLOWED_MIME_TYPES } from '../../components/constants';
 import { uploadMedia, updateExistingAttachment, isSyncAttachment as isSyncAttachmentApi } from '../../components/api';
 import { getFrameProperty } from '../../js/utils';
 
@@ -130,7 +130,7 @@ const BrowserUploaderButton = ( {
 					}
 
 					// Check if selected media is already added.
-					const alreadyAdded = addedMedia.some( ( media ) => media.id === attachment.id );
+					const alreadyAdded = addedMedia?.some( ( media ) => media.id === attachment.id );
 					if ( alreadyAdded ) {
 						setNotice( {
 							type: 'warning',
@@ -201,14 +201,14 @@ const BrowserUploaderButton = ( {
 		}
 
 		// Add WordPress nonce for security.
-		if ( ONEMEDIA_MEDIA_SHARING && UPLOAD_NONCE ) {
+		if ( UPLOAD_NONCE ) {
 			formData.append( '_ajax_nonce', UPLOAD_NONCE );
 		}
 
 		try {
 			// Upload to WordPress AJAX URL.
 			const data = await uploadMedia( formData, isSyncMediaUpload, setNotice );
-			if ( data && data.success ) {
+			if ( data && data?.success ) {
 				if ( onAddMediaSuccess ) {
 					onAddMediaSuccess();
 				}
