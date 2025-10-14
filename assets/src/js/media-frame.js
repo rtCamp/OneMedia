@@ -7,12 +7,13 @@
  */
 import React from 'react';
 import { createRoot } from '@wordpress/element';
+import { Snackbar } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 
 /**
  * Internal dependencies
  */
-import { observeElement, getFrameTitle, getFrameProperty, isBrandSite } from './utils';
+import { observeElement, getFrameTitle, getFrameProperty, isBrandSite, getNoticeClass, showSnackbarNotice } from './utils';
 import BrowserUploaderButton from '../admin/media-sharing/browser-uploader';
 import { isSyncAttachment as isSyncAttachmentApi } from '../components/api';
 
@@ -222,9 +223,119 @@ function initCustomizeMediaFrame() {
 	} );
 }
 
+/**
+ * Create and initialize a snackbar notice element.
+ */
+function initSnackBarNotice() {
+	const snackbarContainer = document.createElement( 'div' );
+	snackbarContainer.id = 'onemedia-snackbar-container';
+	document.body.appendChild( snackbarContainer );
+
+	// Render snackbar component.
+	const SnackbarComponent = () => {
+		const [ notice, setNotice ] = React.useState( null );
+
+		// Listen for custom notice events.
+		React.useEffect( () => {
+			const handleNoticeEvent = ( event ) => {
+				const detail = event?.detail || {};
+				const type = detail?.type || 'error';
+				const message = detail?.message || '';
+				setNotice( { type, message } );
+			};
+
+			document.addEventListener( 'onemediaNotice', handleNoticeEvent );
+
+			return () => {
+				document.removeEventListener( 'onemediaNotice', handleNoticeEvent );
+			};
+		}, [] );
+
+		if ( ! notice ) {
+			return null;
+		}
+		return (
+			<Snackbar
+				status={ notice?.type ?? 'error' }
+				isDismissible={ true }
+				onRemove={ () => setNotice( null ) }
+				className={ getNoticeClass( notice?.type ) }
+			>
+				{ notice?.message }
+			</Snackbar>
+		);
+	};
+
+	const root = createRoot( snackbarContainer );
+	root.render( React.createElement( SnackbarComponent ) );
+}
+
+/**
+ * Intercept AJAX errors made via XMLHttpRequest (used by WP admin-ajax) and show snackbar notices.
+ */
+async function interceptAjaxErrors() {
+	const OriginalXHR = window?.XMLHttpRequest;
+
+	window.XMLHttpRequest = function() {
+		const xhr = new OriginalXHR();
+
+		let requestUrl = '';
+		let requestBody = '';
+
+		const originalOpen = xhr.open;
+		xhr.open = function( method, url, ...rest ) {
+			requestUrl = url || '';
+			originalOpen.apply( this, [ method, url, ...rest ] );
+		};
+
+		const originalSend = xhr.send;
+		xhr.send = function( body ) {
+			requestBody = body || '';
+			this.addEventListener( 'load', function() {
+				try {
+					const isSaveAttachment =
+						requestUrl.includes( 'admin-ajax.php' ) &&
+						requestBody &&
+						requestBody.includes( 'action=save-attachment' );
+
+					if ( ! isSaveAttachment ) {
+						return;
+					}
+
+					const isErrorStatus = this.status >= 400;
+					if ( ! isErrorStatus ) {
+						return;
+					}
+
+					let message = '';
+
+					// Handle JSON error responses (from wp_send_json_error).
+					const json = JSON.parse( this.responseText );
+					if ( json?.data?.message ) {
+						message += json.data.message;
+					}
+
+					if ( message.length > 0 ) {
+						showSnackbarNotice( { type: 'error', message } );
+					}
+				} catch ( err ) {
+					// Ignore JSON parse errors and other errors.
+				}
+			} );
+			originalSend.apply( this, [ body ] );
+		};
+
+		return xhr;
+	};
+}
+
 // Initialize the media frame.
 if ( 'loading' === document.readyState ) {
 	document.addEventListener( 'DOMContentLoaded', initCustomizeMediaFrame );
+	document.addEventListener( 'DOMContentLoaded', initSnackBarNotice );
+	document.addEventListener( 'DOMContentLoaded', interceptAjaxErrors );
 } else {
 	initCustomizeMediaFrame();
+	initSnackBarNotice();
+	interceptAjaxErrors();
 }

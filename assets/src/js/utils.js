@@ -190,6 +190,32 @@ const getFrameTitle = () => {
 	return typeof frameTitle === 'string' ? frameTitle : '';
 };
 
+/**
+ * Show a snackbar notice with the specified type and message.
+ *
+ * @param {Object} detail - The detail object containing type and message.
+ */
+const showSnackbarNotice = ( detail ) => {
+	if ( ! detail || typeof detail !== 'object' ) {
+		return;
+	}
+
+	const type = detail?.type || 'error';
+	const message = detail?.message || '';
+
+	if ( ! message ) {
+		return;
+	}
+
+	const event = new CustomEvent( 'onemediaNotice', {
+		detail: {
+			type,
+			message,
+		},
+	} );
+	document.dispatchEvent( event );
+};
+
 export {
 	isURL,
 	isValidUrl,
@@ -201,4 +227,5 @@ export {
 	observeElement,
 	getFrameTitle,
 	getFrameProperty,
+	showSnackbarNotice,
 };

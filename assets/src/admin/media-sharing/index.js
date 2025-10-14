@@ -46,7 +46,7 @@ const MediaSharingApp = ( {
 	const [ totalPages, setTotalPages ] = useState( 1 );
 	const [ loading, setLoading ] = useState( false );
 	const [ initLoading, setInitLoading ] = useState( false );
-	const [ synedSites, setSynedSites ] = useState( [] );
+	const [ syncedSites, setSyncedSites ] = useState( [] );
 
 	// Brand sites state.
 	const [ brandSites, setBrandSites ] = useState( [] );
@@ -83,7 +83,7 @@ const MediaSharingApp = ( {
 	const fetchSyncedSites = useCallback( async () => {
 		const sites = await fetchSyncedSitesApi( setNotice );
 
-		setSynedSites( sites );
+		setSyncedSites( sites );
 	}, [] );
 
 	const fetchMediaItems = useCallback(
@@ -446,11 +446,11 @@ const MediaSharingApp = ( {
 										</Button>
 									</div>
 								) }
-								{ synedSites[ media.id ] && (
+								{ syncedSites[ media.id ] && (
 									<Tooltip
 										text={
 											<span>
-												{ Object.values( synedSites[ media.id ] ).map( ( site, idx ) => (
+												{ Object.values( syncedSites[ media.id ] ).map( ( site, idx ) => (
 													<span key={ idx }>
 														{ site }
 														<br />

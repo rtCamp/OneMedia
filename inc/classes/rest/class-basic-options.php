@@ -136,6 +136,28 @@ class Basic_Options {
 		);
 
 		/**
+		 * Register a route to check if all the sites for a shared sync media are connected.
+		 */
+		register_rest_route(
+			Constants::NAMESPACE,
+			'/check-sites-connected',
+			array(
+				'methods'             => \WP_REST_Server::CREATABLE,
+				'callback'            => array( $this, 'check_sites_connected' ),
+				'permission_callback' => 'onemedia_validate_rest_api',
+				'args'                => array(
+					'attachment_id' => array(
+						'required'          => true,
+						'sanitize_callback' => 'absint',
+						'validate_callback' => function ( $param ) {
+							return is_numeric( $param );
+						},
+					),
+				),
+			)
+		);
+
+		/**
 		 * Register a route to get multisite type.
 		 */
 		register_rest_route(
@@ -361,6 +383,37 @@ class Basic_Options {
 		}
 
 		return rest_ensure_response( $health_check_response );
+	}
+
+	/**
+	 * Check if all the sites for a shared sync media are connected.
+	 *
+	 * @param \WP_REST_Request $request The request object.
+	 *
+	 * @return \WP_REST_Response|\WP_Error The response after checking the connected sites.
+	 */
+	public function check_sites_connected( \WP_REST_Request $request ): \WP_REST_Response|\WP_Error {
+		$attachment_id = $request->get_param( 'attachment_id' );
+
+		// Validate attachment id.
+		if ( empty( $attachment_id ) || ! is_numeric( $attachment_id ) || 'attachment' !== get_post_type( $attachment_id ) ) {
+			return new \WP_Error(
+				'invalid_data',
+				__( 'Invalid data provided.', 'onemedia' ),
+				array(
+					'status'  => 400,
+					'success' => false,
+				)
+			);
+		}
+
+		// Sanitize attachment id.
+		$attachment_id = intval( $attachment_id );
+
+		// Check if all the sites for this attachment are connected.
+		$health_check_connected_sites = Utils::health_check_attachment_brand_sites( $attachment_id );
+
+		return rest_ensure_response( $health_check_connected_sites );
 	}
 
 	/**

@@ -33,6 +33,10 @@ class Hooks {
 	 * @return void
 	 */
 	public function setup_hooks(): void {
+		// Prevent updating attachment if connected sites are not available.
+		add_action( 'pre_post_update', array( $this, 'pre_update_sync_attachments' ), 10, 1 );
+		add_action( 'wp_ajax_save-attachment', array( $this, 'pre_update_sync_attachments_ajax' ), 0 );
+
 		// Handle syncing the attachment metadata to brand sites for a sync media file.
 		add_action( 'attachment_updated', array( $this, 'update_sync_attachments' ), 10, 1 );
 
@@ -174,25 +178,18 @@ class Hooks {
 		delete_post_meta( $attachment_id, Constants::IS_ONEMEDIA_SYNC_POSTMETA_KEY );
 
 		// Delete onemedia_sync_status from remote sites.
-		$brand_sites = Utils::get_all_brand_sites();
-
-		if ( ! is_array( $brand_sites ) ) {
-			return;
-		}
 		$synced_sites = $synced_brand_site_media[ $attachment_id ] ?? array();
 
 		foreach ( $synced_sites as $site => $site_media_id ) {
 			$site_url      = rtrim( $site, '/' );
 			$site_media_id = (int) $site_media_id;
 
-			// Get site api key from options.
-			$site_api_key = '';
-			foreach ( $brand_sites as $brand_site ) {
-				if ( rtrim( $brand_site['siteUrl'], '/' ) === $site_url ) {
-					$site_api_key = $brand_site['apiKey'];
-					break;
-				}
+			if ( empty( $site_url ) || empty( $site_media_id ) ) {
+				continue;
 			}
+
+			// Get site api key from options.
+			$site_api_key = Utils::get_brand_site_api_key( $site_url );
 
 			// Check if site api key is empty.
 			if ( empty( $site_api_key ) ) {
@@ -248,6 +245,97 @@ class Hooks {
 	}
 
 	/**
+	 * Prevent updating attachment if connected sites are not available.
+	 *
+	 * @param int $post_id Post ID.
+	 *
+	 * @return void
+	 */
+	public function pre_update_sync_attachments( int $post_id ): void {
+		// Check if post type is attachment.
+		$post = get_post( $post_id );
+		if ( ! $post || 'attachment' !== $post->post_type ) {
+			return;
+		}
+
+		// Check post is_onemedia_sync is set to be true.
+		$is_onemedia_sync = Utils::is_sync_attachment( $post_id );
+
+		if ( ! $is_onemedia_sync ) {
+			return;
+		}
+
+		$health_check_connected_sites = Utils::health_check_attachment_brand_sites( $post_id );
+		$success                      = isset( $health_check_connected_sites['success'] ) ? $health_check_connected_sites['success'] : false;
+
+		// If any of the connected brand sites are not reachable, prevent updating the attachment.
+		if ( ! $success ) {
+			$error_message = sprintf(
+				/* translators: %s is the error message. */
+				__( 'Failed to update media. %s', 'onemedia' ),
+				( $health_check_connected_sites['message'] ?? __( 'Some connected brand sites are unreachable.', 'onemedia' ) )
+			);
+			wp_send_json_error(
+				array(
+					'message' => $error_message,
+				),
+				500
+			);
+		}
+	}
+
+	/**
+	 * Prevent saving attachment if connected sites are not available.
+	 *
+	 * @return void
+	 */
+	public function pre_update_sync_attachments_ajax(): void {
+		$attachment_id = isset( $_REQUEST['id'] ) ? intval( $_REQUEST['id'] ) : 0;
+
+		check_ajax_referer( 'update-post_' . $attachment_id, 'nonce' );
+
+		$action = isset( $_REQUEST['action'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['action'] ) ) : '';
+
+		if ( ! current_user_can( 'edit_post', $attachment_id ) ) {
+			wp_send_json_error(
+				array(
+					'message' => __( 'You do not have permission to edit this attachment.', 'onemedia' ),
+				),
+				403
+			);
+		}
+
+		if ( ! $attachment_id || 'attachment' !== get_post_type( $attachment_id ) || 'save-attachment' !== $action ) {
+			return;
+		}
+
+		// Check post is_onemedia_sync is set to be true.
+		$is_onemedia_sync = Utils::is_sync_attachment( $attachment_id );
+
+		if ( ! $is_onemedia_sync ) {
+			return;
+		}
+
+		$health_check_connected_sites = Utils::health_check_attachment_brand_sites( $attachment_id );
+		$success                      = isset( $health_check_connected_sites['success'] ) ? $health_check_connected_sites['success'] : false;
+
+		// If any of the connected brand sites are not reachable, prevent updating the attachment.
+		if ( ! $success ) {
+			$error_message = sprintf(
+				/* translators: %s is the error message. */
+				__( 'Failed to update media. %s', 'onemedia' ),
+				( $health_check_connected_sites['message'] ?? __( 'Some connected brand sites are unreachable.', 'onemedia' ) )
+			);
+			wp_send_json_error(
+				array(
+					'message' => $error_message,
+				),
+				500
+			);
+		}
+	}
+
+	/**
 	 * Update sync attachments on brand sites.
 	 *
 	 * @param int $attachment_id Attachment ID.
@@ -270,12 +358,6 @@ class Hooks {
 
 		// POST request suffix.
 		$post_request_suffix = '/wp-json/' . Constants::NAMESPACE . '/update-attachment';
-
-		// Get site api key from options.
-		$brand_sites = Utils::get_all_brand_sites();
-		if ( ! is_array( $brand_sites ) ) {
-			return;
-		}
 		
 		// Send updates to all sites.
 		foreach ( $onemedia_sync_sites as $site ) {
@@ -283,18 +365,13 @@ class Hooks {
 			// Trim trailing slash.
 			$site_url      = rtrim( $site_url, '/' );
 			$site_media_id = $site['id'];
-			$site_api_key  = '';
 
 			if ( empty( $site_url ) || empty( $site_media_id ) ) {
 				continue;
 			}
 
-			foreach ( $brand_sites as $site ) {
-				if ( rtrim( $site['siteUrl'], '/' ) === $site_url ) {
-					$site_api_key = $site['apiKey'];
-					break;
-				}
-			}
+			// Get site api key from options.
+			$site_api_key = Utils::get_brand_site_api_key( $site_url );
 
 			// Check if site api key is empty.
 			if ( empty( $site_api_key ) ) {

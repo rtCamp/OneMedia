@@ -174,6 +174,7 @@ const SiteModal = ( { formData, setFormData, onSubmit, onClose, editing, origina
 					'This is the API key that will be used to authenticate the site for onemedia.',
 					'onemedia',
 				) }
+				__nextHasNoMarginBottom={ true }
 			/>
 
 			<Button

@@ -46,13 +46,14 @@ table.media {
 }
 
 .onemedia-site-selection-modal,
-#onemedia-settings {
+#onemedia-settings,
+#onemedia-snackbar-container {
 
 	.components-snackbar {
 		position: fixed;
 		bottom: 20px;
 		right: 20px;
-		z-index: 1000000;
+		z-index: 9999999;
 	}
 
 	.components-notice__content {
