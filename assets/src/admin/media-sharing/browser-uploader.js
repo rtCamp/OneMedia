@@ -2,15 +2,15 @@
  * WordPress dependencies
  */
 import { Button } from '@wordpress/components';
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
 import { useState, useRef } from '@wordpress/element';
 
 /**
  * Internal dependencies
  */
-import { ONEMEDIA_MEDIA_SHARING, UPLOAD_NONCE, ALLOWED_MIME_TYPES } from '../../components/constants';
-import { uploadMedia, updateExistingAttachment, isSyncAttachment as isSyncAttachmentApi } from '../../components/api';
-import { getFrameProperty } from '../../js/utils';
+import { UPLOAD_NONCE, ALLOWED_MIME_TYPES } from '../../components/constants';
+import { uploadMedia, updateExistingAttachment, checkIfAllSitesConnected, isSyncAttachment as isSyncAttachmentApi } from '../../components/api';
+import { getFrameProperty, showSnackbarNotice } from '../../js/utils';
 
 const BrowserUploaderButton = ( {
 	onAddMediaSuccess,
@@ -33,7 +33,24 @@ const BrowserUploaderButton = ( {
 		buttonText = __( 'Add Non Sync Media', 'onemedia' );
 	}
 
-	const handleButtonClick = () => {
+	const failedSitesMessage = ( initialMessage, failedSites ) => (
+		<div>
+			<span>{ sprintf(
+				/* translators: %s: initial message. */
+				__( '%s Please check your connection for unreachable sites:', 'onemedia' ),
+				( initialMessage ),
+			) }</span>
+			{ ( failedSites || [] ).map( ( site, idx ) => (
+				<div key={ idx }>
+					<span>
+						{ site?.site_name }
+					</span>
+				</div>
+			) ) }
+		</div>
+	);
+
+	const handleButtonClick = async () => {
 		if ( ! getFrameProperty( 'wp.media' ) ) {
 			setNotice( {
 				type: 'error',
@@ -73,21 +90,37 @@ const BrowserUploaderButton = ( {
 
 					setIsUploading( true );
 					try {
-						// If attachment is already uploaded, trigger update logic.
-						const response = await updateExistingAttachment( attachment.id, isSyncMediaUpload, setNotice );
-						if ( ! response || ! response.success ) {
+						// Check if all the sites for this attachment are connected.
+						const healthCheckResponse = await checkIfAllSitesConnected( attachment.id );
+
+						if ( ! healthCheckResponse || ! healthCheckResponse?.success || healthCheckResponse?.failed_sites?.length > 0 ) {
+							const failedSites = healthCheckResponse?.failed_sites;
+
+							// Trigger custom event onemediaNotice for showing notice in media frame.
 							setNotice( {
-								type: 'warning',
-								message: response?.message || __( 'Failed to update sync attachment.', 'onemedia' ),
+								type: 'error',
+								message: failedSitesMessage(
+									__( 'Failed to convert media.', 'onemedia' ),
+									failedSites,
+								),
 							} );
-						} else {
-							if ( onAddMediaSuccess ) {
-								onAddMediaSuccess();
+						} else if ( healthCheckResponse?.success ) {
+							// If attachment is already uploaded, trigger update logic.
+							const response = await updateExistingAttachment( attachment.id, isSyncMediaUpload, setNotice );
+							if ( ! response || ! response.success ) {
+								setNotice( {
+									type: 'warning',
+									message: response?.message || __( 'Failed to update sync attachment.', 'onemedia' ),
+								} );
+							} else {
+								if ( onAddMediaSuccess ) {
+									onAddMediaSuccess();
+								}
+								setNotice( {
+									type: 'success',
+									message: response?.message || __( 'Sync media added successfully!', 'onemedia' ),
+								} );
 							}
-							setNotice( {
-								type: 'success',
-								message: response?.message || __( 'Sync media added successfully!', 'onemedia' ),
-							} );
 						}
 					} catch ( error ) {
 						setNotice( {
@@ -130,7 +163,7 @@ const BrowserUploaderButton = ( {
 					}
 
 					// Check if selected media is already added.
-					const alreadyAdded = addedMedia.some( ( media ) => media.id === attachment.id );
+					const alreadyAdded = addedMedia?.some( ( media ) => media.id === attachment.id );
 					if ( alreadyAdded ) {
 						setNotice( {
 							type: 'warning',
@@ -160,9 +193,25 @@ const BrowserUploaderButton = ( {
 
 				frame.open();
 			}
-		} else {
-			// Trigger the hidden file input for replace media.
-			fileInputRef.current?.click();
+		} else if ( isReplaceMedia && attachmentId ) { // Trigger the hidden file input for replace media.
+			// Check if all the sites for this attachment are connected.
+			const response = await checkIfAllSitesConnected( attachmentId );
+
+			if ( ! response || ! response?.success || response?.failed_sites?.length > 0 ) {
+				const failedSites = response?.failed_sites;
+
+				// Trigger custom event onemediaNotice for showing notice in media frame.
+				showSnackbarNotice( {
+					type: 'error',
+					message: failedSitesMessage(
+						__( 'Failed to replace media.', 'onemedia' ),
+						failedSites,
+					),
+				} );
+			} else if ( response?.success ) {
+				// All sites are connected, proceed with file input.
+				fileInputRef.current?.click();
+			}
 		}
 	};
 
@@ -201,14 +250,14 @@ const BrowserUploaderButton = ( {
 		}
 
 		// Add WordPress nonce for security.
-		if ( ONEMEDIA_MEDIA_SHARING && UPLOAD_NONCE ) {
+		if ( UPLOAD_NONCE ) {
 			formData.append( '_ajax_nonce', UPLOAD_NONCE );
 		}
 
 		try {
 			// Upload to WordPress AJAX URL.
 			const data = await uploadMedia( formData, isSyncMediaUpload, setNotice );
-			if ( data && data.success ) {
+			if ( data && data?.success ) {
 				if ( onAddMediaSuccess ) {
 					onAddMediaSuccess();
 				}

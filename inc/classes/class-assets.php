@@ -128,10 +128,12 @@ class Assets {
 			'onemedia-media-frame',
 			'oneMediaMediaFrame',
 			array(
-				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-				'nonce'   => wp_create_nonce( 'wp_rest' ),
-				'restUrl' => esc_url( home_url( '/wp-json/' . Constants::NAMESPACE ) ),
-				'apiKey'  => Utils::get_onemedia_api_key( 'default_api_key' ),
+				'ajaxUrl'          => admin_url( 'admin-ajax.php' ),
+				'nonce'            => wp_create_nonce( 'wp_rest' ),
+				'restUrl'          => esc_url( home_url( '/wp-json/' . Constants::NAMESPACE ) ),
+				'uploadNonce'      => wp_create_nonce( 'onemedia_upload_media' ),
+				'apiKey'           => Utils::get_onemedia_api_key( 'default_api_key' ),
+				'allowedMimeTypes' => Utils::get_supported_mime_types(),
 			)
 		);
 		wp_enqueue_script( 'onemedia-media-frame' );

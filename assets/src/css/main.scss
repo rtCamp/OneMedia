@@ -231,10 +231,22 @@
 	z-index: 12;
 	position: absolute;
 	bottom: 0;
-	right: 8px;
+	left: 8px;
 
 	svg {
 		background: #1c1c1c;
+		border-radius: 4px;
+	}
+}
+
+.onemedia-media-version-button {
+	padding: 0;
+	z-index: 12;
+	position: absolute;
+	bottom: 0;
+	right: 8px;
+
+	svg {
 		border-radius: 4px;
 	}
 }
@@ -414,5 +426,85 @@
 			font-size: 12px;
 			color: #6c757d;
 		}
+	}
+}
+
+.onemedia-version-modal {
+	max-width: 850px !important;
+
+	.onemedia-version-thumbnail {
+		position: relative;
+		background-color: #f0f0f0;
+		cursor: pointer;
+		width: 100%;
+		height: 155px;
+
+		&::after {
+			content: "";
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			z-index: 11;
+		}
+	}
+
+	.onemedia-version-thumbnail img {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: contain;
+	}
+
+	.onemedia-version-checkbox {
+		position: absolute;
+		top: 10px;
+		right: 10px;
+		z-index: 10;
+	}
+
+	.onemedia-media-item.in-use {
+
+		.onemedia-version-thumbnail {
+			cursor: default;
+		}
+
+		.onemedia-in-use-overlay {
+			position: absolute;
+			inset: 0;
+			background: #000000bd;
+			color: #fff;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-weight: 600;
+			font-size: 14px;
+			text-transform: uppercase;
+			z-index: 12;
+		}
+	}
+
+	.onemedia-media-container {
+		position: relative;
+	}
+
+	.onemedia-version-last-used {
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		background-color: #000000bd;
+		color: #fff;
+		padding: 4px 8px;
+		font-size: 12px;
+		text-align: center;
+		z-index: 12;
+	}
+
+	.onemedia-media-item.in-use .onemedia-version-last-used {
+		display: none;
 	}
 }

@@ -190,6 +190,58 @@ const getFrameTitle = () => {
 	return typeof frameTitle === 'string' ? frameTitle : '';
 };
 
+/**
+ * Show a snackbar notice with the specified type and message.
+ *
+ * @param {Object} detail - The detail object containing type and message.
+ */
+const showSnackbarNotice = ( detail ) => {
+	if ( ! detail || typeof detail !== 'object' ) {
+		return;
+	}
+
+	const type = detail?.type || 'error';
+	const message = detail?.message || '';
+
+	if ( ! message ) {
+		return;
+	}
+
+	const event = new CustomEvent( 'onemediaNotice', {
+		detail: {
+			type,
+			message,
+		},
+	} );
+	document.dispatchEvent( event );
+};
+
+/**
+ * Format a Unix timestamp (in seconds) into a human-readable date and time.
+ *
+ * @param {number} timestamp - The Unix timestamp (in seconds).
+ * @return {string} Formatted string like "12:45 PM on 15 Oct 2025".
+ */
+const formatLastUsedDate = ( timestamp ) => {
+	if ( ! timestamp ) {
+		return '';
+	}
+
+	const date = new Date( timestamp * 1000 );
+	const timePart = date.toLocaleTimeString( 'en-US', {
+		hour: 'numeric',
+		minute: '2-digit',
+		hour12: true,
+	} );
+
+	const datePart = date.toLocaleDateString( 'en-GB', {
+		day: '2-digit',
+		month: 'short',
+		year: 'numeric',
+	} );
+	return `${ timePart } on ${ datePart }`;
+};
+
 export {
 	isURL,
 	isValidUrl,
@@ -201,4 +253,6 @@ export {
 	observeElement,
 	getFrameTitle,
 	getFrameProperty,
+	showSnackbarNotice,
+	formatLastUsedDate,
 };

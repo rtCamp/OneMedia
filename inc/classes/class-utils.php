@@ -95,7 +95,7 @@ class Utils {
 	}
 	
 	/**
-	 * Get Onemedia API key.
+	 * Get current site's OneMedia API key.
 	 * 
 	 * @param string $default_value Default value if empty.
 	 *
@@ -239,6 +239,28 @@ class Utils {
 			return array();
 		}
 		return $sites;
+	}
+
+	/**
+	 * Get OneMedia sync site URLs postmeta value.
+	 *
+	 * @param int $attachment_id The attachment ID.
+	 *
+	 * @return array The array of sync site URLs.
+	 */
+	public static function get_sync_site_urls_postmeta( int $attachment_id ): array {
+		$sites = self::get_sync_sites_postmeta( $attachment_id );
+		if ( empty( $sites ) ) {
+			return array();
+		}
+
+		$site_urls = array();
+		foreach ( $sites as $site ) {
+			if ( isset( $site['site'] ) ) {
+				$site_urls[] = rtrim( esc_url_raw( $site['site'] ), '/' );
+			}
+		}
+		return $site_urls;
 	}
 
 	/**
@@ -406,6 +428,42 @@ class Utils {
 	}
 
 	/**
+	 * Get OneMedia sync versions postmeta value.
+	 *
+	 * @param int $attachment_id The attachment ID.
+	 *
+	 * @return array The array of sync versions.
+	 */
+	public static function get_sync_attachment_versions( int $attachment_id ): array {
+		if ( ! $attachment_id ) {
+			return array();
+		}
+
+		$versions = get_post_meta( $attachment_id, Constants::ONEMEDIA_SYNC_VERSIONS_POSTMETA_KEY, true );
+		if ( ! is_array( $versions ) ) {
+			return array();
+		}
+
+		return $versions;
+	}
+
+	/**
+	 * Update OneMedia sync versions postmeta value.
+	 *
+	 * @param int   $attachment_id The attachment ID.
+	 * @param array $versions      The array of sync versions to set.
+	 *
+	 * @return bool True if the update was successful, false otherwise.
+	 */
+	public static function update_sync_attachment_versions( int $attachment_id, array $versions ): bool {
+		if ( ! $attachment_id || empty( $versions ) ) {
+			return false;
+		}
+
+		return update_post_meta( $attachment_id, Constants::ONEMEDIA_SYNC_VERSIONS_POSTMETA_KEY, $versions );
+	}
+
+	/**
 	 * Get site name by URL.
 	 *
 	 * @param string $site_url The site URL.
@@ -449,8 +507,155 @@ class Utils {
 		}
 		$parts = explode( '/', $mime_type );
 		$type  = isset( $parts[1] ) ? $parts[1] : '';
+
 		// Handle cases like 'svg+xml'.
 		$type = explode( '+', $type )[0];
 		return strtoupper( $type );
+	}
+
+	/**
+	 * Get saved API key for a given connected brand site URL on governing site.
+	 *
+	 * @param string $site_url The brand site URL.
+	 *
+	 * @return string The saved API key if found, empty string otherwise.
+	 */
+	public static function get_brand_site_api_key( string $site_url ): string {
+		if ( ! self::is_governing_site() || empty( $site_url ) ) {
+			return '';
+		}
+
+		$brand_sites = self::get_brand_sites();
+		foreach ( $brand_sites as $site ) {
+			if ( hash_equals( rtrim( $site['siteUrl'], '/' ), rtrim( $site_url, '/' ) ) ) {
+				return $site['apiKey'];
+			}
+		}
+		return '';
+	}
+
+	/**
+	 * Perform health check on brand sites where a given attachment is shared.
+	 *
+	 * @param int|null $attachment_id The attachment ID.
+	 *
+	 * @return array Array with 'success' boolean and 'failed_sites' array.
+	 */
+	public static function health_check_attachment_brand_sites( int|null $attachment_id ): array {
+		if ( ! $attachment_id ) {
+			return array(
+				'success'      => false,
+				'failed_sites' => array(),
+				'message'      => __( 'Invalid attachment ID.', 'onemedia' ),
+			);
+		}
+
+		// Get URLs of all sites where this attachment is shared.
+		$site_urls = self::get_sync_site_urls_postmeta( $attachment_id );
+
+		if ( empty( $site_urls ) ) {
+			return array(
+				'success'      => true,
+				'failed_sites' => array(),
+				'message'      => __( 'No connected brand sites for this attachment.', 'onemedia' ),
+			);
+		}
+
+		$failed_sites = array();
+		$tracked_urls = array();
+
+		foreach ( $site_urls as $site_url ) {
+			$site_url = rtrim( $site_url, '/' );
+
+			// Skip if we've already processed this URL.
+			if ( in_array( $site_url, $tracked_urls, true ) ) {
+				continue;
+			}
+
+			$tracked_urls[] = $site_url;
+			$api_key        = self::get_brand_site_api_key( $site_url );
+
+			// Brand site not connected.
+			if ( empty( $api_key ) ) {
+				$failed_sites[] = array(
+					'site_name' => self::get_sitename_by_url( $site_url ),
+					'url'       => $site_url,
+					'message'   => __( 'API key not found', 'onemedia' ),
+				);
+				continue;
+			}
+
+			// Perform health check request.
+			$response = wp_remote_get(
+				$site_url . '/wp-json/' . Constants::NAMESPACE . '/health-check',
+				array(
+					'timeout' => Constants::HEALTH_CHECK_REQUEST_TIMEOUT, // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout
+					'headers' => array(
+						'X-OneMedia-Token' => $api_key,
+						'Cache-Control'    => 'no-cache, no-store, must-revalidate',
+					),
+				)
+			);
+
+			if ( is_wp_error( $response ) ) {
+				$failed_sites[] = array(
+					'site_name' => self::get_sitename_by_url( $site_url ),
+					'url'       => $site_url,
+					'message'   => $response->get_error_message(),
+				);
+				continue;
+			}
+
+			$response_code = wp_remote_retrieve_response_code( $response );
+			if ( 200 !== $response_code ) {
+				$failed_sites[] = array(
+					'site_name' => self::get_sitename_by_url( $site_url ),
+					'url'       => $site_url,
+					'message'   => sprintf(
+						/* translators: %d is the HTTP response code. */
+						__( 'HTTP %d response', 'onemedia' ),
+						$response_code
+					),
+				);
+			}
+		}
+
+		
+		if ( ! empty( $failed_sites ) ) {
+			$failed_sites_list = array();
+			foreach ( $failed_sites as $failed_site ) {
+				$site_name = $failed_site['site_name'];
+				if ( ! in_array( $site_name, $failed_sites_list, true ) ) {
+					$failed_sites_list[] = $site_name;
+				}
+			}
+
+			return array(
+				'success'      => false,
+				'failed_sites' => $failed_sites,
+				'message'      => sprintf(
+					/* translators: %s is the list of unreachable sites. */
+					__( 'Please check your connection for unreachable sites: %s.', 'onemedia' ),
+					implode( ', ', $failed_sites_list )
+				),
+			);
+		}
+
+		return array(
+			'success'      => true,
+			'failed_sites' => $failed_sites,
+			'message'      => __( 'All connected sites are reachable.', 'onemedia' ),
+		);
+	}
+
+	/**
+	 * Decode filename to handle special characters.
+	 *
+	 * @param string $filename The filename to decode.
+	 *
+	 * @return string The decoded filename.
+	 */
+	public static function decode_filename( string $filename ): string {
+		return html_entity_decode( $filename, ENT_QUOTES, 'UTF-8' );
 	}
 }

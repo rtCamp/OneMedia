@@ -269,6 +269,28 @@ class Media_Sharing {
 				),
 			)
 		);
+
+		/**
+		 * Register a route to get sync attachment versions.
+		 */
+		register_rest_route(
+			Constants::NAMESPACE,
+			'/sync-attachment-versions',
+			array(
+				'methods'             => WP_REST_Server::CREATABLE,
+				'callback'            => array( $this, 'get_sync_attachment_versions' ),
+				'permission_callback' => 'onemedia_validate_rest_api',
+				'args'                => array(
+					'attachment_id' => array(
+						'required'          => true,
+						'sanitize_callback' => 'absint',
+						'validate_callback' => function ( $param ) {
+							return is_numeric( $param );
+						},
+					),
+				),
+			)
+		);
 	}
 
 	/**
@@ -429,7 +451,7 @@ class Media_Sharing {
 		);
 
 		// Decode HTML entities in title.
-		$attachment_post['post_title'] = html_entity_decode( $attachment_post['post_title'], ENT_QUOTES, 'UTF-8' );
+		$attachment_post['post_title'] = Utils::decode_filename( $attachment_post['post_title'] );
 
 		// Download the file from the URL and save it to the uploads directory and replace the old file.
 		$uploads  = wp_get_upload_dir();
@@ -601,7 +623,7 @@ class Media_Sharing {
 			while ( $query->have_posts() ) {
 				$query->the_post();
 				$post_id       = get_the_ID();
-				$title         = html_entity_decode( get_the_title( $post_id ), ENT_QUOTES, 'UTF-8' );
+				$title         = Utils::decode_filename( get_the_title( $post_id ) );
 				$media_files[] = array(
 					'id'        => $post_id,
 					'url'       => wp_get_attachment_url( $post_id ),
@@ -1024,7 +1046,7 @@ class Media_Sharing {
 			);
 
 			// Decode HTML entities in title.
-			$attachment_metadata['post_title'] = html_entity_decode( $attachment_metadata['post_title'], ENT_QUOTES, 'UTF-8' );
+			$attachment_metadata['post_title'] = Utils::decode_filename( $attachment_metadata['post_title'] );
 
 			// Get governing to brand site attachment mapping to prevent duplicate media files.
 			$attachment_key_map = Utils::get_attachment_key_map();
@@ -1562,6 +1584,53 @@ class Media_Sharing {
 			array(
 				'attachment_id' => $attachment_id,
 				'is_sync'       => $is_sync,
+				'status'        => 200,
+				'success'       => true,
+			)
+		);
+	}
+
+	/**
+	 * Get sync versions of an attachment.
+	 *
+	 * @param \WP_REST_Request $request The REST request object.
+	 *
+	 * @return \WP_Error|\WP_REST_Response The response containing sync versions of the attachment.
+	 */
+	public function get_sync_attachment_versions( \WP_REST_Request $request ): \WP_Error|\WP_REST_Response {
+		$attachment_id = $request->get_param( 'attachment_id' );
+
+		// Validate attachment ID.
+		if ( empty( $attachment_id ) || ! is_numeric( $attachment_id ) || 'attachment' !== get_post_type( $attachment_id ) ) {
+			return new \WP_Error(
+				'invalid_attachment_id',
+				__( 'Invalid attachment ID provided.', 'onemedia' ),
+				array(
+					'status'  => 400,
+					'success' => false,
+				)
+			);
+		}
+
+		// Check if attachment is not a sync attachment.
+		$is_sync = Utils::is_sync_attachment( $attachment_id );
+		if ( ! $is_sync ) {
+			return new \WP_Error(
+				'not_sync_attachment',
+				__( 'Attachment is not a sync attachment.', 'onemedia' ),
+				array(
+					'status'  => 400,
+					'success' => false,
+				)
+			);
+		}
+
+		$versions = Utils::get_sync_attachment_versions( $attachment_id );
+
+		return rest_ensure_response(
+			array(
+				'attachment_id' => $attachment_id,
+				'versions'      => $versions,
 				'status'        => 200,
 				'success'       => true,
 			)

@@ -37,7 +37,7 @@ function onemedia_remove_all_options_on_uninstall( bool $is_multisite = false, i
 	// Remove all attachment meta related to onemedia.
 	$postmeta_table = $table_prefix . 'postmeta';
 	$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		"DELETE FROM {$postmeta_table} WHERE meta_key IN ('onemedia_sync_status', 'onemedia_sync_sites', 'is_onemedia_sync')" // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		"DELETE FROM {$postmeta_table} WHERE meta_key IN ('onemedia_sync_status', 'onemedia_sync_sites', 'is_onemedia_sync', 'onemedia_sync_versions')" // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 	);
 
 	$terms_table              = $table_prefix . 'terms';
