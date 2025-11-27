@@ -440,8 +440,8 @@ class Admin {
 			$existing_versions = array_values( $existing_versions );
 			array_unshift( $existing_versions, $restored_version );
 
-			// Keep only the 10 most recent versions.
-			$existing_versions = array_slice( $existing_versions, 0, 10 );
+			// Keep only the 5 most recent versions.
+			$existing_versions = array_slice( $existing_versions, 0, 5 );
 
 			// Update version history.
 			Utils::update_sync_attachment_versions( $attachment_id, $existing_versions );
