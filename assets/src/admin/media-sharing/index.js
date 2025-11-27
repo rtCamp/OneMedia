@@ -32,7 +32,7 @@ import BrowserUploaderButton from './browser-uploader';
 import { ONEMEDIA_PLUGIN_TAXONOMY_TERM, ONEMEDIA_MEDIA_SHARING, MEDIA_PER_PAGE, UPLOAD_NONCE } from '../../components/constants';
 import ShareMediaModal from '../../components/governing-settings/ShareMediaModal';
 import VersionModal from '../../components/governing-settings/VersionModal';
-import { fetchSyncedSites as fetchSyncedSitesApi, fetchMediaItems as fetchMediaItemsApi, fetchBrandSites as fetchBrandSitesApi, shareMedia as shareMediaApi, uploadMedia, fetchSyncAttachmentVersions } from '../../components/api';
+import { fetchSyncedSites as fetchSyncedSitesApi, fetchMediaItems as fetchMediaItemsApi, fetchBrandSites as fetchBrandSitesApi, shareMedia as shareMediaApi, uploadMedia } from '../../components/api';
 import { getNoticeClass, trimTitle, debounce, getFrameProperty } from '../../js/utils';
 import fallbackImage from '../../images/fallback-image.svg';
 
@@ -50,7 +50,7 @@ const MediaSharingApp = ( {
 	const [ initLoading, setInitLoading ] = useState( false );
 	const [ syncedSites, setSyncedSites ] = useState( [] );
 	const [ selectedVersionId, setSelectedVersionId ] = useState( 0 );
-	const [ mediaVersions, setMediaVersions ] = useState( {} );
+	const [ currentRevision, setCurrentRevision ] = useState( [] );
 
 	// Brand sites state.
 	const [ brandSites, setBrandSites ] = useState( [] );
@@ -135,31 +135,6 @@ const MediaSharingApp = ( {
 		setSelectedSites( initialSelectedSites );
 	}, [] );
 
-	const fetchMediaVersions = useCallback( async () => {
-		if ( ! mediaItems || ! mediaItems.length ) {
-			return;
-		}
-
-		// Only fetch for synced media.
-		if ( ONEMEDIA_PLUGIN_TAXONOMY_TERM === imageType ) {
-			const versionsData = {};
-
-			for ( const media of mediaItems ) {
-				try {
-					const response = await fetchSyncAttachmentVersions( media.id );
-
-					if ( response?.success && 200 === response?.status && response?.versions?.length > 0 ) {
-						versionsData[ media.id ] = response.versions;
-					}
-				} catch ( err ) {
-					// Handle error silently.
-				}
-			}
-
-			setMediaVersions( versionsData );
-		}
-	}, [ imageType, mediaItems ] );
-
 	// Initialize data fetching.
 	useEffect( () => {
 		fetchBrandSites();
@@ -170,13 +145,6 @@ const MediaSharingApp = ( {
 	useEffect( () => {
 		fetchMediaItems( currentPage, debouncedSearchTerm );
 	}, [ currentPage, debouncedSearchTerm, fetchMediaItems ] ); // eslint-disable-line react-hooks/exhaustive-deps
-
-	// Fetch media versions when mediaItems or imageType changes.
-	useEffect( () => {
-		if ( mediaItems.length > 0 && ONEMEDIA_PLUGIN_TAXONOMY_TERM === imageType ) {
-			fetchMediaVersions();
-		}
-	}, [ mediaItems, imageType, fetchMediaVersions ] );
 
 	// Refresh media items when media is replaced.
 	useEffect( () => {
@@ -306,12 +274,20 @@ const MediaSharingApp = ( {
 		setIsShareMediaModalOpen( true );
 	};
 
+	const checkMediaRevisionExists = ( mediaId ) => {
+		const media = mediaItems.filter( ( item ) => item.id === mediaId )?.[ 0 ] || null;
+		return media && media.revision && media.revision.length > 1;
+	};
+
 	const openVersionModal = async ( mediaId ) => {
-		if ( ! mediaId || ! mediaVersions[ mediaId ] ) {
+		const version = Object.values( mediaItems ).filter( ( item ) => item.id === mediaId )?.[ 0 ]?.revision || [];
+
+		if ( ! mediaId || version.length === 0 ) {
 			return;
 		}
 
 		setSelectedVersionId( mediaId );
+		setCurrentRevision( version );
 		setIsVersionModalOpen( true );
 	};
 
@@ -540,12 +516,12 @@ const MediaSharingApp = ( {
 												{ __( 'Edit', 'onemedia' ) }
 											</Button>
 										</div>
-										{ mediaVersions[ media.id ] && (
+										{ checkMediaRevisionExists( media.id ) && (
 											<Tooltip
 												text={ sprintf(
 													/* translators: %d: number of previous versions */
 													__( '%d previous version(s) available', 'onemedia' ),
-													mediaVersions[ media.id ].length - 1,
+													mediaItems[ media.id ]?.length - 1,
 												) }
 												placement="bottom"
 											>
@@ -748,7 +724,7 @@ const MediaSharingApp = ( {
 				{ isVersionModalOpen && (
 					<VersionModal
 						setIsVersionModalOpen={ setIsVersionModalOpen }
-						attachmentVersions={ mediaVersions[ selectedVersionId ] }
+						attachmentVersions={ currentRevision }
 						handleVersionSelect={ handleVersionSelect }
 						loading={ loading }
 					/>

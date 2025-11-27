@@ -218,7 +218,7 @@ class Media_Sharing {
 				'permission_callback' => 'onemedia_validate_rest_api',
 			)
 		);
-		
+
 		/**
 		 * Register a route to update an existing attachment as onemedia.
 		 */
@@ -618,7 +618,7 @@ class Media_Sharing {
 		}
 		$query       = new \WP_Query( $args );
 		$media_files = array();
-		
+
 		if ( $query->have_posts() ) {
 			while ( $query->have_posts() ) {
 				$query->the_post();
@@ -629,6 +629,7 @@ class Media_Sharing {
 					'url'       => wp_get_attachment_url( $post_id ),
 					'title'     => $title,
 					'mime_type' => get_post_mime_type( $post_id ),
+					'revision'  => get_post_meta( $post_id, Constants::ONEMEDIA_SYNC_VERSIONS_POSTMETA_KEY, true ),
 				);
 			}
 			wp_reset_postdata();
@@ -729,7 +730,7 @@ class Media_Sharing {
 				empty( $media['url'] ) ||
 				( ! Utils::is_valid_url( $media['url'] ) ) ||
 				empty( $media['title'] ) ||
-				! is_string( $media['title'] ) 
+				! is_string( $media['title'] )
 			) {
 				return new \WP_Error(
 					'invalid_media_details',
@@ -1066,7 +1067,7 @@ class Media_Sharing {
 						if ( $sync_status ) {
 							update_post_meta( $saved_attachment_id, Constants::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY, $sync_status );
 						}
-	
+
 						// Update the existing attachment with new metadata if any changes are present.
 						if ( $saved_attachment_id && is_numeric( $saved_attachment_id ) && 'attachment' === get_post_type( $saved_attachment_id ) ) {
 							$this->add_source_metadata_to_file( $saved_attachment_id, $attachment_metadata );
@@ -1359,7 +1360,7 @@ class Media_Sharing {
 					$site_url   = rtrim( $site_url, '/' );
 					$site_name  = Utils::get_sitename_by_url( $site_url );
 					$site_token = '';
-					
+
 					if ( empty( $site_url ) ) {
 						$failed_sites[] = array(
 							'site_name' => $site_name,
@@ -1511,7 +1512,7 @@ class Media_Sharing {
 									);
 									continue;
 								}
-							}                       
+							}
 						}
 					}
 				}
@@ -1900,7 +1901,7 @@ class Media_Sharing {
 		$update_post = array(
 			'ID' => $attachment_id,
 		);
-		
+
 		// Update the post title.
 		if ( ! empty( $source_metadata['post_title'] ) ) {
 			$update_post['post_title'] = $source_metadata['post_title'];

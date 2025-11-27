@@ -15,7 +15,47 @@ import { __ } from '@wordpress/i18n';
  */
 import { observeElement, getFrameTitle, getFrameProperty, isBrandSite, getNoticeClass, showSnackbarNotice } from './utils';
 import BrowserUploaderButton from '../admin/media-sharing/browser-uploader';
-import { isSyncAttachment as isSyncAttachmentApi } from '../components/api';
+
+/**
+ * Get sync status from attachment model/element.
+ * The data is already available from the admin-ajax.php response.
+ *
+ * @param {HTMLElement|Object} attachmentOrElement - Attachment model or DOM element.
+ *
+ * @return {boolean} Whether the attachment is synced.
+ */
+function isSyncAttachment( attachmentOrElement ) {
+	// If it's a DOM element with data attributes
+	if ( attachmentOrElement instanceof HTMLElement ) {
+		const attachmentId = attachmentOrElement.dataset.id || attachmentOrElement.dataset.attachmentId;
+
+		if ( ! attachmentId ) {
+			return false;
+		}
+
+		// Try to get from Backbone model
+		const wpMedia = getFrameProperty( 'wp.media' );
+		if ( wpMedia && wpMedia.attachment ) {
+			const attachment = wpMedia.attachment( attachmentId );
+			if ( attachment && attachment.get ) {
+				const syncStatus = attachment.get( 'is_sync_attachment' );
+				// Check if the value exists and is truthy
+				return syncStatus === true || syncStatus === 1 || syncStatus === '1';
+			}
+		}
+
+		// Fallback: check if element has the sync class (set by showSyncBadge)
+		return attachmentOrElement.classList.contains( 'onemedia-synced-media' );
+	}
+
+	// If it's a Backbone model (from wp.media.attachment)
+	if ( attachmentOrElement && typeof attachmentOrElement.get === 'function' ) {
+		const syncStatus = attachmentOrElement.get( 'is_sync_attachment' );
+		return syncStatus === true || syncStatus === 1 || syncStatus === '1';
+	}
+
+	return false;
+}
 
 /**
  * Customize the media frame.
@@ -104,11 +144,13 @@ async function customizeMediaDetails() {
 			return;
 		}
 
-		// Check is attachment is sync attachment.
-		const isSyncAttachment = await isSyncAttachmentApi( attachmentId );
-
-		if ( isSyncAttachment ) {
-			removeDeleteLinks();
+		// Check if attachment is sync attachment from Backbone model
+		const wpMedia = getFrameProperty( 'wp.media' );
+		if ( wpMedia && wpMedia.attachment ) {
+			const attachment = wpMedia.attachment( attachmentId );
+			if ( attachment && isSyncAttachment( attachment ) ) {
+				removeDeleteLinks();
+			}
 		}
 	}
 }
@@ -187,7 +229,7 @@ function removeDeleteLinks() {
  * @param {Function} processFn          - The function to process each attachment element.
  */
 function processAttachments( attachmentElements, processedAttr, processedSync, processedNonSync, processFn ) {
-	attachmentElements.forEach( async ( element ) => {
+	attachmentElements.forEach( ( element ) => {
 		const attachmentId = element.dataset.id || element.dataset.attachmentId;
 
 		// Skip if already processed.
@@ -195,16 +237,16 @@ function processAttachments( attachmentElements, processedAttr, processedSync, p
 			return;
 		}
 
-		// Check if it's a sync attachment.
-		const isSyncAttachment = await isSyncAttachmentApi( attachmentId );
+		// Get sync status from attachment data.
+		const isSync = isSyncAttachment( element );
 
 		// Apply processing function on all sync attachments.
-		if ( processedSync && isSyncAttachment && typeof processFn === 'function' ) {
+		if ( processedSync && isSync && typeof processFn === 'function' ) {
 			processFn( element );
 		}
 
 		// Apply processing function on all non-sync attachments.
-		if ( processedNonSync && ! isSyncAttachment && typeof processFn === 'function' ) {
+		if ( processedNonSync && ! isSync && typeof processFn === 'function' ) {
 			processFn( element );
 		}
 

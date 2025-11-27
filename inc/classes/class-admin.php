@@ -8,6 +8,7 @@
 namespace OneMedia;
 
 use OneMedia\Admin\Media_Taxonomy;
+use OneMedia\Plugin_Configs\Constants;
 use OneMedia\Traits\Singleton;
 
 /**
@@ -36,6 +37,14 @@ class Admin {
 		Media_Taxonomy::get_instance();
 		add_action( 'wp_ajax_onemedia_sync_media_upload', array( $this, 'handle_sync_media_upload' ) );
 		add_action( 'wp_ajax_onemedia_replace_media', array( $this, 'handle_media_replace' ) );
+
+		// Add sync status to attachment data for JavaScript (Media Modal).
+		add_filter( 'wp_prepare_attachment_for_js', array( $this, 'add_sync_meta' ), 10, 3 );
+
+		// Clear cache when attachment sync status changes.
+		add_action( 'updated_post_meta', array( $this, 'clear_sync_cache' ), 10, 4 );
+		add_action( 'added_post_meta', array( $this, 'clear_sync_cache' ), 10, 4 );
+		add_action( 'deleted_post_meta', array( $this, 'clear_sync_cache' ), 10, 4 );
 	}
 
 	/**
@@ -150,7 +159,7 @@ class Admin {
 
 		// Sanitize file input.
 		$file = $this->sanitize_file_input( $input_file );
-		
+
 		if ( is_wp_error( $file ) ) {
 			wp_send_json_error( array( 'message' => $file->get_error_message() ), 400 );
 		}
@@ -177,17 +186,17 @@ class Admin {
 
 			// Update the attachment with the new file.
 			$result = $this->update_attachment( $current_media_id, $file );
-			
+
 			// Update version history, add the new version to versions array.
 			if ( ! is_wp_error( $result ) ) {
 				$this->update_attachment_versions( $current_media_id, $file, $result, $original_data );
 			}
 		}
-		
+
 		if ( is_wp_error( $result ) ) {
 			wp_send_json_error( array( 'message' => $result->get_error_message() ), 500 );
 		}
-		
+
 		// Return success response.
 		wp_send_json_success(
 			array(
@@ -201,7 +210,7 @@ class Admin {
 	 * Process and sanitize file data from either $_FILES or $_POST.
 	 *
 	 * @param array|null $input_file The raw input file data.
-	 * 
+	 *
 	 * @return array|WP_Error Sanitized file array or WP_Error on failure.
 	 */
 	public function sanitize_file_input( $input_file ): array|\WP_Error {
@@ -209,7 +218,7 @@ class Admin {
 		if ( ! isset( $input_file ) || empty( $input_file['name'] ) ) {
 			return new \WP_Error( 'invalid_input', __( 'No file uploaded.', 'onemedia' ) );
 		}
-		
+
 		// Sanitize all file fields.
 		$file = array(
 			'name'     => isset( $input_file['name'] ) ? sanitize_file_name( $input_file['name'] ) : '',
@@ -255,15 +264,15 @@ class Admin {
 
 		// Decode filename.
 		$file['name'] = Utils::decode_filename( $file['name'] );
-		
+
 		// Validate mime type.
 		if ( ! in_array( $file['type'], Utils::get_supported_mime_types(), true ) ) {
-			return new \WP_Error( 
-				'invalid_file_type', 
+			return new \WP_Error(
+				'invalid_file_type',
 				__( 'Invalid file type. Only JPG, PNG, WEBP, BMP, SVG and GIF files are allowed.', 'onemedia' )
 			);
 		}
-		
+
 		return $file;
 	}
 
@@ -274,7 +283,7 @@ class Admin {
 	 * @param array $file             The file data.
 	 * @param bool  $is_version_restore Whether this is a version restore operation.
 	 * @param array $version_data     Version data for restore operations.
-	 * 
+	 *
 	 * @return array|WP_Error Result data or WP_Error on failure.
 	 */
 	public function update_attachment( int $attachment_id, array $file, bool $is_version_restore = false, array $version_data = array() ): array|\WP_Error {
@@ -283,30 +292,30 @@ class Admin {
 		if ( ! $attachment || 'attachment' !== $attachment->post_type ) {
 			return new \WP_Error( 'invalid_attachment', __( 'Invalid attachment.', 'onemedia' ) );
 		}
-		
+
 		// Get current file info.
 		$current_file = get_attached_file( $attachment_id );
 		$alt_text     = get_post_meta( $attachment_id, '_wp_attachment_image_alt', true );
 		$caption      = wp_get_attachment_caption( $attachment_id );
-		
+
 		if ( $is_version_restore ) {
 			// For version restore, use existing file path and data.
 			if ( ! $version_data ) {
 				return new \WP_Error( 'missing_version_data', __( 'Missing version data for restore operation.', 'onemedia' ) );
 			}
-			
+
 			$file_data = $version_data['file'];
-			
+
 			// Check if file still exists at the saved location.
 			if ( ! file_exists( $file_data['path'] ) ) {
 				return new \WP_Error( 'file_not_found', __( 'This version file could not be found. It may have been deleted.', 'onemedia' ) );
 			}
-			
+
 			$target_path = $file_data['path'];
 			$new_url     = $file_data['url'];
 			$mime_type   = $file_data['mime_type'] ?? $file_data['type'];
 			$title       = sanitize_file_name( pathinfo( $file_data['name'], PATHINFO_FILENAME ) );
-			
+
 			// Use existing metadata from version history.
 			$metadata = $file_data['metadata'] ?? array();
 		} else {
@@ -317,12 +326,12 @@ class Admin {
 			$new_url     = $upload_dir['url'] . '/' . $filename;
 			$mime_type   = $file['type'];
 			$title       = sanitize_file_name( pathinfo( $file['name'], PATHINFO_FILENAME ) );
-			
+
 			// Move the uploaded file to the uploads directory.
 			if ( ! move_uploaded_file( $file['tmp_name'], $target_path ) ) {
 				return new \WP_Error( 'file_move_failed', __( 'Failed to move uploaded file.', 'onemedia' ) );
 			}
-			
+
 			// Generate and update attachment metadata.
 			include_once ABSPATH . 'wp-admin/includes/image.php';
 			$metadata = wp_generate_attachment_metadata( $attachment_id, $target_path );
@@ -330,7 +339,7 @@ class Admin {
 				return new \WP_Error( 'metadata_generation_failed', __( 'Failed to generate attachment metadata.', 'onemedia' ) );
 			}
 		}
-		
+
 		// Update attachment URL across posts.
 		onemedia_replace_image_across_all_post_types(
 			$attachment_id,
@@ -338,7 +347,7 @@ class Admin {
 			$alt_text,
 			$caption
 		);
-		
+
 		// Update attachment data.
 		$attachment_data = array(
 			'ID'             => $attachment_id,
@@ -346,28 +355,28 @@ class Admin {
 			'post_mime_type' => $mime_type,
 			'post_title'     => $title,
 		);
-		
+
 		$result = wp_update_post( $attachment_data );
 		if ( is_wp_error( $result ) ) {
 			return new \WP_Error( 'update_failed', __( 'Failed to update attachment.', 'onemedia' ) );
 		}
-		
+
 		// Update attachment metadata.
 		wp_update_attachment_metadata( $attachment_id, $metadata );
-		
+
 		// Update the attachment file path.
 		update_attached_file( $attachment_id, $target_path );
-		
+
 		// Preserve existing taxonomy terms.
 		if ( taxonomy_exists( ONEMEDIA_PLUGIN_TAXONOMY ) ) {
 			$current_terms = wp_get_object_terms( $attachment_id, ONEMEDIA_PLUGIN_TAXONOMY, array( 'fields' => 'slugs' ) );
 			wp_set_object_terms( $attachment_id, $current_terms, ONEMEDIA_PLUGIN_TAXONOMY, false );
 		}
-		
+
 		// Update synced media on brand sites.
 		$hooks_instance = Hooks::get_instance();
 		$hooks_instance->update_sync_attachments( $attachment_id );
-		
+
 		return array(
 			'attachment_id' => $attachment_id,
 			'new_url'       => $new_url,
@@ -381,10 +390,10 @@ class Admin {
 	 *
 	 * @param int   $attachment_id The attachment ID.
 	 * @param array $version_file  The version file data to restore.
-	 * 
+	 *
 	 * @return array|WP_Error Result data or WP_Error on failure.
 	 */
-	public function restore_attachment_version( int $attachment_id, array $version_file ): array|\WP_Error {        
+	public function restore_attachment_version( int $attachment_id, array $version_file ): array|\WP_Error {
 		// Get existing versions.
 		$existing_versions = Utils::get_sync_attachment_versions( $attachment_id );
 		$is_new_meta       = ! is_array( $existing_versions ) || empty( $existing_versions );
@@ -406,17 +415,17 @@ class Admin {
 
 		// Get the version being restored.
 		$restored_version = $existing_versions[ $restore_index ];
-	
+
 		// Update the attachment using the unified function (with version restore flag).
 		$result = $this->update_attachment( $attachment_id, $version_file, true, $restored_version );
-		
+
 		if ( is_wp_error( $result ) ) {
 			return $result;
 		}
 
 		// Update timestamp for last used.
 		$timestamp = time();
-		
+
 		// Update the versions list.
 		if ( is_array( $existing_versions ) && ! empty( $existing_versions ) ) {
 			// Remove the restored version from its current position.
@@ -437,7 +446,7 @@ class Admin {
 			// Update version history.
 			Utils::update_sync_attachment_versions( $attachment_id, $existing_versions );
 		}
-		
+
 		return $result;
 	}
 
@@ -455,7 +464,7 @@ class Admin {
 		$existing_versions = Utils::get_sync_attachment_versions( $attachment_id );
 		$is_new_meta       = ! is_array( $existing_versions ) || empty( $existing_versions );
 		$existing_versions = is_array( $existing_versions ) ? array_values( $existing_versions ) : array();
-		
+
 		// Original file information.
 		$attachment   = $original_data['attachment'];
 		$old_metadata = $original_data['metadata'];
@@ -463,10 +472,10 @@ class Admin {
 		$old_url      = $original_data['url'];
 		$alt_text     = $original_data['alt_text'];
 		$caption      = $original_data['caption'];
-		
+
 		// Add current timestamp.
 		$timestamp = time();
-		
+
 		// Snapshot of the current (pre-replacement) file.
 		$current_snapshot = array(
 			'last_used' => $timestamp,
@@ -490,7 +499,7 @@ class Admin {
 				'checksum'      => ( file_exists( $current_file ) ? md5_file( $current_file ) : '' ),
 			),
 		);
-		
+
 		// Snapshot of the new file.
 		$new_snapshot = array(
 			'last_used' => $timestamp,
@@ -514,7 +523,7 @@ class Admin {
 				'checksum'      => ( file_exists( $update_result['target_path'] ) ? md5_file( $update_result['target_path'] ) : '' ),
 			),
 		);
-		
+
 		if ( $is_new_meta ) {
 			// First replacement: new (current) at 0, previous (old) at 1.
 			$versions = array( $new_snapshot, $current_snapshot );
@@ -523,10 +532,76 @@ class Admin {
 			$versions = $existing_versions;
 			array_unshift( $versions, $new_snapshot );
 		}
-		
-		// Keep only the 10 most recent versions.
-		$versions = array_slice( $versions, 0, 10 );
-		
+
+		// Keep only the 5 most recent versions.
+		$versions = array_slice( $versions, 0, 5 );
+
 		Utils::update_sync_attachment_versions( $attachment_id, $versions );
+	}
+
+	/**
+	 * Add sync status meta to attachment data for JavaScript.
+	 *
+	 * @param array    $response   The prepared attachment data.
+	 * @param \WP_Post $attachment The attachment post object.
+	 *
+	 * @return array Modified attachment data with sync status.
+	 */
+	public function add_sync_meta( array $response, \WP_Post $attachment ): array {
+		// if attachment ID is not set, return original response.
+		if ( ! isset( $attachment->ID ) ) {
+			return $response;
+		}
+
+		// Add sync status to the response.
+		$response['is_sync_attachment'] = self::is_sync_attachment( $attachment->ID );
+
+		return $response;
+	}
+
+	/**
+	 * Check if an attachment is a sync attachment.
+	 *
+	 * @param int $attachment_id The attachment ID.
+	 *
+	 * @return bool True if sync attachment, false otherwise.
+	 */
+	private static function is_sync_attachment( int $attachment_id ): bool {
+		// Validate input.
+		$attachment_id = absint( $attachment_id );
+		if ( ! $attachment_id ) {
+			return false;
+		}
+
+		// Check object cache first.
+		$cache_key = "onemedia_sync_status_{$attachment_id}";
+		$cached    = wp_cache_get( $cache_key, 'onemedia' );
+
+		if ( false !== $cached ) {
+			return (bool) $cached;
+		}
+
+		// get post meta value.
+		$meta_value = get_post_meta( $attachment_id, Constants::IS_ONEMEDIA_SYNC_POSTMETA_KEY, true );
+		$is_sync    = '1' === $meta_value || 1 === $meta_value || true === $meta_value;
+
+		// update cache.
+		wp_cache_set( $cache_key, $is_sync, 'onemedia', HOUR_IN_SECONDS );
+
+		return $is_sync;
+	}
+
+	/**
+	 * Clear sync status cache when the relevant post meta is updated.
+	 *
+	 * @param int    $object_id  The attachment ID.
+	 * @param string $meta_key   The meta key.
+	 *
+	 * @return void -- clear cache if the meta key matches.
+	 */
+	public function clear_sync_cache( int $object_id, string $meta_key ): void {
+		if ( 'is_onemedia_sync' === $meta_key ) {
+			wp_cache_delete( "onemedia_sync_status_{$object_id}", 'onemedia' );
+		}
 	}
 }
