@@ -521,7 +521,7 @@ const MediaSharingApp = ( {
 												text={ sprintf(
 													/* translators: %d: number of previous versions */
 													__( '%d previous version(s) available', 'onemedia' ),
-													mediaItems[ media.id ]?.length - 1,
+													media.revision.length - 1,
 												) }
 												placement="bottom"
 											>
