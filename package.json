@@ -12,17 +12,19 @@
 	],
 	"homepage": "https://github.com/rtCamp/OneMedia",
 	"repository": {
-        "type": "git",
-        "url": "https://github.com/rtCamp/OneMedia.git"
-    },
+		"type": "git",
+		"url": "https://github.com/rtCamp/OneMedia.git"
+	},
 	"bugs": {
 		"url": "https://github.com/rtCamp/OneMedia/issues"
 	},
 	"dependencies": {
 		"@wordpress/block-editor": "12.0.0",
 		"@wordpress/blocks": "12.9.0",
+		"@wordpress/dom-ready": "^4.36.0",
 		"@wordpress/i18n": "4.32.0",
 		"@wordpress/icons": "9.45.0",
+		"@wordpress/primitives": "^4.36.0",
 		"@wordpress/server-side-render": "4.9.0",
 		"classnames": "2.5.1",
 		"clsx": "2.1.1",
@@ -30,8 +32,8 @@
 		"html-react-parser": "5.1.10",
 		"lodash": "4.17.21",
 		"prop-types": "15.8.1",
-		"react": "^18.2.0",
-		"react-dom": "^18.2.0"
+		"react": "^18.3.1",
+		"react-dom": "^18.3.1"
 	},
 	"devDependencies": {
 		"@babel/core": "7.21.8",
@@ -105,5 +107,11 @@
 		"**/*.{css,scss}": [
 			"npm run lint:css:spec --"
 		]
+	},
+	"overrides": {
+		"@babel/runtime": "^7.27.6",
+		"react": "^18.3.1",
+		"react-dom": "^18.3.1",
+		"webpack-dev-server@<=5.2.0": ">=5.2.1"
 	}
 }

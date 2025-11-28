@@ -5,10 +5,10 @@
 /**
  * WordPress dependencies
  */
-import React from 'react';
-import { createRoot } from '@wordpress/element';
+import { createRoot, createElement, useState, useEffect } from '@wordpress/element';
 import { Snackbar } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
+import domReady from '@wordpress/dom-ready';
 
 /**
  * Internal dependencies
@@ -18,43 +18,47 @@ import BrowserUploaderButton from '../admin/media-sharing/browser-uploader';
 
 /**
  * Get sync status from attachment model/element.
- * The data is already available from the admin-ajax.php response.
  *
  * @param {HTMLElement|Object} attachmentOrElement - Attachment model or DOM element.
  *
  * @return {boolean} Whether the attachment is synced.
  */
 function isSyncAttachment( attachmentOrElement ) {
-	// If it's a DOM element with data attributes
-	if ( attachmentOrElement instanceof HTMLElement ) {
-		const attachmentId = attachmentOrElement.dataset.id || attachmentOrElement.dataset.attachmentId;
-
-		if ( ! attachmentId ) {
-			return false;
-		}
-
-		// Try to get from Backbone model
-		const wpMedia = getFrameProperty( 'wp.media' );
-		if ( wpMedia && wpMedia.attachment ) {
-			const attachment = wpMedia.attachment( attachmentId );
-			if ( attachment && attachment.get ) {
-				const syncStatus = attachment.get( 'is_sync_attachment' );
-				// Check if the value exists and is truthy
-				return syncStatus === true || syncStatus === 1 || syncStatus === '1';
-			}
-		}
-
-		// Fallback: check if element has the sync class (set by showSyncBadge)
-		return attachmentOrElement.classList.contains( 'onemedia-synced-media' );
+	// Invalid input
+	if ( ! attachmentOrElement ) {
+		return false;
 	}
 
-	// If it's a Backbone model (from wp.media.attachment)
-	if ( attachmentOrElement && typeof attachmentOrElement.get === 'function' ) {
-		const syncStatus = attachmentOrElement.get( 'is_sync_attachment' );
-		return syncStatus === true || syncStatus === 1 || syncStatus === '1';
+	// Helper to check sync status value
+	const isSyncValue = ( value ) => value === true || value === 1 || value === '1';
+
+	// Handle Backbone model
+	if ( typeof attachmentOrElement.get === 'function' ) {
+		return isSyncValue( attachmentOrElement.get( 'is_sync_attachment' ) );
 	}
 
-	return false;
+	// Not a DOM element
+	if ( ! ( attachmentOrElement instanceof HTMLElement ) ) {
+		return false;
+	}
+
+	// No attachment ID
+	const attachmentId = attachmentOrElement.dataset.id || attachmentOrElement.dataset.attachmentId;
+	if ( ! attachmentId ) {
+		return false;
+	}
+
+	// Try media model
+	const wpMedia = getFrameProperty( 'wp.media' );
+	if ( wpMedia && wpMedia.attachment ) {
+		const attachment = wpMedia.attachment( attachmentId );
+		if ( attachment && attachment.get ) {
+			return isSyncValue( attachment.get( 'is_sync_attachment' ) );
+		}
+	}
+
+	// Fallback to CSS class
+	return attachmentOrElement.classList.contains( 'onemedia-synced-media' );
 }
 
 /**
@@ -101,7 +105,7 @@ async function customizeMediaDetails() {
 
 			// Render Replace Media button for sync media.
 			const MediaReplaceComponent = () => {
-				return React.createElement( BrowserUploaderButton, {
+				return createElement( BrowserUploaderButton, {
 					onAddMediaSuccess: () => {
 						// Handle success - refresh attachment.
 						const attachmentProperty = getFrameProperty( 'wp.media.attachment' );
@@ -127,7 +131,7 @@ async function customizeMediaDetails() {
 			removeDeleteLinks();
 
 			const root = createRoot( container );
-			root.render( React.createElement( MediaReplaceComponent ) );
+			root.render( createElement( MediaReplaceComponent ) );
 		},
 	);
 
@@ -275,10 +279,10 @@ function initSnackBarNotice() {
 
 	// Render snackbar component.
 	const SnackbarComponent = () => {
-		const [ notice, setNotice ] = React.useState( null );
+		const [ notice, setNotice ] = useState( null );
 
 		// Listen for custom notice events.
-		React.useEffect( () => {
+		useEffect( () => {
 			const handleNoticeEvent = ( event ) => {
 				const detail = event?.detail || {};
 				const type = detail?.type || 'error';
@@ -309,7 +313,7 @@ function initSnackBarNotice() {
 	};
 
 	const root = createRoot( snackbarContainer );
-	root.render( React.createElement( SnackbarComponent ) );
+	root.render( createElement( SnackbarComponent ) );
 }
 
 /**
@@ -372,12 +376,8 @@ async function interceptAjaxErrors() {
 }
 
 // Initialize the media frame.
-if ( 'loading' === document.readyState ) {
-	document.addEventListener( 'DOMContentLoaded', initCustomizeMediaFrame );
-	document.addEventListener( 'DOMContentLoaded', initSnackBarNotice );
-	document.addEventListener( 'DOMContentLoaded', interceptAjaxErrors );
-} else {
+domReady( () => {
 	initCustomizeMediaFrame();
 	initSnackBarNotice();
 	interceptAjaxErrors();
-}
+} );

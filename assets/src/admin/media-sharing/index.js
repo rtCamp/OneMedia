@@ -17,11 +17,11 @@ import {
 	Snackbar,
 	Spinner,
 	Tooltip,
-	Icon,
 	TabPanel,
 	TextControl,
 } from '@wordpress/components';
 import { __, sprintf } from '@wordpress/i18n';
+import { Icon, edit } from '@wordpress/icons';
 
 /**
  * Internal dependencies
@@ -501,9 +501,9 @@ const MediaSharingApp = ( {
 									<>
 										<div className="onemedia-media-edit-button">
 											<Button
-												isSmall
+												size="small"
 												variant="secondary"
-												icon="edit"
+												icon={ edit }
 												onClick={ ( e ) => {
 													e.stopPropagation();
 													handleEditMedia(

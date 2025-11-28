@@ -46,7 +46,7 @@ class Utils {
 		$onemedia_site_type = get_option( Constants::ONEMEDIA_SITE_TYPE_OPTION, '' );
 		return $onemedia_site_type;
 	}
-	
+
 	/**
 	 * Get the governing site URL.
 	 *
@@ -93,10 +93,10 @@ class Utils {
 
 		return true;
 	}
-	
+
 	/**
 	 * Get current site's OneMedia API key.
-	 * 
+	 *
 	 * @param string $default_value Default value if empty.
 	 *
 	 * @return string The OneMedia API key.
@@ -157,7 +157,7 @@ class Utils {
 		}
 		return false;
 	}
-	
+
 	/**
 	 * Check if any of the brand sites are connected or not.
 	 *
@@ -169,7 +169,7 @@ class Utils {
 		}
 		return ! empty( get_option( Constants::ONEMEDIA_BRAND_SITES_OPTION, array() ) );
 	}
-	
+
 	/**
 	 * Get connected brand sites.
 	 *
@@ -184,7 +184,7 @@ class Utils {
 
 	/**
 	 * Get brand site's synced media array.
-	 * 
+	 *
 	 * The structure of this array is different on governing and brand sites.
 	 *
 	 * @return array Array of brand site's synced media.
@@ -195,7 +195,7 @@ class Utils {
 
 	/**
 	 * Get attachment key map.
-	 * 
+	 *
 	 * This option contains the governing site to brand site attachment key map.
 	 * It's used for checking if an attachment is already synced or not on the brand site.
 	 *
@@ -248,7 +248,7 @@ class Utils {
 	 *
 	 * @return array The array of sync site URLs.
 	 */
-	public static function get_sync_site_urls_postmeta( int $attachment_id ): array {
+	private static function get_sync_site_urls_postmeta( int $attachment_id ): array {
 		$sites = self::get_sync_sites_postmeta( $attachment_id );
 		if ( empty( $sites ) ) {
 			return array();
@@ -257,7 +257,7 @@ class Utils {
 		$site_urls = array();
 		foreach ( $sites as $site ) {
 			if ( isset( $site['site'] ) ) {
-				$site_urls[] = rtrim( esc_url_raw( $site['site'] ), '/' );
+				$site_urls[] = untrailingslashit( esc_url_raw( $site['site'] ) );
 			}
 		}
 		return $site_urls;
@@ -406,7 +406,7 @@ class Utils {
 		if ( isset( $parsed_url['scheme'] ) && isset( $parsed_url['host'] ) ) {
 			$url = $parsed_url['scheme'] . '://' . $parsed_url['host'];
 		}
-		
+
 		$pattern = "/^https?:\\/\\/(?:www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b(?:[-a-zA-Z0-9()@:%_\\+.~#?&\\/=]*)$/";
 
 		return (bool) preg_match( $pattern, $url );
@@ -527,7 +527,7 @@ class Utils {
 
 		$brand_sites = self::get_brand_sites();
 		foreach ( $brand_sites as $site ) {
-			if ( hash_equals( rtrim( $site['siteUrl'], '/' ), rtrim( $site_url, '/' ) ) ) {
+			if ( rtrim( $site['siteUrl'], '/' ) === rtrim( $site_url, '/' ) ) {
 				return $site['apiKey'];
 			}
 		}
@@ -620,7 +620,6 @@ class Utils {
 			}
 		}
 
-		
 		if ( ! empty( $failed_sites ) ) {
 			$failed_sites_list = array();
 			foreach ( $failed_sites as $failed_site ) {

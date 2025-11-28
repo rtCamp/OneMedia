@@ -51,170 +51,182 @@ const BrowserUploaderButton = ( {
 	);
 
 	const handleButtonClick = async () => {
+		// Media library not available
 		if ( ! getFrameProperty( 'wp.media' ) ) {
 			setNotice( {
 				type: 'error',
 				message: __( 'Media library is not available.', 'onemedia' ),
 			} );
-
-			// Trigger the hidden file input for fallback.
 			fileInputRef.current?.click();
 			return;
 		}
 
-		if ( ! isReplaceMedia ) {
-			// Show media library for non sync and sync media.
-			if ( isSyncMediaUpload ) {
-				// Open WP media library modal for selecting an image.
-				const frame = window.wp.media( {
-					title: __( 'Select Sync Media', 'onemedia' ),
-					button: {
-						text: __( 'Select', 'onemedia' ),
-					},
-					multiple: false,
-					library: {
-						type: ALLOWED_MIME_TYPES,
-					},
-				} );
-
-				frame.on( 'select', async () => {
-					const selection = frame.state().get( 'selection' );
-					const attachment = selection.first().toJSON();
-					if ( ! attachment || ! attachment.url ) {
-						setNotice( {
-							type: 'error',
-							message: __( 'No image selected.', 'onemedia' ),
-						} );
-						return;
-					}
-
-					setIsUploading( true );
-					try {
-						// Check if all the sites for this attachment are connected.
-						const healthCheckResponse = await checkIfAllSitesConnected( attachment.id );
-
-						if ( ! healthCheckResponse || ! healthCheckResponse?.success || healthCheckResponse?.failed_sites?.length > 0 ) {
-							const failedSites = healthCheckResponse?.failed_sites;
-
-							// Trigger custom event onemediaNotice for showing notice in media frame.
-							setNotice( {
-								type: 'error',
-								message: failedSitesMessage(
-									__( 'Failed to convert media.', 'onemedia' ),
-									failedSites,
-								),
-							} );
-						} else if ( healthCheckResponse?.success ) {
-							// If attachment is already uploaded, trigger update logic.
-							const response = await updateExistingAttachment( attachment.id, isSyncMediaUpload, setNotice );
-							if ( ! response || ! response.success ) {
-								setNotice( {
-									type: 'warning',
-									message: response?.message || __( 'Failed to update sync attachment.', 'onemedia' ),
-								} );
-							} else {
-								if ( onAddMediaSuccess ) {
-									onAddMediaSuccess();
-								}
-								setNotice( {
-									type: 'success',
-									message: response?.message || __( 'Sync media added successfully!', 'onemedia' ),
-								} );
-							}
-						}
-					} catch ( error ) {
-						setNotice( {
-							type: 'error',
-							message: error.message || __( 'Failed to update sync attachment.', 'onemedia' ),
-						} );
-					} finally {
-						setIsUploading( false );
-					}
-				} );
-
-				frame.on( 'close', () => {
-					if ( onAddMediaSuccess ) {
-						onAddMediaSuccess();
-					}
-				} );
-
-				frame.open();
-			} else {
-				// Open WP media library modal for selecting an image.
-				const frame = window.wp.media( {
-					title: __( 'Upload Non-Sync Media', 'onemedia' ),
-					button: {
-						text: __( 'Add', 'onemedia' ),
-					},
-					multiple: false,
-					library: {
-						type: ALLOWED_MIME_TYPES,
-					},
-				} );
-
-				frame.on( 'select', async () => {
-					const selection = frame.state().get( 'selection' );
-					const attachment = selection.first().toJSON();
-					if ( ! attachment || ! attachment.url ) {
-						setNotice( {
-							type: 'error',
-							message: __( 'No image selected.', 'onemedia' ),
-						} );
-					}
-
-					// Check if selected media is already added.
-					const alreadyAdded = addedMedia?.some( ( media ) => media.id === attachment.id );
-					if ( alreadyAdded ) {
-						setNotice( {
-							type: 'warning',
-							message: __( 'Media has been added already.', 'onemedia' ),
-						} );
-					} else {
-						const isSyncAttachment = await isSyncAttachmentApi( attachment.id, setNotice );
-						if ( isSyncAttachment ) {
-							setNotice( {
-								type: 'warning',
-								message: __( 'Media is already added to "Sync Media" tab.', 'onemedia' ),
-							} );
-						} else {
-							setNotice( {
-								type: 'success',
-								message: __( 'Media added successfully.', 'onemedia' ),
-							} );
-						}
-					}
-				} );
-
-				frame.on( 'close', () => {
-					if ( onAddMediaSuccess ) {
-						onAddMediaSuccess();
-					}
-				} );
-
-				frame.open();
-			}
-		} else if ( isReplaceMedia && attachmentId ) { // Trigger the hidden file input for replace media.
-			// Check if all the sites for this attachment are connected.
+		// Handle replace media
+		if ( isReplaceMedia && attachmentId ) {
 			const response = await checkIfAllSitesConnected( attachmentId );
 
 			if ( ! response || ! response?.success || response?.failed_sites?.length > 0 ) {
-				const failedSites = response?.failed_sites;
-
-				// Trigger custom event onemediaNotice for showing notice in media frame.
 				showSnackbarNotice( {
 					type: 'error',
 					message: failedSitesMessage(
 						__( 'Failed to replace media.', 'onemedia' ),
-						failedSites,
+						response?.failed_sites,
 					),
 				} );
-			} else if ( response?.success ) {
-				// All sites are connected, proceed with file input.
-				fileInputRef.current?.click();
+				return;
 			}
+
+			fileInputRef.current?.click();
+			return;
 		}
+
+		// Invalid replace media state
+		if ( isReplaceMedia ) {
+			return;
+		}
+
+		// Handle sync media upload
+		if ( isSyncMediaUpload ) {
+			openSyncMediaFrame();
+			return;
+		}
+
+		// Handle non-sync media upload
+		openNonSyncMediaFrame();
 	};
 
+	const openSyncMediaFrame = () => {
+		const frame = window.wp.media( {
+			title: __( 'Select Sync Media', 'onemedia' ),
+			button: {
+				text: __( 'Select', 'onemedia' ),
+			},
+			multiple: false,
+			library: {
+				type: ALLOWED_MIME_TYPES,
+			},
+		} );
+
+		frame.on( 'select', async () => {
+			const selection = frame.state().get( 'selection' );
+			const attachment = selection.first().toJSON();
+
+			if ( ! attachment || ! attachment.url ) {
+				setNotice( {
+					type: 'error',
+					message: __( 'No image selected.', 'onemedia' ),
+				} );
+				return;
+			}
+
+			setIsUploading( true );
+
+			try {
+				const healthCheckResponse = await checkIfAllSitesConnected( attachment.id );
+
+				if ( ! healthCheckResponse || ! healthCheckResponse?.success || healthCheckResponse?.failed_sites?.length > 0 ) {
+					throw new Error(
+						sprintf(
+						/* translators: %s: list of failed sites. */
+							__( 'Media conversion failed for some sites: %s', 'onemedia' ),
+							healthCheckResponse?.failed_sites?.map( ( site ) => site?.site_name ).join( ', ' ),
+						),
+					);
+				}
+
+				const response = await updateExistingAttachment( attachment.id, isSyncMediaUpload, setNotice );
+
+				if ( ! response || ! response.success ) {
+					setNotice( {
+						type: 'warning',
+						message: response?.message || __( 'Failed to update sync attachment.', 'onemedia' ),
+					} );
+					return;
+				}
+
+				if ( onAddMediaSuccess ) {
+					onAddMediaSuccess();
+				}
+
+				setNotice( {
+					type: 'success',
+					message: response?.message || __( 'Sync media added successfully!', 'onemedia' ),
+				} );
+			} catch ( error ) {
+				setNotice( {
+					type: 'error',
+					message: error.message || __( 'Failed to update sync attachment.', 'onemedia' ),
+				} );
+			} finally {
+				setIsUploading( false );
+			}
+		} );
+
+		frame.on( 'close', () => {
+			if ( onAddMediaSuccess ) {
+				onAddMediaSuccess();
+			}
+		} );
+
+		frame.open();
+	};
+
+	const openNonSyncMediaFrame = () => {
+		const frame = window.wp.media( {
+			title: __( 'Upload Non-Sync Media', 'onemedia' ),
+			button: {
+				text: __( 'Add', 'onemedia' ),
+			},
+			multiple: false,
+			library: {
+				type: ALLOWED_MIME_TYPES,
+			},
+		} );
+
+		frame.on( 'select', async () => {
+			const selection = frame.state().get( 'selection' );
+			const attachment = selection.first().toJSON();
+
+			if ( ! attachment || ! attachment.url ) {
+				setNotice( {
+					type: 'error',
+					message: __( 'No image selected.', 'onemedia' ),
+				} );
+				return;
+			}
+
+			const alreadyAdded = addedMedia?.some( ( media ) => media.id === attachment.id );
+			if ( alreadyAdded ) {
+				setNotice( {
+					type: 'warning',
+					message: __( 'Media has been added already.', 'onemedia' ),
+				} );
+				return;
+			}
+
+			const isSyncAttachment = await isSyncAttachmentApi( attachment.id, setNotice );
+			if ( isSyncAttachment ) {
+				setNotice( {
+					type: 'warning',
+					message: __( 'Media is already added to "Sync Media" tab.', 'onemedia' ),
+				} );
+				return;
+			}
+
+			setNotice( {
+				type: 'success',
+				message: __( 'Media added successfully.', 'onemedia' ),
+			} );
+		} );
+
+		frame.on( 'close', () => {
+			if ( onAddMediaSuccess ) {
+				onAddMediaSuccess();
+			}
+		} );
+
+		frame.open();
+	};
 	const handleFileSelect = ( event ) => {
 		const file = event.target.files[ 0 ];
 		if ( ! file ) {

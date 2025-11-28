@@ -1,5 +1,3 @@
-/* eslint-disable @wordpress/no-unsafe-wp-apis */
-
 /**
  * WordPress dependencies
  */
@@ -17,8 +15,34 @@ import { __, sprintf } from '@wordpress/i18n';
 /**
  * Internal dependencies
  */
-import { trimTitle, formatLastUsedDate } from '../../js/utils';
+import { trimTitle } from '../../js/utils';
 import fallbackImage from '../../images/fallback-image.svg';
+
+/**
+ * Format a Unix timestamp (in seconds) into a human-readable date and time.
+ *
+ * @param {number} timestamp - The Unix timestamp (in seconds).
+ * @return {string} Formatted string like "12:45 PM on 15 Oct 2025".
+ */
+const formatLastUsedDate = ( timestamp ) => {
+	if ( ! timestamp ) {
+		return '';
+	}
+
+	const date = new Date( timestamp * 1000 );
+	const timePart = date.toLocaleTimeString( 'en-US', {
+		hour: 'numeric',
+		minute: '2-digit',
+		hour12: true,
+	} );
+
+	const datePart = date.toLocaleDateString( 'en-GB', {
+		day: '2-digit',
+		month: 'short',
+		year: 'numeric',
+	} );
+	return `${ timePart } on ${ datePart }`;
+};
 
 const VersionModal = ( {
 	setIsVersionModalOpen,
@@ -153,7 +177,7 @@ const VersionModal = ( {
 					</Button>
 					<Button
 						variant="primary"
-						onClick={ () => handleVersionSelect( attachmentVersions[ selectedVersion ] ) }
+						onClick={ () => selectedVersion !== null && handleVersionSelect( attachmentVersions[ selectedVersion ] ) }
 						isBusy={ loading }
 						disabled={ null === selectedVersion || loading }
 					>
@@ -166,5 +190,3 @@ const VersionModal = ( {
 };
 
 export default VersionModal;
-
-/* eslint-enable @wordpress/no-unsafe-wp-apis */

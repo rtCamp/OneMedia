@@ -216,32 +216,6 @@ const showSnackbarNotice = ( detail ) => {
 	document.dispatchEvent( event );
 };
 
-/**
- * Format a Unix timestamp (in seconds) into a human-readable date and time.
- *
- * @param {number} timestamp - The Unix timestamp (in seconds).
- * @return {string} Formatted string like "12:45 PM on 15 Oct 2025".
- */
-const formatLastUsedDate = ( timestamp ) => {
-	if ( ! timestamp ) {
-		return '';
-	}
-
-	const date = new Date( timestamp * 1000 );
-	const timePart = date.toLocaleTimeString( 'en-US', {
-		hour: 'numeric',
-		minute: '2-digit',
-		hour12: true,
-	} );
-
-	const datePart = date.toLocaleDateString( 'en-GB', {
-		day: '2-digit',
-		month: 'short',
-		year: 'numeric',
-	} );
-	return `${ timePart } on ${ datePart }`;
-};
-
 export {
 	isURL,
 	isValidUrl,
@@ -254,5 +228,4 @@ export {
 	getFrameTitle,
 	getFrameProperty,
 	showSnackbarNotice,
-	formatLastUsedDate,
 };

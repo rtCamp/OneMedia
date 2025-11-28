@@ -22,6 +22,13 @@ class Admin {
 	use Singleton;
 
 	/**
+	 * Number of attachment versions to keep.
+	 *
+	 * @var int
+	 */
+	const ATTACHMENT_VERSIONS_TO_KEEP = 5;
+
+	/**
 	 * Protected class constructor.
 	 */
 	protected function __construct() {
@@ -137,8 +144,7 @@ class Admin {
 		}
 
 		// Check if this is a version restore operation.
-		$is_version_restore = isset( $_POST['is_version_restore'] ) ?? filter_input( INPUT_POST, 'is_version_restore', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
-		$is_version_restore = ! empty( $is_version_restore ) && $is_version_restore ? true : false;
+		$is_version_restore = ! empty( filter_input( INPUT_POST, 'is_version_restore', FILTER_VALIDATE_BOOLEAN ) );
 
 		// Get the file input.
 		$input_file = isset( $_FILES['file'] ) && ! empty( $_FILES['file']['name'] ) ? wp_unslash( $_FILES['file'] ) : null; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized later in sanitize_file_input().
@@ -441,7 +447,7 @@ class Admin {
 			array_unshift( $existing_versions, $restored_version );
 
 			// Keep only the 5 most recent versions.
-			$existing_versions = array_slice( $existing_versions, 0, 5 );
+			$existing_versions = array_slice( $existing_versions, 0, self::ATTACHMENT_VERSIONS_TO_KEEP );
 
 			// Update version history.
 			Utils::update_sync_attachment_versions( $attachment_id, $existing_versions );
@@ -534,7 +540,7 @@ class Admin {
 		}
 
 		// Keep only the 5 most recent versions.
-		$versions = array_slice( $versions, 0, 5 );
+		$versions = array_slice( $versions, 0, self::ATTACHMENT_VERSIONS_TO_KEEP );
 
 		Utils::update_sync_attachment_versions( $attachment_id, $versions );
 	}
@@ -548,7 +554,7 @@ class Admin {
 	 * @return array Modified attachment data with sync status.
 	 */
 	public function add_sync_meta( array $response, \WP_Post $attachment ): array {
-		// if attachment ID is not set, return original response.
+		// If attachment ID is not set, return original response.
 		if ( ! isset( $attachment->ID ) ) {
 			return $response;
 		}
@@ -581,7 +587,7 @@ class Admin {
 			return (bool) $cached;
 		}
 
-		// get post meta value.
+		// Get post meta value.
 		$meta_value = '';
 		$is_sync    = false;
 		if ( Utils::is_brand_site() ) { // totally not sure why same meta is not used on both sites & why string instead of boolean.
@@ -594,7 +600,7 @@ class Admin {
 			$is_sync    = '1' === $meta_value || 1 === $meta_value || true === $meta_value;
 		}
 
-		// update cache.
+		// Update cache.
 		wp_cache_set( $cache_key, $is_sync, 'onemedia', HOUR_IN_SECONDS );
 
 		return $is_sync;
@@ -603,12 +609,13 @@ class Admin {
 	/**
 	 * Clear sync status cache when the relevant post meta is updated.
 	 *
-	 * @param int    $object_id  The attachment ID.
+	 * @param int    $meta_id    The meta ID.
+	 * @param int    $object_id  The object ID.
 	 * @param string $meta_key   The meta key.
 	 *
 	 * @return void -- clear cache if the meta key matches.
 	 */
-	public function clear_sync_cache( int $object_id, string $meta_key ): void {
+	public function clear_sync_cache( int $meta_id, int $object_id, string $meta_key ): void {
 		if ( 'is_onemedia_sync' === $meta_key ) {
 			wp_cache_delete( "onemedia_sync_status_{$object_id}", 'onemedia' );
 		}
