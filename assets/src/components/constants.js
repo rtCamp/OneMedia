@@ -1,3 +1,4 @@
+// Select settings from the available global variables.
 let settings = {};
 if ( typeof oneMediaSettings !== 'undefined' ) {
 	settings = oneMediaSettings;
@@ -9,10 +10,18 @@ if ( typeof oneMediaSettings !== 'undefined' ) {
 	settings = oneMediaMediaFrame;
 }
 
-export const REST_URL = settings.restUrl;
-export const NONCE = settings.nonce;
-export const API_KEY = settings.apiKey;
+// Export settings as constants.
+export const REST_URL = settings?.restUrl || '';
+export const NONCE = settings?.nonce || '';
+export const API_KEY = settings?.apiKey || '';
+export const UPLOAD_NONCE = settings?.uploadNonce || '';
+export const SHARING_AJAX_URL = settings?.ajaxUrl || '';
 
+export const ALLOWED_MIME_TYPES = typeof settings?.allowedMimeTypes !== 'undefined'
+	? Object.values( settings?.allowedMimeTypes )
+	: [];
+
+// Export script specific constants.
 export const SETUP_URL = typeof oneMediaSetupSettings !== 'undefined'
 	? oneMediaSetupSettings.setupUrl
 	: '';
@@ -20,17 +29,8 @@ export const SETUP_URL = typeof oneMediaSetupSettings !== 'undefined'
 export const ONEMEDIA_MEDIA_SHARING = typeof oneMediaMediaSharing !== 'undefined'
 	? oneMediaMediaSharing
 	: null;
-export const UPLOAD_NONCE = typeof ONEMEDIA_MEDIA_SHARING?.uploadNonce !== 'undefined'
-	? ONEMEDIA_MEDIA_SHARING?.uploadNonce
-	: '';
-export const SHARING_AJAX_URL = typeof ONEMEDIA_MEDIA_SHARING?.ajaxUrl !== 'undefined'
-	? ONEMEDIA_MEDIA_SHARING?.ajaxUrl
-	: '';
 
-export const ALLOWED_MIME_TYPES = typeof ONEMEDIA_MEDIA_SHARING?.allowedMimeTypes !== 'undefined'
-	? Object.values( ONEMEDIA_MEDIA_SHARING?.allowedMimeTypes )
-	: [];
-
+// Export plugin specific constants.
 export const ONEMEDIA_REST_API_NAMESPACE = 'onemedia';
 export const ONEMEDIA_REST_API_VERSION = 'v1';
 export const ONEMEDIA_REST_API_BASE = '/wp-json/' + ONEMEDIA_REST_API_NAMESPACE + '/' + ONEMEDIA_REST_API_VERSION;
