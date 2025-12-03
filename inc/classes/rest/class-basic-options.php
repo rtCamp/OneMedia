@@ -136,6 +136,25 @@ class Basic_Options {
 		);
 
 		/**
+		 * Register a route to check if all the sites for a shared sync media are connected.
+		 */
+		register_rest_route(
+			Constants::NAMESPACE,
+			'/check-sites-connected',
+			array(
+				'methods'             => \WP_REST_Server::CREATABLE,
+				'callback'            => array( $this, 'check_sites_connected' ),
+				'permission_callback' => 'onemedia_validate_rest_api',
+				'args'                => array(
+					'attachment_id' => array(
+						'type'     => 'integer',
+						'required' => true,
+					),
+				),
+			)
+		);
+
+		/**
 		 * Register a route to get multisite type.
 		 */
 		register_rest_route(
@@ -147,7 +166,7 @@ class Basic_Options {
 				'permission_callback' => '__return_true',
 			)
 		);
-		
+
 		/**
 		 * Register a route to manage governing site connection on brand site.
 		 */
@@ -215,7 +234,7 @@ class Basic_Options {
 		if ( empty( $saved_site_type ) || ! hash_equals( $site_type, $saved_site_type ) ) {
 			// Update site type option.
 			$success = update_option( Constants::ONEMEDIA_SITE_TYPE_OPTION, $site_type );
-	
+
 			if ( ! $success ) {
 				return new \WP_Error(
 					'update_failed',
@@ -316,7 +335,7 @@ class Basic_Options {
 		$saved_brand_sites = Utils::get_brand_sites();
 		if ( ! hash_equals( wp_json_encode( $sites ), wp_json_encode( $saved_brand_sites ) ) ) {
 			$success = update_option( Constants::ONEMEDIA_BRAND_SITES_OPTION, $sites );
-	
+
 			if ( ! $success ) {
 				return new \WP_Error(
 					'update_failed',
@@ -364,6 +383,34 @@ class Basic_Options {
 	}
 
 	/**
+	 * Check if all the sites for a shared sync media are connected.
+	 *
+	 * @param \WP_REST_Request $request The request object.
+	 *
+	 * @return \WP_REST_Response|\WP_Error The response after checking the connected sites.
+	 */
+	public function check_sites_connected( \WP_REST_Request $request ): \WP_REST_Response|\WP_Error {
+		$attachment_id = absint( $request->get_param( 'attachment_id' ) );
+
+		// Validate attachment id.
+		if ( empty( $attachment_id ) || 'attachment' !== get_post_type( $attachment_id ) ) {
+			return new \WP_Error(
+				'invalid_data',
+				__( 'Invalid data provided.', 'onemedia' ),
+				array(
+					'status'  => 400,
+					'success' => false,
+				)
+			);
+		}
+
+		// Check if all the sites for this attachment are connected.
+		$health_check_connected_sites = Utils::health_check_attachment_brand_sites( $attachment_id );
+
+		return rest_ensure_response( $health_check_connected_sites );
+	}
+
+	/**
 	 * Get multisite type.
 	 *
 	 * @return \WP_REST_Response The response containing the multisite type (single, subdomain or subdirectory).
@@ -404,7 +451,7 @@ class Basic_Options {
 
 		if ( ! empty( $saved_site_type ) ) {
 			$success = update_option( Constants::ONEMEDIA_GOVERNING_SITES_URL_OPTION, '', false );
-	
+
 			if ( ! $success ) {
 				return new \WP_Error(
 					'update_failed',

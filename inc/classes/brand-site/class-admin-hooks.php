@@ -241,8 +241,6 @@ class Admin_Hooks {
 		}
 	}
 
-	// TODO: Add a Snackbar notice for this in the media edit screen.
-
 	/**
 	 * Prevent save_attachment AJAX and block editing for synced attachments.
 	 *
@@ -268,8 +266,9 @@ class Admin_Hooks {
 			set_transient( 'onemedia_sync_edit_notice', true, 30 );
 			wp_send_json_error(
 				array(
-					'message' => __( 'This file is synced from Governing site, please edit it over there.', 'onemedia' ),
-				) 
+					'message' => __( 'This file is synced from the Governing Site, please edit it over there.', 'onemedia' ),
+				),
+				500
 			);
 			exit;
 		}

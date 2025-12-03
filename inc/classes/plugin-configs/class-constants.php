@@ -99,6 +99,13 @@ class Constants {
 	public const ONEMEDIA_SYNC_STATUS_POSTMETA_KEY = 'onemedia_sync_status';
 
 	/**
+	 * OneMedia sync versions postmeta key.
+	 *
+	 * @var string
+	 */
+	public const ONEMEDIA_SYNC_VERSIONS_POSTMETA_KEY = 'onemedia_sync_versions';
+
+	/**
 	 * Health check request timeout.
 	 *
 	 * @var number

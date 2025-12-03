@@ -19,7 +19,8 @@
 	},
 	"rules": {
 		"jsdoc/check-indentation": "error",
-		"no-shadow": "warn"
+		"no-shadow": "warn",
+		"@wordpress/no-unsafe-wp-apis": "warn"
 	},
 	"overrides": [
 		{

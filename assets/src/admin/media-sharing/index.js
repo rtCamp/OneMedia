@@ -17,20 +17,22 @@ import {
 	Snackbar,
 	Spinner,
 	Tooltip,
-	Icon,
 	TabPanel,
 	TextControl,
 } from '@wordpress/components';
 import { __, sprintf } from '@wordpress/i18n';
+import { Icon, edit } from '@wordpress/icons';
 
 /**
  * Internal dependencies
  */
 import syncIcon from './syncIcon';
+import versionIcon from './versionIcon';
 import BrowserUploaderButton from './browser-uploader';
-import { ONEMEDIA_PLUGIN_TAXONOMY_TERM, ONEMEDIA_MEDIA_SHARING, MEDIA_PER_PAGE } from '../../components/constants';
+import { ONEMEDIA_PLUGIN_TAXONOMY_TERM, ONEMEDIA_MEDIA_SHARING, MEDIA_PER_PAGE, UPLOAD_NONCE } from '../../components/constants';
 import ShareMediaModal from '../../components/governing-settings/ShareMediaModal';
-import { fetchSyncedSites as fetchSyncedSitesApi, fetchMediaItems as fetchMediaItemsApi, fetchBrandSites as fetchBrandSitesApi, shareMedia as shareMediaApi } from '../../components/api';
+import VersionModal from '../../components/governing-settings/VersionModal';
+import { fetchSyncedSites as fetchSyncedSitesApi, fetchMediaItems as fetchMediaItemsApi, fetchBrandSites as fetchBrandSitesApi, shareMedia as shareMediaApi, uploadMedia } from '../../components/api';
 import { getNoticeClass, trimTitle, debounce, getFrameProperty } from '../../js/utils';
 import fallbackImage from '../../images/fallback-image.svg';
 
@@ -46,7 +48,9 @@ const MediaSharingApp = ( {
 	const [ totalPages, setTotalPages ] = useState( 1 );
 	const [ loading, setLoading ] = useState( false );
 	const [ initLoading, setInitLoading ] = useState( false );
-	const [ synedSites, setSynedSites ] = useState( [] );
+	const [ syncedSites, setSyncedSites ] = useState( [] );
+	const [ selectedVersionId, setSelectedVersionId ] = useState( 0 );
+	const [ currentRevision, setCurrentRevision ] = useState( [] );
 
 	// Brand sites state.
 	const [ brandSites, setBrandSites ] = useState( [] );
@@ -57,6 +61,7 @@ const MediaSharingApp = ( {
 	const [ debouncedSearchTerm, setDebouncedSearchTerm ] = useState( '' );
 	const [ notice, setNotice ] = useState( { type: 'success', message: '' } );
 	const [ isShareMediaModalOpen, setIsShareMediaModalOpen ] = useState( false );
+	const [ isVersionModalOpen, setIsVersionModalOpen ] = useState( false );
 	const [ syncOption, setSyncOption ] = useState( 'sync' );
 
 	const perPage = MEDIA_PER_PAGE; // Show more items in grid.
@@ -83,7 +88,7 @@ const MediaSharingApp = ( {
 	const fetchSyncedSites = useCallback( async () => {
 		const sites = await fetchSyncedSitesApi( setNotice );
 
-		setSynedSites( sites );
+		setSyncedSites( sites );
 	}, [] );
 
 	const fetchMediaItems = useCallback(
@@ -269,6 +274,23 @@ const MediaSharingApp = ( {
 		setIsShareMediaModalOpen( true );
 	};
 
+	const checkMediaRevisionExists = ( mediaId ) => {
+		const media = mediaItems.filter( ( item ) => item.id === mediaId )?.[ 0 ] || null;
+		return media && media.revision && media.revision.length > 1;
+	};
+
+	const openVersionModal = async ( mediaId ) => {
+		const version = Object.values( mediaItems ).filter( ( item ) => item.id === mediaId )?.[ 0 ]?.revision || [];
+
+		if ( ! mediaId || version.length === 0 ) {
+			return;
+		}
+
+		setSelectedVersionId( mediaId );
+		setCurrentRevision( version );
+		setIsVersionModalOpen( true );
+	};
+
 	const handleShareMedia = async () => {
 		if ( ! ONEMEDIA_MEDIA_SHARING ) {
 			localizationError();
@@ -365,6 +387,54 @@ const MediaSharingApp = ( {
 		setLoading( false );
 	};
 
+	const handleVersionSelect = async ( version ) => {
+		if ( ! version || ! version?.file ) {
+			setNotice( {
+				type: 'error',
+				message: __( 'Invalid version selected.', 'onemedia' ),
+			} );
+		}
+
+		// Upload the selected version as a new media item.
+		setLoading( true );
+		try {
+			const formData = new FormData();
+			formData.append( 'file', JSON.stringify( version.file ) );
+			formData.append( 'action', 'onemedia_replace_media' );
+
+			// Add current media ID for replacement.
+			formData.append( 'current_media_id', String( selectedVersionId ) );
+
+			// Add WordPress nonce for security.
+			if ( UPLOAD_NONCE ) {
+				formData.append( '_ajax_nonce', UPLOAD_NONCE );
+			}
+
+			formData.append( 'is_version_restore', true );
+
+			const response = await uploadMedia( formData, false, setNotice );
+
+			if ( response && response?.success ) {
+				// Refresh media items to reflect the restored version.
+				setIsVersionModalOpen( false );
+				fetchMediaItems( currentPage, debouncedSearchTerm );
+				fetchSyncedSites();
+
+				setNotice( {
+					type: 'success',
+					message: __( 'Media version restored successfully!', 'onemedia' ),
+				} );
+			}
+		} catch ( error ) {
+			setNotice( {
+				type: 'error',
+				message: __( 'An error occurred while restoring media version.', 'onemedia' ),
+			} );
+		} finally {
+			setLoading( false );
+		}
+	};
+
 	const getSelectedCount = () => {
 		return Object.values( selectedMedia ).filter( Boolean ).length;
 	};
@@ -428,29 +498,55 @@ const MediaSharingApp = ( {
 									/>
 								</div>
 								{ ONEMEDIA_PLUGIN_TAXONOMY_TERM === imageType && (
-									<div className="onemedia-media-edit-button">
-										<Button
-											isSmall
-											variant="secondary"
-											icon="edit"
-											onClick={ ( e ) => {
-												e.stopPropagation();
-												handleEditMedia(
-													media.id,
-													imageType,
-												);
-											} }
-											title={ __( 'Edit Media', 'onemedia' ) }
-										>
-											{ __( 'Edit', 'onemedia' ) }
-										</Button>
-									</div>
+									<>
+										<div className="onemedia-media-edit-button">
+											<Button
+												size="small"
+												variant="secondary"
+												icon={ edit }
+												onClick={ ( e ) => {
+													e.stopPropagation();
+													handleEditMedia(
+														media.id,
+														imageType,
+													);
+												} }
+												title={ __( 'Edit Media', 'onemedia' ) }
+											>
+												{ __( 'Edit', 'onemedia' ) }
+											</Button>
+										</div>
+										{ checkMediaRevisionExists( media.id ) && (
+											<Tooltip
+												text={ sprintf(
+													/* translators: %d: number of previous versions */
+													__( '%d previous version(s) available', 'onemedia' ),
+													media.revision.length - 1,
+												) }
+												placement="bottom"
+											>
+												<Button
+													className="onemedia-media-version-button"
+													onClick={ ( e ) => {
+														e.stopPropagation();
+														openVersionModal( media.id );
+													} }
+												>
+													<Icon
+														icon={ versionIcon }
+														size={ 28 }
+														fill="#fff"
+													/>
+												</Button>
+											</Tooltip>
+										) }
+									</>
 								) }
-								{ synedSites[ media.id ] && (
+								{ syncedSites[ media.id ] && (
 									<Tooltip
 										text={
 											<span>
-												{ Object.values( synedSites[ media.id ] ).map( ( site, idx ) => (
+												{ Object.values( syncedSites[ media.id ] ).map( ( site, idx ) => (
 													<span key={ idx }>
 														{ site }
 														<br />
@@ -621,6 +717,16 @@ const MediaSharingApp = ( {
 						getSelectedSitesCount={ getSelectedSitesCount }
 						loading={ loading }
 						setNotice={ setNotice }
+					/>
+				) }
+
+				{ /* Version Modal */ }
+				{ isVersionModalOpen && (
+					<VersionModal
+						setIsVersionModalOpen={ setIsVersionModalOpen }
+						attachmentVersions={ currentRevision }
+						handleVersionSelect={ handleVersionSelect }
+						loading={ loading }
 					/>
 				) }
 			</div>

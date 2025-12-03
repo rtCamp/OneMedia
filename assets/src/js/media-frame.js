@@ -5,16 +5,61 @@
 /**
  * WordPress dependencies
  */
-import React from 'react';
-import { createRoot } from '@wordpress/element';
+import { createRoot, createElement, useState, useEffect } from '@wordpress/element';
+import { Snackbar } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
+import domReady from '@wordpress/dom-ready';
 
 /**
  * Internal dependencies
  */
-import { observeElement, getFrameTitle, getFrameProperty, isBrandSite } from './utils';
+import { observeElement, getFrameTitle, getFrameProperty, isBrandSite, getNoticeClass, showSnackbarNotice } from './utils';
 import BrowserUploaderButton from '../admin/media-sharing/browser-uploader';
-import { isSyncAttachment as isSyncAttachmentApi } from '../components/api';
+
+/**
+ * Get sync status from attachment model/element.
+ *
+ * @param {HTMLElement|Object} attachmentOrElement - Attachment model or DOM element.
+ *
+ * @return {boolean} Whether the attachment is synced.
+ */
+function isSyncAttachment( attachmentOrElement ) {
+	// Invalid input
+	if ( ! attachmentOrElement ) {
+		return false;
+	}
+
+	// Helper to check sync status value
+	const isSyncValue = ( value ) => value === true || value === 1 || value === '1';
+
+	// Handle Backbone model
+	if ( typeof attachmentOrElement.get === 'function' ) {
+		return isSyncValue( attachmentOrElement.get( 'is_sync_attachment' ) );
+	}
+
+	// Not a DOM element
+	if ( ! ( attachmentOrElement instanceof HTMLElement ) ) {
+		return false;
+	}
+
+	// No attachment ID
+	const attachmentId = attachmentOrElement.dataset.id || attachmentOrElement.dataset.attachmentId;
+	if ( ! attachmentId ) {
+		return false;
+	}
+
+	// Try media model
+	const wpMedia = getFrameProperty( 'wp.media' );
+	if ( wpMedia && wpMedia.attachment ) {
+		const attachment = wpMedia.attachment( attachmentId );
+		if ( attachment && attachment.get ) {
+			return isSyncValue( attachment.get( 'is_sync_attachment' ) );
+		}
+	}
+
+	// Fallback to CSS class
+	return attachmentOrElement.classList.contains( 'onemedia-synced-media' );
+}
 
 /**
  * Customize the media frame.
@@ -60,7 +105,7 @@ async function customizeMediaDetails() {
 
 			// Render Replace Media button for sync media.
 			const MediaReplaceComponent = () => {
-				return React.createElement( BrowserUploaderButton, {
+				return createElement( BrowserUploaderButton, {
 					onAddMediaSuccess: () => {
 						// Handle success - refresh attachment.
 						const attachmentProperty = getFrameProperty( 'wp.media.attachment' );
@@ -86,7 +131,7 @@ async function customizeMediaDetails() {
 			removeDeleteLinks();
 
 			const root = createRoot( container );
-			root.render( React.createElement( MediaReplaceComponent ) );
+			root.render( createElement( MediaReplaceComponent ) );
 		},
 	);
 
@@ -103,11 +148,13 @@ async function customizeMediaDetails() {
 			return;
 		}
 
-		// Check is attachment is sync attachment.
-		const isSyncAttachment = await isSyncAttachmentApi( attachmentId );
-
-		if ( isSyncAttachment ) {
-			removeDeleteLinks();
+		// Check if attachment is sync attachment from Backbone model
+		const wpMedia = getFrameProperty( 'wp.media' );
+		if ( wpMedia && wpMedia.attachment ) {
+			const attachment = wpMedia.attachment( attachmentId );
+			if ( attachment && isSyncAttachment( attachment ) ) {
+				removeDeleteLinks();
+			}
 		}
 	}
 }
@@ -186,7 +233,7 @@ function removeDeleteLinks() {
  * @param {Function} processFn          - The function to process each attachment element.
  */
 function processAttachments( attachmentElements, processedAttr, processedSync, processedNonSync, processFn ) {
-	attachmentElements.forEach( async ( element ) => {
+	attachmentElements.forEach( ( element ) => {
 		const attachmentId = element.dataset.id || element.dataset.attachmentId;
 
 		// Skip if already processed.
@@ -194,16 +241,16 @@ function processAttachments( attachmentElements, processedAttr, processedSync, p
 			return;
 		}
 
-		// Check if it's a sync attachment.
-		const isSyncAttachment = await isSyncAttachmentApi( attachmentId );
+		// Get sync status from attachment data.
+		const isSync = isSyncAttachment( element );
 
 		// Apply processing function on all sync attachments.
-		if ( processedSync && isSyncAttachment && typeof processFn === 'function' ) {
+		if ( processedSync && isSync && typeof processFn === 'function' ) {
 			processFn( element );
 		}
 
 		// Apply processing function on all non-sync attachments.
-		if ( processedNonSync && ! isSyncAttachment && typeof processFn === 'function' ) {
+		if ( processedNonSync && ! isSync && typeof processFn === 'function' ) {
 			processFn( element );
 		}
 
@@ -222,9 +269,115 @@ function initCustomizeMediaFrame() {
 	} );
 }
 
-// Initialize the media frame.
-if ( 'loading' === document.readyState ) {
-	document.addEventListener( 'DOMContentLoaded', initCustomizeMediaFrame );
-} else {
-	initCustomizeMediaFrame();
+/**
+ * Create and initialize a snackbar notice element.
+ */
+function initSnackBarNotice() {
+	const snackbarContainer = document.createElement( 'div' );
+	snackbarContainer.id = 'onemedia-snackbar-container';
+	document.body.appendChild( snackbarContainer );
+
+	// Render snackbar component.
+	const SnackbarComponent = () => {
+		const [ notice, setNotice ] = useState( null );
+
+		// Listen for custom notice events.
+		useEffect( () => {
+			const handleNoticeEvent = ( event ) => {
+				const detail = event?.detail || {};
+				const type = detail?.type || 'error';
+				const message = detail?.message || '';
+				setNotice( { type, message } );
+			};
+
+			document.addEventListener( 'onemediaNotice', handleNoticeEvent );
+
+			return () => {
+				document.removeEventListener( 'onemediaNotice', handleNoticeEvent );
+			};
+		}, [] );
+
+		if ( ! notice ) {
+			return null;
+		}
+		return (
+			<Snackbar
+				status={ notice?.type ?? 'error' }
+				isDismissible={ true }
+				onRemove={ () => setNotice( null ) }
+				className={ getNoticeClass( notice?.type ) }
+			>
+				{ notice?.message }
+			</Snackbar>
+		);
+	};
+
+	const root = createRoot( snackbarContainer );
+	root.render( createElement( SnackbarComponent ) );
 }
+
+/**
+ * Intercept AJAX errors made via XMLHttpRequest (used by WP admin-ajax) and show snackbar notices.
+ */
+async function interceptAjaxErrors() {
+	const OriginalXHR = window?.XMLHttpRequest;
+
+	window.XMLHttpRequest = function() {
+		const xhr = new OriginalXHR();
+
+		let requestUrl = '';
+		let requestBody = '';
+
+		const originalOpen = xhr.open;
+		xhr.open = function( method, url, ...rest ) {
+			requestUrl = url || '';
+			originalOpen.apply( this, [ method, url, ...rest ] );
+		};
+
+		const originalSend = xhr.send;
+		xhr.send = function( body ) {
+			requestBody = body || '';
+			this.addEventListener( 'load', function() {
+				try {
+					const isSaveAttachment =
+						requestUrl.includes( 'admin-ajax.php' ) &&
+						requestBody &&
+						requestBody.includes( 'action=save-attachment' );
+
+					if ( ! isSaveAttachment ) {
+						return;
+					}
+
+					const isErrorStatus = this.status >= 400;
+					if ( ! isErrorStatus ) {
+						return;
+					}
+
+					let message = '';
+
+					// Handle JSON error responses (from wp_send_json_error).
+					const json = JSON.parse( this.responseText );
+					if ( json?.data?.message ) {
+						message += json.data.message;
+					}
+
+					if ( message.length > 0 ) {
+						showSnackbarNotice( { type: 'error', message } );
+					}
+				} catch ( err ) {
+					// Ignore JSON parse errors and other errors.
+				}
+			} );
+			originalSend.apply( this, [ body ] );
+		};
+
+		return xhr;
+	};
+}
+
+// Initialize the media frame.
+domReady( () => {
+	initCustomizeMediaFrame();
+	initSnackBarNotice();
+	interceptAjaxErrors();
+} );

@@ -125,6 +125,24 @@ export const checkBrandSiteHealth = async ( siteUrl, apiKey, addNotice ) => {
 };
 
 /**
+ * Checks if all sites are connected for a given attachment.
+ *
+ * @param {number} attachmentId - Attachment ID to check.
+ * @return {Promise<boolean>} - True if all sites are connected, false otherwise.
+ */
+export const checkIfAllSitesConnected = async ( attachmentId ) => {
+	const response = await apiFetch( {
+		endpoint: 'check-sites-connected',
+		method: 'POST',
+		body: {
+			attachment_id: attachmentId,
+		},
+		errorMsg: __( 'Failed to check connected sites.', 'onemedia' ),
+	} );
+	return response;
+};
+
+/**
  * Fetches the multisite type.
  *
  * @return {Promise<string>} - Multisite type string (single, subdomain or subdirectory).
@@ -391,4 +409,22 @@ export const isSyncAttachment = async ( attachmentId, addNotice ) => {
 		errorMsg: __( 'Failed to check sync status.', 'onemedia' ),
 	} );
 	return data?.is_sync || false;
+};
+
+/**
+ * Fetches the versions of a sync attachment.
+ *
+ * @param {number} attachmentId - Attachment ID to fetch versions for.
+ * @return {Promise<Array>} - Array of version objects.
+ */
+export const fetchSyncAttachmentVersions = async ( attachmentId ) => {
+	const data = await apiFetch( {
+		endpoint: `sync-attachment-versions`,
+		method: 'POST',
+		body: {
+			attachment_id: Number( attachmentId ),
+		},
+		errorMsg: __( 'Failed to fetch attachment versions.', 'onemedia' ),
+	} );
+	return data || [];
 };
