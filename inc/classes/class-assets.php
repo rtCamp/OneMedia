@@ -185,7 +185,7 @@ class Assets {
 	 */
 	public function get_asset_meta( string $file, array $deps = array(), int|string|bool|null $ver = false ): array {
 		/* translators: %1$s is the assets build directory path, %2$s is the asset file name. */
-		$asset_meta_file = sprintf( '%1$s/js/%2$s.asset.php', untrailingslashit( ONEMEDIA_PLUGIN_FEATURES_PATH . '/assets/build' ), basename( $file, '.' . pathinfo( $file )['extension'] ) );
+		$asset_meta_file = sprintf( '%1$s/js/%2$s.asset.php', untrailingslashit( ONEMEDIA_DIR . '/assets/build' ), basename( $file, '.' . pathinfo( $file )['extension'] ) );
 		$asset_meta      = is_readable( $asset_meta_file )
 		? include $asset_meta_file // phpcs:ignore WordPressVIPMinimum.Files.IncludingFile.UsingVariable
 		: array(
@@ -212,7 +212,7 @@ class Assets {
 	 */
 	public function register_script( string $handle, string|bool $file, array $deps = array(), int|string|bool|null $ver = false, bool $in_footer = true ): bool {
 		/* translators: %1$s is the assets build directory path, %2$s is the asset file name. */
-		$file_path = sprintf( '%1$s/%2$s', ONEMEDIA_PLUGIN_FEATURES_PATH . '/assets/build', $file );
+		$file_path = sprintf( '%1$s/%2$s', ONEMEDIA_DIR . '/assets/build', $file );
 
 		if ( ! \file_exists( $file_path ) ) {
 			return false;
@@ -232,7 +232,7 @@ class Assets {
 		}
 
 		/* translators: %s is the filename. */
-		$src = sprintf( ONEMEDIA_PLUGIN_FEATURES_URL . '/assets/build/%s', $file );
+		$src = sprintf( ONEMEDIA_URL . '/assets/build/%s', $file );
 
 		return wp_register_script( $handle, $src, $asset_meta['dependencies'], $asset_meta['version'], $in_footer );
 	}
@@ -252,14 +252,14 @@ class Assets {
 	 */
 	public function register_style( string $handle, string|bool $file, array $deps = array(), int|string|bool|null $ver = false, string $media = 'all' ): bool {
 		/* translators: %1$s is the assets build directory path, %2$s is the asset file name. */
-		$file_path = sprintf( '%1$s/%2$s', ONEMEDIA_PLUGIN_FEATURES_PATH . '/assets/build', $file );
+		$file_path = sprintf( '%1$s/%2$s', ONEMEDIA_DIR . '/assets/build', $file );
 
 		if ( ! \file_exists( $file_path ) ) {
 			return false;
 		}
 
 		/* translators: %s is the filename. */
-		$src     = sprintf( ONEMEDIA_PLUGIN_FEATURES_URL . '/assets/build/%s', $file );
+		$src     = sprintf( ONEMEDIA_URL . '/assets/build/%s', $file );
 		$version = $this->get_file_version( $file, $ver );
 
 		return wp_register_style( $handle, $src, $deps, $version, $media );
@@ -279,7 +279,7 @@ class Assets {
 		}
 
 		/* translators: %1$s is the assets build directory path, %2$s is the asset file name. */
-		$file_path = sprintf( '%1$s/%2$s', ONEMEDIA_PLUGIN_FEATURES_PATH . '/assets/build', $file );
+		$file_path = sprintf( '%1$s/%2$s', ONEMEDIA_DIR . '/assets/build', $file );
 
 		return file_exists( $file_path ) ? filemtime( $file_path ) : false;
 	}

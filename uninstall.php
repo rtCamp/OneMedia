@@ -5,33 +5,56 @@
  * @package OneMedia
  */
 
+declare( strict_types=1 );
+
+namespace OneMedia;
+
 // If uninstall not called from WordPress, exit.
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 	exit;
 }
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
+
+/**
+ * Multisite loop for uninstalling from all sites.
+ */
+function multisite_uninstall(): void {
+	if ( ! is_multisite() ) {
+		uninstall();
+		return;
+	}
+
+	$site_ids = get_sites(
+		[
+			'fields' => 'ids',
+			'number' => 0,
+		]
+	) ?: [];
+
+	foreach ( $site_ids as $site_id ) {
+		// phpcs:ignore WordPressVIPMinimum.Functions.RestrictedFunctions.switch_to_blog_switch_to_blog
+		if ( ! switch_to_blog( (int) $site_id ) ) {
+			continue;
+		}
+
+		uninstall();
+		restore_current_blog();
+	}
 }
 
 /**
- * Remove all OneMedia options on plugin uninstall.
- *
- * This function deletes all options and attachment meta related to OneMedia.
- * 
- * @param bool     $is_multisite Whether the WordPress installation is multisite. Default is false.
- * @param int|null $blog_id The blog ID to target in a multisite setup. Default is null (not used).
- *
- * @return void
+ * The (site-specific) uninstall function.
  */
-function onemedia_remove_all_options_on_uninstall( bool $is_multisite = false, int|null $blog_id ): void {
+function uninstall(): void {
+	delete_plugin_data();
+}
+
+/**
+ * Deletes meta, options, transients, etc.
+ */
+function delete_plugin_data(): void {
 	global $wpdb;
 
-	// For multisite, we need to use the correct table prefix for the specific blog.
-	if ( $is_multisite && $blog_id ) {
-		$table_prefix = $wpdb->get_blog_prefix( $blog_id );
-	} else {
-		$table_prefix = $wpdb->prefix;
-	}
+	$table_prefix = $wpdb->prefix;
 
 	// Ignoring caching warning for these queries because it will only be queried once during plugin uninstallation.
 	// Remove all attachment meta related to onemedia.
@@ -47,7 +70,7 @@ function onemedia_remove_all_options_on_uninstall( bool $is_multisite = false, i
 	// Remove onemedia term and term relationships from all attachments.
 	// Get the term_taxonomy_id for slug 'onemedia' in taxonomy 'onemedia_media_type'.
 	$term_taxonomy_id_query = sprintf(
-		'SELECT tt.term_taxonomy_id 
+		'SELECT tt.term_taxonomy_id
 		FROM `%s` t
 		INNER JOIN `%s` tt ON t.term_id = tt.term_id
 		WHERE t.slug = %%s AND tt.taxonomy = %%s',
@@ -90,60 +113,32 @@ function onemedia_remove_all_options_on_uninstall( bool $is_multisite = false, i
 			$wpdb->prepare(
 				$delete_query, // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 				'onemedia'
-			) 
+			)
 		);
 	}
 
-	// Clear up onemedia options.
-	$onemedia_options = array(
-		'onemedia_child_site_api_key',
-		'onemedia_media_type_children',
+	$options = [
+		// Common site options.
 		'onemedia_site_type',
-		'onemedia_brand_sites',
+		'onemedia_show_onboarding',
+
+		// Governing site options.
+		'onemedia_shared_sites',
+
+		// Brand site options.
+		'onemedia_parent_site_url',
+		'onemedia_consumer_api_key',
+
+		// Plugin specific options.
+		'onemedia_media_type_children',
 		'onemedia_brand_sites_synced_media',
-		'onemedia_governing_site_url',
 		'onemedia_attachment_key_map',
-	);
+	];
 
-	foreach ( $onemedia_options as $onemedia_option ) {
-		delete_option( $onemedia_option );
+	foreach ( $options as $option ) {
+		delete_option( $option );
 	}
 }
 
-if ( ! function_exists( 'onemedia_plugin_uninstall' ) ) {
-
-	/**
-	 * Function to deactivate the plugin and clean up options.
-	 * 
-	 * @return void
-	 */
-	function onemedia_plugin_uninstall(): void {
-
-		// For multisite, loop through each site and remove options.
-		if ( is_multisite() ) {
-			// Get all blog ids.
-			$blog_ids = array();
-
-			if ( function_exists( 'get_sites' ) ) {
-				$sites = get_sites( array( 'fields' => 'ids' ) );
-				if ( $sites ) {
-					$blog_ids = $sites;
-				}
-			}
-
-			foreach ( $blog_ids as $blog_id ) {
-				// Ignoring the warning since we only need the change the database context for uninstallation.
-				switch_to_blog( $blog_id ); // phpcs:ignore WordPressVIPMinimum.Functions.RestrictedFunctions.switch_to_blog_switch_to_blog
-				onemedia_remove_all_options_on_uninstall( true, $blog_id );
-				restore_current_blog();
-			}       
-		} else {
-			// For single site, remove options from the current site.
-			onemedia_remove_all_options_on_uninstall( false, null );
-		}
-	}
-}
-/**
- * Uninstall the plugin and clean up options.
- */
-onemedia_plugin_uninstall();
+// Run the uninstaller.
+multisite_uninstall();
