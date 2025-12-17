@@ -7,23 +7,13 @@
 
 namespace OneMedia;
 
-use OneMedia\Plugin_Configs\Constants;
+use OneMedia\Constants;
 use OneMedia\Traits\Singleton;
 
 /**
  * Class Utils
  */
 class Utils {
-
-	/**
-	 * Use Singleton trait.
-	 */
-	use Singleton;
-
-	/**
-	 * Protected class constructor.
-	 */
-	protected function __construct() { }
 
 	/**
 	 * Get the multisite type.
@@ -38,28 +28,6 @@ class Utils {
 	}
 
 	/**
-	 * Get the current site type.
-	 *
-	 * @return string The current site type (brand or governing).
-	 */
-	public static function get_current_site_type(): string {
-		$onemedia_site_type = get_option( Constants::ONEMEDIA_SITE_TYPE_OPTION, '' );
-		return $onemedia_site_type;
-	}
-
-	/**
-	 * Get the governing site URL.
-	 *
-	 * @return string The governing site URL if the current site is a brand site, empty string otherwise.
-	 */
-	public static function get_governing_site_url(): string {
-		if ( ! self::is_brand_site() ) {
-			return '';
-		}
-		return get_option( Constants::ONEMEDIA_GOVERNING_SITES_URL_OPTION, '' );
-	}
-
-	/**
 	 * Set the governing site URL.
 	 *
 	 * @param string $url The governing site URL to set.
@@ -67,7 +35,7 @@ class Utils {
 	 * @return bool|\WP_Error True if the URL was set successfully, WP_Error on failure.
 	 */
 	public static function set_governing_site_url( string $url ): bool|\WP_Error {
-		if ( ! $url || empty( $url ) || ! self::is_brand_site() ) {
+		if ( ! $url || empty( $url ) || ! Settings::is_consumer_site() ) {
 			return new \WP_Error(
 				'invalid_request',
 				__( 'Invalid request to set governing site URL.', 'onemedia' ),
@@ -78,7 +46,7 @@ class Utils {
 			);
 		}
 
-		$success = update_option( Constants::ONEMEDIA_GOVERNING_SITES_URL_OPTION, $url );
+		$success = update_option( Settings::OPTION_CONSUMER_PARENT_SITE_URL, $url );
 
 		if ( ! $success ) {
 			return new \WP_Error(
@@ -95,41 +63,12 @@ class Utils {
 	}
 
 	/**
-	 * Get current site's OneMedia API key.
-	 *
-	 * @param string $default_value Default value if empty.
-	 *
-	 * @return string The OneMedia API key.
-	 */
-	public static function get_onemedia_api_key( string $default_value = '' ): string {
-		return get_option( Constants::ONEMEDIA_API_KEY_OPTION, $default_value );
-	}
-
-	/**
-	 * Check if the current site is a brand site.
-	 *
-	 * @return bool True if the current site is a brand site, false otherwise.
-	 */
-	public static function is_brand_site(): bool {
-		return hash_equals( ONEMEDIA_PLUGIN_BRAND_SITE, self::get_current_site_type() );
-	}
-
-	/**
-	 * Check if the current site is a governing site.
-	 *
-	 * @return bool True if the current site is a governing site, false otherwise.
-	 */
-	public static function is_governing_site(): bool {
-		return hash_equals( ONEMEDIA_PLUGIN_GOVERNING_SITE, self::get_current_site_type() );
-	}
-
-	/**
 	 * Check if site type is set or not.
 	 *
 	 * @return bool True if site type is set, false otherwise.
 	 */
 	public static function is_site_type_set(): bool {
-		$site_type = self::get_current_site_type();
+		$site_type = Settings::get_site_type();
 		if ( ! empty( $site_type ) ) {
 			// Site type is set.
 			return true;
@@ -145,9 +84,9 @@ class Utils {
 	 * @return bool True if the attachment is of sync type, false otherwise.
 	 */
 	public static function is_sync_attachment( int $attachment_id ): bool {
-		if ( self::is_governing_site() ) {
+		if ( Settings::is_governing_site() ) {
 			$sync = get_post_meta( $attachment_id, Constants::IS_ONEMEDIA_SYNC_POSTMETA_KEY, true );
-		} elseif ( self::is_brand_site() ) {
+		} elseif ( Settings::is_consumer_site() ) {
 			$sync_status = self::get_sync_status_postmeta( $attachment_id );
 			$sync        = hash_equals( $sync_status, 'sync' );
 		}
@@ -156,30 +95,6 @@ class Utils {
 			return true;
 		}
 		return false;
-	}
-
-	/**
-	 * Check if any of the brand sites are connected or not.
-	 *
-	 * @return bool True if any brand sites are connected, false otherwise.
-	 */
-	public static function has_brand_sites(): bool {
-		if ( ! self::is_governing_site() ) {
-			return false;
-		}
-		return ! empty( get_option( Constants::ONEMEDIA_BRAND_SITES_OPTION, array() ) );
-	}
-
-	/**
-	 * Get connected brand sites.
-	 *
-	 * @return array Array of connected brand sites.
-	 */
-	public static function get_brand_sites(): array {
-		if ( ! self::has_brand_sites() ) {
-			return array();
-		}
-		return get_option( Constants::ONEMEDIA_BRAND_SITES_OPTION, array() );
 	}
 
 	/**
@@ -202,7 +117,7 @@ class Utils {
 	 * @return array The attachment key map array.
 	 */
 	public static function get_attachment_key_map(): array {
-		if ( ! self::is_brand_site() ) {
+		if ( ! Settings::is_consumer_site() ) {
 			return array();
 		}
 		return get_option( Constants::ONEMEDIA_ATTACHMENT_KEY_MAP_OPTION, array() );
@@ -216,7 +131,7 @@ class Utils {
 	 * @return string The sync status value.
 	 */
 	public static function get_sync_status_postmeta( int $attachment_id ): string {
-		if ( ! self::is_brand_site() || ! $attachment_id ) {
+		if ( ! Settings::is_consumer_site() || ! $attachment_id ) {
 			return '';
 		}
 		return get_post_meta( $attachment_id, Constants::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY, true );
@@ -230,7 +145,7 @@ class Utils {
 	 * @return array The array of sync sites.
 	 */
 	public static function get_sync_sites_postmeta( int $attachment_id ): array {
-		if ( ! self::is_governing_site() || ! $attachment_id ) {
+		if ( ! Settings::is_governing_site() || ! $attachment_id ) {
 			return array();
 		}
 
@@ -300,27 +215,6 @@ class Utils {
 			return array();
 		}
 		return $terms;
-	}
-
-	/**
-	 * Get all brand sites.
-	 *
-	 * @return array Array of all brand sites with siteName, siteUrl and apiKey.
-	 */
-	public static function get_all_brand_sites(): array {
-		$sites_value = self::get_brand_sites();
-		$sites       = array();
-
-		foreach ( $sites_value as $site ) {
-			$site    = array(
-				'siteName' => $site['siteName'],
-				'siteUrl'  => $site['siteUrl'],
-				'apiKey'   => $site['apiKey'],
-			);
-			$sites[] = $site;
-		}
-
-		return $sites;
 	}
 
 	/**
@@ -472,8 +366,8 @@ class Utils {
 	 */
 	public static function get_sitename_by_url( string $site_url ): string {
 		// If governing site return from option.
-		if ( self::is_governing_site() ) {
-			$sites = self::get_brand_sites();
+		if ( Settings::is_governing_site() ) {
+			$sites = Settings::get_shared_sites();
 			foreach ( $sites as $site ) {
 				if ( hash_equals( rtrim( $site['siteUrl'], '/' ), rtrim( $site_url, '/' ) ) ) {
 					return $site['siteName'];
@@ -521,11 +415,11 @@ class Utils {
 	 * @return string The saved API key if found, empty string otherwise.
 	 */
 	public static function get_brand_site_api_key( string $site_url ): string {
-		if ( ! self::is_governing_site() || empty( $site_url ) ) {
+		if ( ! Settings::is_governing_site() || empty( $site_url ) ) {
 			return '';
 		}
 
-		$brand_sites = self::get_brand_sites();
+		$brand_sites = Settings::get_shared_sites();
 		foreach ( $brand_sites as $site ) {
 			if ( rtrim( $site['siteUrl'], '/' ) === rtrim( $site_url, '/' ) ) {
 				return $site['apiKey'];
@@ -587,7 +481,7 @@ class Utils {
 
 			// Perform health check request.
 			$response = wp_remote_get(
-				$site_url . '/wp-json/' . Constants::NAMESPACE . '/health-check',
+				$site_url . '/wp-json/' . Abstract_REST_Controller::NAMESPACE . '/health-check',
 				array(
 					'timeout' => Constants::HEALTH_CHECK_REQUEST_TIMEOUT, // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout
 					'headers' => array(

@@ -7,8 +7,9 @@
 
 namespace OneMedia;
 
-use OneMedia\Plugin_Configs\Constants;
+use OneMedia\Constants;
 use OneMedia\Traits\Singleton;
+use OneMedia\Modules\Settings\Admin as Settings_Admin;
 
 /**
  * Class Hooks
@@ -47,7 +48,7 @@ class Hooks {
 		add_action(
 			'init',
 			function () {
-				if ( Utils::is_brand_site() ) {
+				if ( Settings::is_consumer_site() ) {
 					// Get onemedia_media_type.
 					$taxonomy = get_taxonomy( ONEMEDIA_PLUGIN_TAXONOMY );
 					if ( $taxonomy && $taxonomy->show_ui ) {
@@ -131,7 +132,7 @@ class Hooks {
 	 * @return array Modified form fields.
 	 */
 	public function add_replace_media_button( array $form_fields, \WP_Post $post ): array {
-		if ( Utils::is_brand_site() ) {
+		if ( Settings::is_consumer_site() ) {
 			// Don't show replace media button on brand sites.
 			return $form_fields;
 		}
@@ -198,7 +199,7 @@ class Hooks {
 
 			// Make POST request to delete attachment on brand sites.
 			$response = wp_remote_post(
-				$site_url . '/wp-json/' . Constants::NAMESPACE . '/delete-media-metadata',
+				$site_url . '/wp-json/' . Abstract_REST_Controller::NAMESPACE . '/delete-media-metadata',
 				array(
 					'body'      => wp_json_encode(
 						array(
@@ -357,8 +358,8 @@ class Hooks {
 		}
 
 		// POST request suffix.
-		$post_request_suffix = '/wp-json/' . Constants::NAMESPACE . '/update-attachment';
-		
+		$post_request_suffix = '/wp-json/' . Abstract_REST_Controller::NAMESPACE . '/update-attachment';
+
 		// Send updates to all sites.
 		foreach ( $onemedia_sync_sites as $site ) {
 			$site_url = $site['site'];
@@ -408,7 +409,7 @@ class Hooks {
 			wp_remote_post(
 				$site_url . $post_request_suffix,
 				array(
-					'body'    => ( 
+					'body'    => (
 						array(
 							'attachment_id'   => (int) $site_media_id,
 							'attachment_url'  => $attachment_url,
@@ -440,14 +441,14 @@ class Hooks {
 		}
 
 		// Get oneupdate_shared_sites option.
-		$brand_sites = Utils::get_brand_sites();
+		$brand_sites = Settings::get_shared_sites();
 
 		// If there are no connected brand sites then hide the media sharing menu.
 		if ( empty( $brand_sites ) || ! is_array( $brand_sites ) ) {
 			$classes .= ' onemedia-missing-brand-sites ';
 
 			// Remove plugin manager submenu.
-			remove_submenu_page( Constants::SETTINGS_PAGE_SLUG, Constants::SETTINGS_PAGE_SLUG );
+			remove_submenu_page( Settings_Admin::MENU_SLUG, Settings_Admin::MENU_SLUG );
 			return $classes;
 		}
 

@@ -39,10 +39,3 @@
 .edit-tags-php.taxonomy-onemedia_media_type .term-icons .check-column input {
 	display: none !important;
 }
-
-[id="toplevel_page_onemedia"] {
-
-	.dashicons-admin-generic::before {
-		content: url("../images/logo.svg") !important;
-	}
-}

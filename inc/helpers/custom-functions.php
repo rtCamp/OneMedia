@@ -14,7 +14,7 @@ use OneMedia\Utils;
  * @param string $attachment_permalink The permalink of the attachment.
  * @param string $alt_text             The alt text for the image.
  * @param string $caption              The caption for the image.
- * 
+ *
  * @return void
  */
 function onemedia_replace_image_across_all_post_types( int $attachment_id, string $attachment_permalink, string $alt_text = '', string $caption = '' ): void {
@@ -26,9 +26,9 @@ function onemedia_replace_image_across_all_post_types( int $attachment_id, strin
 	if ( false === $posts_with_image ) {
 		$posts_with_image = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 			$wpdb->prepare(
-				"SELECT ID, post_content, post_type 
-				FROM {$wpdb->posts} 
-				WHERE post_content LIKE %s 
+				"SELECT ID, post_content, post_type
+				FROM {$wpdb->posts}
+				WHERE post_content LIKE %s
 				AND post_status IN ('publish', 'draft', 'private', 'future', 'pending')
 				AND post_type NOT IN ('revision', 'nav_menu_item', 'attachment')",
 				'%wp-image-' . $attachment_id . '%'
@@ -144,8 +144,8 @@ function onemedia_replace_image_across_all_post_types( int $attachment_id, strin
 	if ( false === $meta_results ) {
 		$meta_results = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 			$wpdb->prepare(
-				"SELECT post_id, meta_key, meta_value 
-				FROM {$wpdb->postmeta} 
+				"SELECT post_id, meta_key, meta_value
+				FROM {$wpdb->postmeta}
 				WHERE meta_value LIKE %s",
 				'%wp-image-' . $attachment_id . '%'
 			)
@@ -216,7 +216,7 @@ function onemedia_validate_rest_api(): bool {
 
 /**
  * Validating Rest API request.
- * 
+ *
  * @param bool $is_health_check Whether the request is for health check or not.
  *
  * @return bool|\WP_REST_Response|\WP_Error True or WP_REST_Response if valid, WP_Error otherwise.
@@ -243,13 +243,13 @@ function onemedia_rest_api_validation( bool $is_health_check ): bool|\WP_REST_Re
 	if ( isset( $_SERVER['HTTP_X_ONEMEDIA_TOKEN'] ) && ! empty( $_SERVER['HTTP_X_ONEMEDIA_TOKEN'] ) ) {
 		$token = sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_ONEMEDIA_TOKEN'] ) );
 		// Get the API key from options.
-		$api_key = Utils::get_onemedia_api_key();
+		$api_key = Settings::get_api_key;
 
 		// Check if site type is set or not.
 		$is_site_type_set = Utils::is_site_type_set();
 
 		// Governing site url.
-		$governing_site_url = Utils::get_governing_site_url();
+		$governing_site_url = Settings::get_parent_site_url();
 
 		$request_origin   = Utils::get_origin_url( $_SERVER );
 		$current_site_url = get_site_url();
@@ -292,7 +292,7 @@ function onemedia_rest_api_validation( bool $is_health_check ): bool|\WP_REST_Re
 		}
 
 		// Check if the request is to governing site.
-		if ( Utils::is_governing_site() ) {
+		if ( Settings::is_governing_site() ) {
 			// If request is from governing site (same domain).
 			// TODO: Currently there is no request from brand site to governing site. But in future if such requests are added, this check will bypass such requests for subdirectory multisite.
 			if ( $is_same_domain && Utils::check_user_permissions() ) {
@@ -301,7 +301,7 @@ function onemedia_rest_api_validation( bool $is_health_check ): bool|\WP_REST_Re
 		}
 
 		// Check if the request is to a brand site.
-		if ( Utils::is_brand_site() ) {
+		if ( Settings::is_consumer_site() ) {
 
 			// For all requests of non-multisite setups & subdomain multisite setups.
 			if ( ! $is_multisite || ( 'subdomain' === $multisite_type ) ) {
@@ -363,7 +363,7 @@ function onemedia_rest_api_validation( bool $is_health_check ): bool|\WP_REST_Re
 
 /**
  * Return onemedia template content.
- * 
+ *
  * @param string $slug Template path.
  * @param array  $vars Template variables.
  *

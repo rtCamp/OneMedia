@@ -8,7 +8,7 @@
 namespace OneMedia;
 
 use OneMedia\Admin\Media_Taxonomy;
-use OneMedia\Plugin_Configs\Constants;
+use OneMedia\Constants;
 use OneMedia\Traits\Singleton;
 
 /**
@@ -590,12 +590,12 @@ class Admin {
 		// Get post meta value.
 		$meta_value = '';
 		$is_sync    = false;
-		if ( Utils::is_brand_site() ) { // totally not sure why same meta is not used on both sites & why string instead of boolean.
+		if ( Settings::is_consumer_site() ) { // totally not sure why same meta is not used on both sites & why string instead of boolean.
 			$meta_value = get_post_meta( $attachment_id, Constants::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY, true );
 			if ( 'sync' === $meta_value ) {
 				$is_sync = true;
 			}
-		} elseif ( Utils::is_governing_site() ) {
+		} elseif ( Settings::is_governing_site() ) {
 			$meta_value = get_post_meta( $attachment_id, Constants::IS_ONEMEDIA_SYNC_POSTMETA_KEY, true );
 			$is_sync    = '1' === $meta_value || 1 === $meta_value || true === $meta_value;
 		}

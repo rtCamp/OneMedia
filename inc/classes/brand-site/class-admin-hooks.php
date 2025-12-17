@@ -7,9 +7,9 @@
 
 namespace OneMedia\Brand_Site;
 
-use OneMedia\Plugin_Configs\Constants;
-use OneMedia\Utils;
+use OneMedia\Constants;
 use OneMedia\Traits\Singleton;
+use OneMedia\Utils;
 
 /**
  * Class Admin_Hooks
@@ -36,7 +36,7 @@ class Admin_Hooks {
 	public function setup_hooks(): void {
 
 		// Skip if not a brand site.
-		if ( Utils::is_governing_site() ) {
+		if ( Settings::is_governing_site() ) {
 			return;
 		}
 
@@ -333,7 +333,7 @@ class Admin_Hooks {
 			}
 		}
 	}
-	
+
 	/**
 	 * Add custom author column in media library.
 	 *
@@ -361,7 +361,7 @@ class Admin_Hooks {
 
 			// Add governing_site_url link to the output.
 			if ( ! empty( $terms ) && isset( array_flip( $terms )[ ONEMEDIA_PLUGIN_TAXONOMY_TERM ] ) && ! empty( $onemedia_sync_status ) && $onemedia_sync_status ) {
-				$saved_governing_site_url = Utils::get_governing_site_url();
+				$saved_governing_site_url = Settings::get_parent_site_url();
 				if ( $saved_governing_site_url ) {
 					printf(
 						/* translators: %1$s is the site URL, %2$s is the link text. */

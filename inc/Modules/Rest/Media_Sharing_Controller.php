@@ -5,38 +5,19 @@
  * @package OneMedia
  */
 
-namespace OneMedia\REST;
+namespace OneMedia\Modules\Rest;
 
-use OneMedia\Plugin_Configs\Constants;
-use OneMedia\Utils;
+use OneMedia\Constants;
 use OneMedia\Traits\Singleton;
+use OneMedia\Utils;
 use WP_REST_Server;
 
 /**
  * Class Media_Sharing
  */
-class Media_Sharing {
+class Media_Sharing_Controller extends Abstract_REST_Controller  {
 
-	/**
-	 * Use Singleton trait.
-	 */
-	use Singleton;
 
-	/**
-	 * Protected class constructor.
-	 */
-	protected function __construct() {
-		$this->setup_hooks();
-	}
-
-	/**
-	 * Setup WordPress hooks.
-	 *
-	 * @return void
-	 */
-	public function setup_hooks(): void {
-		add_action( 'rest_api_init', array( $this, 'register_routes' ) );
-	}
 
 	/**
 	 * Register REST API routes.
@@ -48,7 +29,7 @@ class Media_Sharing {
 		 * Register a route to get all media files with pagination.
 		 */
 		register_rest_route(
-			Constants::NAMESPACE,
+			Abstract_REST_Controller::NAMESPACE,
 			'/media',
 			array(
 				'methods'             => WP_REST_Server::READABLE,
@@ -91,7 +72,7 @@ class Media_Sharing {
 		 * Register a route to sync media files with brand sites.
 		 */
 		register_rest_route(
-			Constants::NAMESPACE,
+			Abstract_REST_Controller::NAMESPACE,
 			'/sync-media',
 			array(
 				'methods'             => WP_REST_Server::CREATABLE,
@@ -125,7 +106,7 @@ class Media_Sharing {
 		 * Register a route to add media files.
 		 */
 		register_rest_route(
-			Constants::NAMESPACE,
+			Abstract_REST_Controller::NAMESPACE,
 			'/add-media',
 			array(
 				'methods'             => WP_REST_Server::CREATABLE,
@@ -153,7 +134,7 @@ class Media_Sharing {
 		 * Register a route to update media files.
 		 */
 		register_rest_route(
-			Constants::NAMESPACE,
+			Abstract_REST_Controller::NAMESPACE,
 			'/update-attachment',
 			array(
 				'methods'             => WP_REST_Server::CREATABLE,
@@ -188,7 +169,7 @@ class Media_Sharing {
 		 * Register a route to delete media metadata of syned.
 		 */
 		register_rest_route(
-			Constants::NAMESPACE,
+			Abstract_REST_Controller::NAMESPACE,
 			'/delete-media-metadata',
 			array(
 				'methods'             => WP_REST_Server::CREATABLE,
@@ -210,7 +191,7 @@ class Media_Sharing {
 		 * Register a route to get onemedia_brand_sites_synced_media option.
 		 */
 		register_rest_route(
-			Constants::NAMESPACE,
+			Abstract_REST_Controller::NAMESPACE,
 			'/brand-sites-synced-media',
 			array(
 				'methods'             => WP_REST_Server::READABLE,
@@ -223,7 +204,7 @@ class Media_Sharing {
 		 * Register a route to update an existing attachment as onemedia.
 		 */
 		register_rest_route(
-			Constants::NAMESPACE,
+			Abstract_REST_Controller::NAMESPACE,
 			'/update-existing-attachment',
 			array(
 				'methods'             => WP_REST_Server::CREATABLE,
@@ -252,7 +233,7 @@ class Media_Sharing {
 		 * Register a route to check if attachment is sync or not.
 		 */
 		register_rest_route(
-			Constants::NAMESPACE,
+			Abstract_REST_Controller::NAMESPACE,
 			'/is-sync-attachment',
 			array(
 				'methods'             => WP_REST_Server::CREATABLE,
@@ -274,7 +255,7 @@ class Media_Sharing {
 		 * Register a route to get sync attachment versions.
 		 */
 		register_rest_route(
-			Constants::NAMESPACE,
+			Abstract_REST_Controller::NAMESPACE,
 			'/sync-attachment-versions',
 			array(
 				'methods'             => WP_REST_Server::CREATABLE,
@@ -307,7 +288,7 @@ class Media_Sharing {
 		}
 
 		// Get all registered brand sites.
-		$all_brand_sites = Utils::get_all_brand_sites();
+		$all_brand_sites = Settings::get_shared_sites();
 		if ( ! is_array( $all_brand_sites ) ) {
 			$all_brand_sites = array();
 		}
@@ -777,13 +758,13 @@ class Media_Sharing {
 		}
 
 		// Perform the media sync operation here.
-		$brand_site_prefix = '/wp-json/' . Constants::NAMESPACE . '/add-media';
+		$brand_site_prefix = '/wp-json/' . Abstract_REST_Controller::NAMESPACE . '/add-media';
 
 		// Failed to sync media files to brand sites.
 		$failed_sites = array();
 
 		// Get all registered brand sites to compare endpoint and get API token before sharing media.
-		$all_brand_sites = Utils::get_all_brand_sites();
+		$all_brand_sites = Settings::get_shared_sites();
 
 		foreach ( $brand_sites as $site ) {
 			$site_url = $site;
@@ -802,7 +783,7 @@ class Media_Sharing {
 					),
 					'site_url'  => $site_url . $brand_site_prefix,
 					'token'     => $site_token,
-					'child_key' => Utils::get_onemedia_api_key( 'default_api_key' ),
+					'child_key' => Settings::get_api_key(),
 				);
 				continue;
 			}
@@ -857,7 +838,7 @@ class Media_Sharing {
 					'errors'             => $errors,
 					'site_url'           => $site_url . $brand_site_prefix,
 					'token'              => $site_token,
-					'child_key'          => Utils::get_onemedia_api_key( 'default_api_key' ),
+					'child_key'          => Settings::get_api_key(),
 					'is_mime_type_error' => $is_mime_type_error,
 				);
 			}
@@ -926,7 +907,7 @@ class Media_Sharing {
 									'message'   => __( 'Failed to update synced media.', 'onemedia' ),
 									'site_url'  => $site_url . $brand_site_prefix,
 									'token'     => $site_token,
-									'child_key' => Utils::get_onemedia_api_key( 'default_api_key' ),
+									'child_key' => Settings::get_api_key(),
 								);
 							}
 						}
@@ -1342,7 +1323,7 @@ class Media_Sharing {
 			$shared_sites = Utils::get_sync_sites_postmeta( $attachment_id );
 			if ( is_array( $shared_sites ) ) {
 				// Perform the media sync operation here.
-				$brand_site_prefix = '/wp-json/' . Constants::NAMESPACE . '/add-media';
+				$brand_site_prefix = '/wp-json/' . Abstract_REST_Controller::NAMESPACE . '/add-media';
 
 				// Failed to sync media files to brand sites.
 				$failed_sites = array();
@@ -1351,7 +1332,7 @@ class Media_Sharing {
 				$success_response = array();
 
 				// Get all registered brand sites to compare endpoint and get API token before sharing media.
-				$all_brand_sites = Utils::get_all_brand_sites();
+				$all_brand_sites = Settings::get_shared_sites();
 
 				foreach ( $shared_sites as $site ) {
 					$site_url = $site['site'];
@@ -1368,7 +1349,7 @@ class Media_Sharing {
 							'message'   => __( 'Invalid site URL.', 'onemedia' ),
 							'site_url'  => $site_url . $brand_site_prefix,
 							'token'     => $site_token,
-							'child_key' => Utils::get_onemedia_api_key( 'default_api_key' ),
+							'child_key' => Settings::get_api_key(),
 						);
 						continue;
 					}
@@ -1391,7 +1372,7 @@ class Media_Sharing {
 							'message'   => __( 'Invalid child ID data.', 'onemedia' ),
 							'site_url'  => $site_url . $brand_site_prefix,
 							'token'     => $site_token,
-							'child_key' => Utils::get_onemedia_api_key( 'default_api_key' ),
+							'child_key' => Settings::get_api_key(),
 						);
 						continue;
 					}
@@ -1456,7 +1437,7 @@ class Media_Sharing {
 							'errors'             => $errors,
 							'site_url'           => $site_url . $brand_site_prefix,
 							'token'              => $site_token,
-							'child_key'          => Utils::get_onemedia_api_key( 'default_api_key' ),
+							'child_key'          => Settings::get_api_key(),
 							'is_mime_type_error' => $is_mime_type_error,
 						);
 					}
@@ -1508,7 +1489,7 @@ class Media_Sharing {
 										'message'   => __( 'Failed to update synced media.', 'onemedia' ),
 										'site_url'  => $site_url . $brand_site_prefix,
 										'token'     => $site_token,
-										'child_key' => Utils::get_onemedia_api_key( 'default_api_key' ),
+										'child_key' => Settings::get_api_key(),
 									);
 									continue;
 								}

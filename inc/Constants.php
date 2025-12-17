@@ -5,9 +5,8 @@
  * @package OneMedia
  */
 
-namespace OneMedia\Plugin_Configs;
+namespace OneMedia;
 
-use OneMedia\Traits\Singleton;
 
 /**
  * Class Constants
@@ -29,47 +28,12 @@ class Constants {
 	public const NAMESPACE = 'onemedia/v1';
 
 	/**
-	 * Settings page slug.
-	 *
-	 * @var string
-	 */
-	public const SETTINGS_PAGE_SLUG = 'onemedia';
-
-	/**
-	 * OneMedia site type option.
-	 *
-	 * @var string
-	 */
-	public const ONEMEDIA_SITE_TYPE_OPTION = 'onemedia_site_type';
-
-	/**
-	 * OneMedia brand sites option.
-	 *
-	 * @var string
-	 */
-	public const ONEMEDIA_BRAND_SITES_OPTION = 'onemedia_brand_sites';
-
-	/**
 	 * Brand sites synced media option.
 	 *
 	 * @var string
 	 */
 	public const BRAND_SITES_SYNCED_MEDIA_OPTION = 'onemedia_brand_sites_synced_media';
-	
-	/**
-	 * OneMedia API key option.
-	 *
-	 * @var string
-	 */
-	public const ONEMEDIA_API_KEY_OPTION = 'onemedia_child_site_api_key';
-	
-	/**
-	 * OneMedia governing sites URL option.
-	 *
-	 * @var string
-	 */
-	public const ONEMEDIA_GOVERNING_SITES_URL_OPTION = 'onemedia_governing_site_url';
-	
+
 	/**
 	 * OneMedia brand site to governing site attachment key map.
 	 *
@@ -118,14 +82,14 @@ class Constants {
 	 * @var number
 	 */
 	public const SYNC_REQUEST_TIMEOUT = 25;
-	
+
 	/**
 	 * Fetch media request timeout.
 	 *
 	 * @var number
 	 */
 	public const FETCH_MEDIA_REQUEST_TIMEOUT = 30;
-	
+
 	/**
 	 * Sync media request timeout.
 	 *
@@ -151,24 +115,4 @@ class Constants {
 		'image/svg+xml',
 	);
 
-	/**
-	 * Use Singleton trait.
-	 */
-	use Singleton;
-
-	/**
-	 * Protected class constructor.
-	 */
-	protected function __construct() {
-		$this->define_constants();
-	}
-
-	/**
-	 * Define plugin constants.
-	 *
-	 * @return void
-	 */
-	private function define_constants(): void {
-		// Future constants can be defined here.
-	}
 }

@@ -24,6 +24,18 @@ final class Main {
 	 * @var class-string<\OneMedia\Contracts\Interfaces\Registrable>[]
 	 */
 	private const REGISTRABLE_CLASSES = [
+		Modules\Core\Rest::class,
+		Modules\Core\Assets::class,
+		Modules\Settings\Admin::class,
+		Modules\Settings\Settings::class,
+		Modules\Rest\Basic_Options_Controller::class,
+		Modules\Rest\Media_Sharing_Controller::class,
+		Modules\Taxonomies\Media::class,
+		Modules\Taxonomies\Term_Restriction::class,
+		Modules\MediaLibrary\Admin::class,
+		Modules\MediaSharing\Admin::class,
+		Modules\MediaSharing\UserInterface::class,
+		Modules\MediaSharing\MediaProtection::class,
 	];
 
 	/**
