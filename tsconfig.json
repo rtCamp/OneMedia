@@ -58,7 +58,7 @@
 	"include": [
 		"**/*.mjs",
 		"**/*.ts",
-		"**/*.tsx",
+		"**/*.tsx", "assets/src/js/utils.js",
 	],
 	"exclude": [
 		"**/build/*",

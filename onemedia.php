@@ -89,27 +89,3 @@ if ( class_exists( 'OneMedia\Main' ) ) {
 		}
 	);
 }
-
-/**
- * Activate the OneMedia plugin.
- *
- * This function initializes the plugin options and adds it to the addons list.
- *
- * @return void
- */
-function onemedia_activate(): void { }
-
-// Activation hook.
-register_activation_hook( __FILE__, 'onemedia_activate' );
-
-/**
- * Deactivate the OneMedia plugin.
- *
- * This function runs when plugin deactivates.
- *
- * @return void
- */
-function onemedia_deactivate(): void { }
-
-// Deactivation hook.
-register_deactivation_hook( __FILE__, 'onemedia_deactivate' );

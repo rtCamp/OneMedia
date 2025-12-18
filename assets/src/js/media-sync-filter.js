@@ -5,6 +5,7 @@
 /**
  * Internal dependencies
  */
+import domReady from '@wordpress/dom-ready';
 import { getFrameProperty } from './utils';
 
 function SyncMediaFilter() {
@@ -15,8 +16,8 @@ function SyncMediaFilter() {
 		return;
 	}
 
-	const ONEMEDIA_MEDIA_UPLOAD = typeof oneMediaMediaUpload !== 'undefined'
-		? oneMediaMediaUpload
+	const ONEMEDIA_MEDIA_UPLOAD = typeof OneMediaMediaUpload !== 'undefined'
+		? OneMediaMediaUpload
 		: '';
 
 	if ( ! ONEMEDIA_MEDIA_UPLOAD ) {
@@ -160,4 +161,6 @@ function SyncMediaFilter() {
 }
 
 // Initialize the filter.
-document.addEventListener( 'DOMContentLoaded', SyncMediaFilter, { once: true } );
+domReady( () => {
+	SyncMediaFilter();
+} );

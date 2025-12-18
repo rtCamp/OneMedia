@@ -6,8 +6,16 @@ import { __ } from '@wordpress/i18n';
 /**
  * Internal dependencies
  */
-import { REST_URL, NONCE, API_KEY, SHARING_AJAX_URL, ONEMEDIA_REST_API_BASE } from './constants';
 import { removeTrailingSlash } from '../js/utils';
+const ONEMEDIA_REST_API_NAMESPACE = 'onemedia';
+const ONEMEDIA_REST_API_VERSION = 'v1';
+const ONEMEDIA_REST_API_BASE = '/wp-json/' + ONEMEDIA_REST_API_NAMESPACE + '/' + ONEMEDIA_REST_API_VERSION;
+const {
+	restUrl: REST_URL,
+	restNonce: NONCE,
+	apiKey: API_KEY,
+	ajaxUrl: SHARING_AJAX_URL,
+} = window.OneMediaMediaFrame || {};
 
 /**
  * Makes a REST API request to the OneMedia backend.
@@ -278,6 +286,7 @@ export const fetchMediaItems = async ( { search, page, perPage, imageType, addNo
 	if ( search ) {
 		params.search_term = search;
 	}
+
 	return await apiFetch( {
 		endpoint: 'media',
 		params,

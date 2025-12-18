@@ -1,15 +1,22 @@
+/**
+ * WordPress dependencies
+ */
 import { createRoot } from 'react-dom/client';
+
+/**
+ * Internal dependencies
+ */
 import OnboardingScreen, { type SiteType } from './page';
 
-interface OneMediaSettings {
-	restNonce: string;
+interface OneMediaOnboardingType {
+	nonce: string;
 	site_type: SiteType | '';
-	settingsLink: string;
+	setup_url: string;
 }
 
 declare global {
 	interface Window {
-		OneMediaSettings: OneMediaSettings;
+		OneMediaOnboarding: OneMediaOnboardingType;
 	}
 }
 

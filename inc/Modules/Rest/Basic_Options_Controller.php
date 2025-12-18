@@ -72,7 +72,7 @@ class Basic_Options_Controller extends Abstract_REST_Controller {
 					'callback'            => [ $this, 'set_shared_sites' ],
 					'permission_callback' => static fn() => current_user_can( 'manage_options' ),
 					'args'                => [
-						'sites_data' => [
+						'shared_sites' => [
 							'required' => true,
 							'type'     => 'array',
 						],
@@ -238,11 +238,11 @@ class Basic_Options_Controller extends Abstract_REST_Controller {
 
 		$body         = $request->get_body();
 		$decoded_body = json_decode( $body, true );
-		$sites_data   = $decoded_body['sites_data'] ?? [];
+		$shared_sites   = $decoded_body['shared_sites'] ?? [];
 
 		// check if same url exists more than once or not.
 		$urls = [];
-		foreach ( $sites_data as $site ) {
+		foreach ( $shared_sites as $site ) {
 			if ( isset( $site['url'] ) && in_array( $site['url'], $urls, true ) ) {
 				return new \WP_Error( 'duplicate_site_url', __( 'Brand Site already exists.', 'onemedia' ), [ 'status' => 400 ] );
 			}
@@ -250,7 +250,7 @@ class Basic_Options_Controller extends Abstract_REST_Controller {
 		}
 
 		// add unique id to each site if not exists.
-		foreach ( $sites_data as &$site ) {
+		foreach ( $shared_sites as &$site ) {
 			if ( isset( $site['id'] ) && ! empty( $site['id'] ) ) {
 				continue;
 			}
@@ -258,12 +258,12 @@ class Basic_Options_Controller extends Abstract_REST_Controller {
 			$site['id'] = wp_generate_uuid4();
 		}
 
-		Settings::set_shared_sites( $sites_data );
+		Settings::set_shared_sites( $shared_sites );
 
 		return rest_ensure_response(
 			[
 				'success'    => true,
-				'sites_data' => array_values( $sites_data ),
+				'shared_sites' => array_values( $shared_sites ),
 			]
 		);
 	}

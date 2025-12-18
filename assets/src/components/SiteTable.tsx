@@ -4,24 +4,22 @@
 import { useState } from 'react';
 import { Button, Card, CardHeader, CardBody, Modal } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
+import type { BrandSite, EditingIndex } from '../admin/settings/page';
 
-/**
- * SiteTable component to display and manage brand sites.
- *
- * @param {Object}   props              - Component properties.
- * @param {Array}    props.sites        - List of brand sites.
- * @param {Function} props.onEdit       - Function to handle editing a site.
- * @param {Function} props.onDelete     - Function to handle deleting a site.
- * @param {Function} props.setFormData  - Function to set form data for editing.
- * @param {Function} props.setShowModal - Function to show/hide the modal for adding/editing a site.
- *
- * @return {JSX.Element} Rendered component.
- */
-const SiteTable = ( { sites, onEdit, onDelete, setFormData, setShowModal } ) => {
+const SiteTable = (
+	{ sites, onEdit, onDelete, setFormData, setShowModal } :
+	{
+		sites: BrandSite[];
+		onEdit: ( index: number ) => void;
+		onDelete: ( index: number|null ) => void;
+		setFormData: ( data: BrandSite ) => void;
+		setShowModal: ( show: boolean ) => void;
+	},
+) => {
 	const [ showDeleteModal, setShowDeleteModal ] = useState( false );
-	const [ deleteIndex, setDeleteIndex ] = useState( null );
+	const [ deleteIndex, setDeleteIndex ] = useState< EditingIndex >( null );
 
-	const handleDeleteClick = ( index ) => {
+	const handleDeleteClick = ( index:number ) => {
 		setDeleteIndex( index );
 		setShowDeleteModal( true );
 	};
@@ -50,7 +48,7 @@ const SiteTable = ( { sites, onEdit, onDelete, setFormData, setShowModal } ) => 
 				</Button>
 			</CardHeader>
 			<CardBody>
-				<table className="wp-list-table widefat fixed striped">
+				<table className="wp-list-table widefat fixed striped " style={ { marginTop: '16px' } }>
 					<thead>
 						<tr>
 							<th>{ __( 'Site Name', 'onemedia' ) }</th>
@@ -62,7 +60,7 @@ const SiteTable = ( { sites, onEdit, onDelete, setFormData, setShowModal } ) => 
 					<tbody>
 						{ sites.length === 0 && (
 							<tr>
-								<td colSpan="4" style={ { textAlign: 'center' } }>
+								<td colSpan={ 4 } style={ { textAlign: 'center' } }>
 									{ __( 'No Brand Sites found.', 'onemedia' ) }
 								</td>
 							</tr>
@@ -71,7 +69,7 @@ const SiteTable = ( { sites, onEdit, onDelete, setFormData, setShowModal } ) => 
 							<tr key={ index }>
 								<td>{ site?.name }</td>
 								<td>{ site?.url }</td>
-								<td><code>{ site?.api_key.substring( 0, 10 ) }...</code></td>
+								<td><code>{ site?.api_key?.substring( 0, 10 ) }...</code></td>
 								<td>
 									<Button
 										variant="secondary"
@@ -80,7 +78,6 @@ const SiteTable = ( { sites, onEdit, onDelete, setFormData, setShowModal } ) => 
 											onEdit( index );
 											setShowModal( true );
 										} }
-										disabled={ site?.is_editable === false }
 										style={ { marginRight: '8px' } }
 									>
 										{ __( 'Edit', 'onemedia' ) }
@@ -108,19 +105,15 @@ const SiteTable = ( { sites, onEdit, onDelete, setFormData, setShowModal } ) => 
 	);
 };
 
-/**
- * DeleteConfirmationModal component for confirming site deletion.
- *
- * @param {Object}   props           - Component properties.
- * @param {Function} props.onConfirm - Function to call on confirmation.
- * @param {Function} props.onCancel  - Function to call on cancellation.
- * @return {JSX.Element} Rendered component.
- */
-const DeleteConfirmationModal = ( { onConfirm, onCancel } ) => (
+const DeleteConfirmationModal = (
+	{ onConfirm, onCancel }
+	: { onConfirm: () => void; onCancel: () => void },
+) => (
 	<Modal
 		title={ __( 'Delete Brand Site', 'onemedia' ) }
 		onRequestClose={ onCancel }
 		isDismissible={ true }
+		shouldCloseOnClickOutside={ true }
 	>
 		<p>{ __( 'Are you sure you want to delete this Brand Site? This action cannot be undone.', 'onemedia' ) }</p>
 		<div style={ { display: 'flex', justifyContent: 'flex-end', marginTop: '20px', gap: '16px' } }>

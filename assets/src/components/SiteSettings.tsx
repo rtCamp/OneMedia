@@ -16,25 +16,24 @@ import {
 import { __ } from '@wordpress/i18n';
 
 /**
- * internal dependencies
+ * Internal dependencies
  */
-import { API_NAMESPACE, NONCE, API_KEY } from '../js/constants';
+import type { NoticeType } from '../admin/settings/page';
 
-/**
- * SiteSettings component for managing API key and governing site connection.
- *
- * @return {JSX.Element} Rendered component.
- */
+const API_NAMESPACE = window.OneMediaSettings.restUrl + '/onemedia/v1';
+const NONCE = window.OneMediaSettings.restNonce;
+const API_KEY = window.OneMediaSettings.api_key;
+
 const SiteSettings = () => {
-	const [ apiKey, setApiKey ] = useState( '' );
+	const [ api_key, setApiKey ] = useState( '' );
 	const [ isLoading, setIsLoading ] = useState( false );
-	const [ notice, setNotice ] = useState( null );
+	const [ notice, setNotice ] = useState< NoticeType | null >( null );
 	const [ governingSite, setGoverningSite ] = useState( '' );
 	const [ showDisconnectionModal, setShowDisconnectionModal ] = useState( false );
 
 	const fetchApiKey = useCallback( async () => {
+		setIsLoading( true );
 		try {
-			setIsLoading( true );
 			const response = await fetch( API_NAMESPACE + '/secret-key', {
 				method: 'GET',
 				headers: {
@@ -51,7 +50,7 @@ const SiteSettings = () => {
 		} catch ( error ) {
 			setNotice( {
 				type: 'error',
-				message: __( 'Failed to fetch api key. Please try again later.', 'onemedia' ),
+				message: __( 'Failed to fetch API key. Please try again later.', 'onemedia' ),
 			} );
 		} finally {
 			setIsLoading( false );
@@ -81,13 +80,13 @@ const SiteSettings = () => {
 			} else {
 				setNotice( {
 					type: 'error',
-					message: __( 'Failed to regenerate api key. Please try again later.', 'onemedia' ),
+					message: __( 'Failed to regenerate API key. Please try again later.', 'onemedia' ),
 				} );
 			}
 		} catch ( error ) {
 			setNotice( {
 				type: 'error',
-				message: __( 'Error regenerating api key. Please try again later.', 'onemedia' ),
+				message: __( 'Error regenerating API key. Please try again later.', 'onemedia' ),
 			} );
 		}
 	}, [] );
@@ -102,7 +101,7 @@ const SiteSettings = () => {
 					headers: {
 						'Content-Type': 'application/json',
 						'X-WP-Nonce': NONCE,
-						'X-OneMedia-Token': apiKey,
+						'X-OneMedia-Token': api_key,
 					},
 				},
 			);
@@ -120,7 +119,7 @@ const SiteSettings = () => {
 		} finally {
 			setIsLoading( false );
 		}
-	}, [ apiKey ] );
+	}, [ api_key ] );
 
 	const deleteGoverningSiteConnection = useCallback( async () => {
 		try {
@@ -131,7 +130,7 @@ const SiteSettings = () => {
 					headers: {
 						'Content-Type': 'application/json',
 						'X-WP-Nonce': NONCE,
-						'X-OneMedia-Token': apiKey,
+						'X-OneMedia-Token': api_key,
 					},
 				},
 			);
@@ -151,7 +150,7 @@ const SiteSettings = () => {
 		} finally {
 			setShowDisconnectionModal( false );
 		}
-	}, [ apiKey ] );
+	}, [ api_key ] );
 
 	const handleDisconnectGoverningSite = useCallback( async () => {
 		setShowDisconnectionModal( true );
@@ -179,9 +178,7 @@ const SiteSettings = () => {
 				</Notice>
 			) }
 
-			<Card className="brand-site-settings"
-				style={ { marginTop: '30px' } }
-			>
+			<Card style={ { marginTop: '30px' } } >
 				<CardHeader>
 					<h2>{ __( 'API Key', 'onemedia' ) }</h2>
 					<div>
@@ -189,7 +186,7 @@ const SiteSettings = () => {
 						<Button
 							variant="primary"
 							onClick={ () => {
-								navigator?.clipboard?.writeText( apiKey )
+								navigator?.clipboard?.writeText( api_key )
 									.then( () => {
 										setNotice( {
 											type: 'success',
@@ -219,9 +216,11 @@ const SiteSettings = () => {
 				<CardBody>
 					<div>
 						<TextareaControl
-							value={ apiKey }
+							value={ api_key }
 							disabled={ true }
 							help={ __( 'This key is used for secure communication with the Governing site.', 'onemedia' ) }
+							__nextHasNoMarginBottom
+							onChange={ () => {} } // to avoid ts warning
 						/>
 					</div>
 				</CardBody>
@@ -247,6 +246,9 @@ const SiteSettings = () => {
 						value={ governingSite }
 						disabled={ true }
 						help={ __( 'This is the URL of the Governing site this Brand site is connected to.', 'onemedia' ) }
+						__next40pxDefaultSize
+						__nextHasNoMarginBottom
+						onChange={ () => {} } // to avoid ts warning
 					/>
 				</CardBody>
 			</Card>

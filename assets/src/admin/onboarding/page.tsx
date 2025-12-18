@@ -1,3 +1,6 @@
+/**
+ * WordPress dependencies
+ */
 import { useState, useEffect } from 'react';
 import apiFetch from '@wordpress/api-fetch';
 import { __ } from '@wordpress/i18n';
@@ -20,6 +23,15 @@ interface NoticeState {
 	message: string;
 }
 
+// WordPress provides snake_case keys here. Using them intentionally.
+// eslint-disable-next-line camelcase
+const { nonce, setup_url, site_type } = window.OneMediaOnboarding;
+
+/**
+ * Create NONCE middleware for apiFetch
+ */
+apiFetch.use( apiFetch.createNonceMiddleware( nonce ) );
+
 const SiteTypeSelector = ( { value, setSiteType }: {
 	value: SiteType | '';
 	setSiteType: ( v: SiteType | '' ) => void;
@@ -31,8 +43,8 @@ const SiteTypeSelector = ( { value, setSiteType }: {
 			"Choose your site's primary purpose. This setting cannot be changed later and affects available features and configurations.",
 			'onemedia',
 		) }
-		onChange={ ( v ) => {
-			setSiteType( v );
+		onChange={ ( v: string ) => {
+			setSiteType( v as SiteType | '' );
 		} }
 		options={ [
 			{ label: __( 'Select…', 'onemedia' ), value: '' },
@@ -43,16 +55,11 @@ const SiteTypeSelector = ( { value, setSiteType }: {
 );
 
 const OnboardingScreen = () => {
-	// WordPress provides snake_case keys here. Using them intentionally.
-	// eslint-disable-next-line camelcase
-	const { restNonce, settingsLink, site_type } = window.OneMediaSettings;
-
 	const [ siteType, setSiteType ] = useState<SiteType | ''>( site_type || '' );
 	const [ notice, setNotice ] = useState<NoticeState | null>( null );
-	const [ isSaving, setIsSaving ] = useState<boolean>( false );
+	const [ isSaving, setIsSaving ] = useState( false );
 
 	useEffect( () => {
-		apiFetch.use( apiFetch.createNonceMiddleware( restNonce ) );
 		apiFetch<{ onemedia_site_type?: SiteType }>( { path: '/wp/v2/settings' } )
 			.then( ( settings ) => {
 				if ( settings?.onemedia_site_type ) {
@@ -65,7 +72,7 @@ const OnboardingScreen = () => {
 					message: __( 'Error fetching site type.', 'onemedia' ),
 				} );
 			} );
-	} );
+	}, [] ); // for initial component mount
 
 	const handleSiteTypeChange = async ( value: SiteType | '' ) => {
 		// Optimistically set site type.
@@ -79,14 +86,14 @@ const OnboardingScreen = () => {
 				data: { onemedia_site_type: value },
 			} ).then( ( settings ) => {
 				if ( ! settings?.onemedia_site_type ) {
-					throw new Error( __( 'No site type in response', 'onemedia' ) );
+					throw new Error( 'No site type in response' );
 				}
 
 				setSiteType( settings.onemedia_site_type );
 
 				// Redirect user to setup page.
-				if ( settingsLink ) {
-					window.location.href = settingsLink;
+				if ( setup_url ) {
+					window.location.href = setup_url;
 				}
 			} );
 		} catch {

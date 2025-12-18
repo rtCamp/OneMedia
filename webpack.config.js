@@ -66,9 +66,8 @@ const styles = {
 const scripts = {
 	...sharedConfig,
 	entry: {
-		main: path.resolve( process.cwd(), 'assets', 'src', 'js', 'main.js' ),
 		'media-sharing': path.resolve( process.cwd(), 'assets', 'src', 'admin/media-sharing', 'index.js' ),
-		settings: path.resolve( process.cwd(), 'assets', 'src', 'admin', 'settings', 'index.js' ),
+		settings: path.resolve( process.cwd(), 'assets', 'src', 'admin', 'settings', 'index.tsx' ),
 		onboarding: path.resolve( process.cwd(), 'assets', 'src', 'admin', 'onboarding', 'index.tsx' ),
 		'media-sync-filter': path.resolve( process.cwd(), 'assets', 'src', 'js', 'media-sync-filter.js' ),
 		'media-frame': path.resolve( process.cwd(), 'assets', 'src', 'js', 'media-frame.js' ),

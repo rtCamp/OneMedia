@@ -2,41 +2,32 @@
  * Utility functions
  */
 
-import { fetchSiteType } from '../components/api';
-import { ONEMEDIA_PLUGIN_BRAND_SITE, ONEMEDIA_PLUGIN_GOVERNING_SITE } from '../components/constants';
+import type { NoticeType } from '../admin/settings/page';
 
 /**
- * Checks if a string is a valid URL.
+ * Helper function to validate if a string is a well-formed URL.
  *
- * @param {string} str - The string to check.
+ * @param {string} str - The string to validate as a URL.
+ *
  * @return {boolean} True if the string is a valid URL, false otherwise.
  */
-const isURL = ( str ) => {
-	// Less extensive regex to reduce backtracking issues.
-	const pattern = new RegExp(
-		'^' +
-			'(https?:\\/\\/)?' +
-			'(' +
-			'([a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,}' +
-			'|\\d{1,3}(\\.\\d{1,3}){3}' +
-			')' +
-			'(\\:\\d{1,5})?' +
-			'(\\/[a-zA-Z0-9._~%!$&\'()*+,;=:@-]*)*' +
-			'(\\?[a-zA-Z0-9._~%!$&\'()*+,;=:@/?-]*)?' +
-			'(#[a-zA-Z0-9._~%!$&\'()*+,;=:@/?-]*)?' +
-			'$',
-		'i',
-	);
-	return pattern.test( str );
+const isURL = ( str: string ): boolean => {
+	try {
+		new URL( str );
+		return true;
+	} catch {
+		return false;
+	}
 };
 
 /**
- * Checks if a URL is valid.
+ * Validates if a given string is a valid URL.
  *
- * @param {string} url - The URL to check.
+ * @param {string} url - The URL string to validate.
+ *
  * @return {boolean} True if the URL is valid, false otherwise.
  */
-const isValidUrl = ( url ) => {
+const isValidUrl = ( url: string ): boolean => {
 	try {
 		const parsedUrl = new URL( url );
 		return isURL( parsedUrl.href );
@@ -51,7 +42,7 @@ const isValidUrl = ( url ) => {
  * @param {string} url - The URL to process.
  * @return {string} The URL without trailing slashes.
  */
-const removeTrailingSlash = ( url ) => url.replace( /\/+$/, '' );
+const removeTrailingSlash = ( url: string ): string => url.replace( /\/+$/, '' );
 
 /**
  * Returns the appropriate CSS class for a notice based on its type.
@@ -59,11 +50,11 @@ const removeTrailingSlash = ( url ) => url.replace( /\/+$/, '' );
  * @param {string} type - The type of notice ('error', 'warning', 'success').
  * @return {string} The corresponding CSS class.
  */
-const getNoticeClass = ( type ) => {
-	if ( 'error' === type ) {
+const getNoticeClass = ( type: NoticeType['type'] ): string => {
+	if ( type === 'error' ) {
 		return 'onemedia-error-notice';
 	}
-	if ( 'warning' === type ) {
+	if ( type === 'warning' ) {
 		return 'onemedia-warning-notice';
 	}
 	return 'onemedia-success-notice';
@@ -76,7 +67,7 @@ const getNoticeClass = ( type ) => {
  * @param {number} maxLength - The maximum length of the title (default is 25).
  * @return {string} The trimmed title.
  */
-const trimTitle = ( title, maxLength = 25 ) => {
+const trimTitle = ( title: string, maxLength: number = 25 ): string => {
 	if ( typeof title !== 'string' ) {
 		return '';
 	}
@@ -93,9 +84,12 @@ const trimTitle = ( title, maxLength = 25 ) => {
  * @param {number}   wait - The number of milliseconds to delay.
  * @return {Function}        - The debounced function.
  */
-const debounce = ( func, wait ) => {
-	let timeout;
-	return function executedFunction( ...args ) {
+const debounce = <T extends ( ...args: any[] ) => any>(
+	func: T,
+	wait: number,
+): ( ( ...args: Parameters<T> ) => void ) => {
+	let timeout: ReturnType<typeof setTimeout> | undefined;
+	return function executedFunction( ...args: Parameters<T> ) {
 		const later = () => {
 			clearTimeout( timeout );
 			func( ...args );
@@ -106,21 +100,6 @@ const debounce = ( func, wait ) => {
 };
 
 /**
- * Check if the current site is a brand site.
- *
- * @return {Promise<boolean>} - True if brand site, false otherwise.
- */
-const isBrandSite = async () => {
-	const siteType = await fetchSiteType();
-
-	if ( ! siteType || ( ONEMEDIA_PLUGIN_BRAND_SITE !== siteType && ONEMEDIA_PLUGIN_GOVERNING_SITE !== siteType ) ) {
-		return null;
-	}
-
-	return ONEMEDIA_PLUGIN_BRAND_SITE === siteType;
-};
-
-/**
  * Observe for elements matching selector and run callback when found.
  *
  * @param {string}   selector      - CSS selector to observe for.
@@ -128,7 +107,11 @@ const isBrandSite = async () => {
  * @param {number}   debounceDelay - Time to wait after last mutation before firing (default 200ms).
  * @return {MutationObserver} The MutationObserver instance.
  */
-const observeElement = ( selector, onFound, debounceDelay = 200 ) => {
+const observeElement = (
+	selector: string,
+	onFound: ( elements: NodeListOf<Element> ) => void,
+	debounceDelay: number = 200,
+): MutationObserver => {
 	const debouncedOnFound = debounce( () => {
 		const elements = document.querySelectorAll( selector );
 		if ( elements.length > 0 ) {
@@ -160,14 +143,14 @@ const observeElement = ( selector, onFound, debounceDelay = 200 ) => {
  * @param {string} propertyPath - Dot-separated path to the property, e.g. 'wp.media.view.AttachmentDetails'
  * @return {*} The value of the nested property, or undefined if not found.
  */
-const getFrameProperty = ( propertyPath ) => {
+const getFrameProperty = ( propertyPath: string ): any => {
 	if ( typeof propertyPath !== 'string' || ! propertyPath ) {
 		return undefined;
 	}
 
 	try {
 		// Split the path by dots and reduce to get the nested property.
-		return propertyPath.split( '.' ).reduce( ( obj, key ) => obj?.[ key ], window );
+		return propertyPath.split( '.' ).reduce( ( obj, key ) => obj?.[ key ], window as any );
 	} catch ( error ) {
 		return undefined;
 	}
@@ -178,7 +161,7 @@ const getFrameProperty = ( propertyPath ) => {
  *
  * @return {string} The title of the media frame, or an empty string if not found.
  */
-const getFrameTitle = () => {
+const getFrameTitle = (): string => {
 	const frameTitleProperty = getFrameProperty( 'wp.media.frame' );
 
 	if ( ! frameTitleProperty || typeof frameTitleProperty?.state !== 'function' ) {
@@ -193,9 +176,9 @@ const getFrameTitle = () => {
 /**
  * Show a snackbar notice with the specified type and message.
  *
- * @param {Object} detail - The detail object containing type and message.
+ * @param {NoticeType} detail - The detail object containing type and message.
  */
-const showSnackbarNotice = ( detail ) => {
+const showSnackbarNotice = ( detail: NoticeType ): void => {
 	if ( ! detail || typeof detail !== 'object' ) {
 		return;
 	}
@@ -223,7 +206,6 @@ export {
 	getNoticeClass,
 	trimTitle,
 	debounce,
-	isBrandSite,
 	observeElement,
 	getFrameTitle,
 	getFrameProperty,
