@@ -12,6 +12,9 @@ namespace OneMedia\Modules\Taxonomies;
  */
 class Media extends Abstract_Taxonomy {
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public function register_hooks(): void {
 		parent::register_hooks();
 

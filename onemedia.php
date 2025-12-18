@@ -50,16 +50,11 @@ function constants(): void {
 	define( 'ONEMEDIA_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
 
 	/**
-	 * Plugin relative path.
-	 */
-	define( 'ONEMEDIA_PLUGIN_RELATIVE_PATH', dirname( ONEMEDIA_PLUGIN_BASENAME ) );
-
-	/**
 	 * Other constants.
 	 */
 	define( 'ONEMEDIA_PLUGIN_BUILD_PATH', ONEMEDIA_DIR . '/assets/build' );
 	define( 'ONEMEDIA_PLUGIN_SRC_PATH', ONEMEDIA_DIR . '/assets/src' );
-	define( 'ONEMEDIA_PLUGIN_TEMPLATES_PATH', ONEMEDIA_DIR . '/inc/templates' );
+	define( 'ONEMEDIA_PLUGIN_TEMPLATES_PATH', ONEMEDIA_DIR . '/inc/Modules/MediaSharing/templates' );
 	define( 'ONEMEDIA_PLUGIN_BUILD_URI', ONEMEDIA_URL . '/assets/build' );
 	define( 'ONEMEDIA_PLUGIN_SLUG', 'onemedia' );
 	define( 'ONEMEDIA_PLUGIN_GOVERNING_SITE', 'governing-site' );
@@ -85,7 +80,7 @@ if ( class_exists( 'OneMedia\Main' ) ) {
 			\OneMedia\Main::instance();
 
 			//phpcs:ignore PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound -- @todo remove before submitting to .org.
-			load_plugin_textdomain( 'onemedia', false, dirname( ONEMEDIA_PLUGIN_BASENAME ) . '/languages/' );
+			load_plugin_textdomain( 'onemedia', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
 		}
 	);
 }

@@ -11,6 +11,7 @@ namespace OneMedia\Modules\MediaLibrary;
 
 use OneMedia\Contracts\Interfaces\Registrable;
 use OneMedia\Modules\MediaSharing\Admin as MediaSharingAdmin;
+use OneMedia\Modules\MediaSharing\UserInterface;
 use OneMedia\Modules\Rest\Media_Sharing_Controller;
 use OneMedia\Modules\Settings\Settings;
 

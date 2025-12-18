@@ -168,15 +168,6 @@ class Basic_Options_Controller extends Abstract_REST_Controller {
 	}
 
 	/**
-	 * Permission callback to check if the user has manage_options capability.
-	 *
-	 * @return bool
-	 */
-	public static function permission_callback(): bool {
-		return current_user_can( 'manage_options' );
-	}
-
-	/**
 	 * Get the site type.
 	 *
 	 * @return \WP_REST_Response|\WP_Error
@@ -457,7 +448,7 @@ class Basic_Options_Controller extends Abstract_REST_Controller {
 			}
 
 			// Perform health check request.
-			$response = wp_remote_get(
+			$response = wp_safe_remote_get(
 				$site_url . '/wp-json/' . Abstract_REST_Controller::NAMESPACE . '/health-check',
 				[
 					'timeout' => self::HEALTH_CHECK_REQUEST_TIMEOUT, // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout

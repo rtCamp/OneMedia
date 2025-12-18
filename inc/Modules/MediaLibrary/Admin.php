@@ -1,6 +1,6 @@
 <?php
 /**
- * Admin class to handle all the admin functionalities related to logs.
+ * Admin class to handle all the admin functionalities related to MediaLibrary.
  *
  * @package OneMedia\Modules\Post_Types;
  */
@@ -9,19 +9,12 @@ namespace OneMedia\Modules\MediaLibrary;
 
 use OneMedia\Contracts\Interfaces\Registrable;
 use OneMedia\Modules\Core\Assets;
-use OneMedia\Modules\Settings\Admin as Settings_Admin;
 use OneMedia\Modules\Settings\Settings;
 
 /**
  * Class Admin
  */
 class Admin implements Registrable {
-	/**
-	 * The screen ID for the settings page.
-	 *
-	 * We use the settings menu slug, so it's the default screen.
-	 */
-	public const SCREEN_ID = Settings_Admin::MENU_SLUG;
 
 	/**
 	 * {@inheritDoc}
@@ -84,7 +77,7 @@ class Admin implements Registrable {
 		}
 
 		// Nonce verification for AJAX requests.
-		if ( defined( 'DOING_AJAX' ) && DOING_AJAX && isset( $_REQUEST['_ajax_nonce'] ) ) {
+		if ( wp_doing_ajax() && isset( $_REQUEST['_ajax_nonce'] ) ) {
 			$nonce = sanitize_text_field( wp_unslash( $_REQUEST['_ajax_nonce'] ) );
 			if ( ! wp_verify_nonce( $nonce, 'onemedia_check_sync_status' ) ) {
 				return $query;
@@ -132,7 +125,7 @@ class Admin implements Registrable {
 	 */
 	public function onemedia_filter_ajax_query_attachments( array $query ): array {
 		// Nonce verification for AJAX requests.
-		if ( defined( 'DOING_AJAX' ) && DOING_AJAX ) {
+		if ( wp_doing_ajax() ) {
 			$nonce = filter_input( INPUT_POST, '_ajax_nonce', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
 			$nonce = sanitize_text_field( wp_unslash( $nonce ) );
 			if ( ! wp_verify_nonce( $nonce, 'onemedia_check_sync_status' ) ) {
@@ -141,7 +134,7 @@ class Admin implements Registrable {
 		}
 
 		// Check if this is an AJAX request for attachments and we're filtering for onemedia_sync.
-		if ( defined( 'DOING_AJAX' ) && DOING_AJAX ) {
+		if ( wp_doing_ajax() ) {
 			$post_action = filter_input( INPUT_POST, 'action', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
 
 			if ( ! isset( $post_action ) || empty( $post_action ) || 'query-attachments' !== $post_action ) {

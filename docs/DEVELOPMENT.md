@@ -32,12 +32,12 @@ Code contributions, bug reports, and feature requests are welcome! The following
 │       ├── admin
 │       │   ├── media-sharing
 │       │   │   ├── browser-uploader.js
-│       │   │   ├── index.js
+│       │   │   ├── index.tsx
 │       │   │   └── syncIcon.js
 │       │   ├── plugin
-│       │   │   └── index.js
+│       │   │   └── index.tsx
 │       │   └── settings
-│       │       └── index.js
+│       │       └── index.tsx
 │       ├── components
 │       │   ├── api.js
 │       │   ├── brand-settings

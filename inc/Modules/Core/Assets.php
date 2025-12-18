@@ -34,17 +34,11 @@ final class Assets implements Registrable {
 	public const ADMIN_STYLES_HANDLE      = self::PREFIX . 'admin';
 	public const SETTINGS_SCRIPT_HANDLE   = self::PREFIX . 'settings';
 	public const ONBOARDING_SCRIPT_HANDLE = self::PREFIX . 'onboarding';
-
 	public const MEDIA_SHARING_SCRIPT_HANDLE = self::PREFIX . 'media-sharing';
-
 	public const MAIN_STYLE_HANDLE = self::PREFIX . 'main';
-
 	public const HIDE_DELETE_BUTTON_STYLE_HANDLE = self::PREFIX . 'hide-delete-button';
-
 	public const MEDIA_FRAME_SCRIPT_HANDLE = self::PREFIX . 'media-frame';
-
 	public const MEDIA_SYNC_FILTER_SCRIPT_HANDLE = self::PREFIX . 'media-sync-filter';
-
 	public const MEDIA_TAXONOMY_STYLE_HANDLE = self::PREFIX . 'media-taxonomy';
 
 	/**
@@ -107,7 +101,7 @@ final class Assets implements Registrable {
 	 * {@inheritDoc}
 	 */
 	public function register_hooks(): void {
-		add_action( 'admin_enqueue_scripts', [ $this, 'register_assets' ], 20, 1 );
+		add_action( 'admin_enqueue_scripts', [ $this, 'register_assets' ], 20 );
 
 		// Add defer attribute to certain plugin bundles to improve admin load performance.
 		add_filter( 'script_loader_tag', [ $this, 'defer_scripts' ], 10, 2 );
@@ -118,7 +112,7 @@ final class Assets implements Registrable {
 	 *
 	 * Assets are registered once centrally, and enqueued in the modules that need them.
 	 */
-	public function register_assets( string $hook_suffix ): void {
+	public function register_assets(): void {
 		// Register scripts related to media sharing page.
 		$this->register_script( self::MEDIA_SHARING_SCRIPT_HANDLE, 'media-sharing' );
 		$this->register_style( self::MAIN_STYLE_HANDLE, 'main' );

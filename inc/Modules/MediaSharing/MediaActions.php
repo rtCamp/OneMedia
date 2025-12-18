@@ -1,9 +1,6 @@
 <?php
 /**
- * Admin lifecycle handlers for Media Sharing.
- *
- * Manages the admin-side lifecycle of synced media, including pre-update
- * guards, deletion cleanup, and propagation of attachment changes to Brand Sites.
+ * Handlers for various actions and filters related to Media Sharing.
  *
  * @package OneMedia\Modules\Post_Types;
  */
@@ -26,7 +23,7 @@ class MediaActions implements Registrable {
 	 *
 	 * @var int
 	 */
-	const ATTACHMENT_VERSIONS_TO_KEEP = 5;
+	public const ATTACHMENT_VERSIONS_TO_KEEP = 5;
 
 	/**
 	 * Sync request timeout.
@@ -435,7 +432,7 @@ class MediaActions implements Registrable {
 		// Move the uploaded file to the uploads directory.
 		$upload_dir  = wp_upload_dir();
 		$target_path = $upload_dir['path'] . '/' . basename( $file['name'] );
-		if ( ! move_uploaded_file( $file['tmp_name'], $target_path ) ) {
+		if ( ! move_uploaded_file( $file['tmp_name'], $target_path ) ) { //phpcs:ignore Generic.PHP.ForbiddenFunctions.Found
 			wp_send_json_error( [ 'message' => __( 'Failed to move uploaded file.', 'onemedia' ) ], 500 );
 		}
 
@@ -646,9 +643,8 @@ class MediaActions implements Registrable {
 		}
 
 		// Get current file info.
-		$current_file = get_attached_file( $attachment_id );
-		$alt_text     = get_post_meta( $attachment_id, '_wp_attachment_image_alt', true );
-		$caption      = wp_get_attachment_caption( $attachment_id );
+		$alt_text = get_post_meta( $attachment_id, '_wp_attachment_image_alt', true );
+		$caption  = wp_get_attachment_caption( $attachment_id );
 
 		if ( $is_version_restore ) {
 			// For version restore, use existing file path and data.
@@ -680,7 +676,7 @@ class MediaActions implements Registrable {
 			$title       = sanitize_file_name( pathinfo( $file['name'], PATHINFO_FILENAME ) );
 
 			// Move the uploaded file to the uploads directory.
-			if ( ! move_uploaded_file( $file['tmp_name'], $target_path ) ) {
+			if ( ! move_uploaded_file( $file['tmp_name'], $target_path ) ) { //phpcs:ignore Generic.PHP.ForbiddenFunctions.Found
 				return new \WP_Error( 'file_move_failed', __( 'Failed to move uploaded file.', 'onemedia' ) );
 			}
 
