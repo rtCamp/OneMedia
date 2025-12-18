@@ -15,8 +15,8 @@ import { __, sprintf } from '@wordpress/i18n';
 /**
  * Internal dependencies
  */
-import { trimTitle } from '../../js/utils';
-import fallbackImage from '../../images/fallback-image.svg';
+import { trimTitle } from '../../../js/utils';
+import fallbackImage from '../../../images/fallback-image.svg';
 
 /**
  * Format a Unix timestamp (in seconds) into a human-readable date and time.

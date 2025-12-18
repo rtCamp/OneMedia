@@ -14,7 +14,7 @@ import domReady from '@wordpress/dom-ready';
  * Internal dependencies
  */
 import { observeElement, getFrameTitle, getFrameProperty, isBrandSite, getNoticeClass, showSnackbarNotice } from './utils';
-import BrowserUploaderButton from '../admin/media-sharing/browser-uploader';
+import BrowserUploaderButton from '../admin/media-sharing/components/browser-uploader';
 
 /**
  * Get sync status from attachment model/element.

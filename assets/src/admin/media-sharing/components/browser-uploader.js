@@ -8,9 +8,9 @@ import { useState, useRef } from '@wordpress/element';
 /**
  * Internal dependencies
  */
-import { UPLOAD_NONCE, ALLOWED_MIME_TYPES } from '../../components/constants';
-import { uploadMedia, updateExistingAttachment, checkIfAllSitesConnected, isSyncAttachment as isSyncAttachmentApi } from '../../components/api';
-import { getFrameProperty, showSnackbarNotice } from '../../js/utils';
+import { UPLOAD_NONCE, ALLOWED_MIME_TYPES } from '../../../components/constants';
+import { uploadMedia, updateExistingAttachment, checkIfAllSitesConnected, isSyncAttachment as isSyncAttachmentApi } from '../../../components/api';
+import { getFrameProperty, showSnackbarNotice } from '../../../js/utils';
 
 const BrowserUploaderButton = ( {
 	onAddMediaSuccess,

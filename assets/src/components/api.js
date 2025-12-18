@@ -106,7 +106,7 @@ export const fetchBrandSites = async ( addNotice ) => {
 /**
  * Performs a health check for a brand site from the governing site.
  *
- * @param {string}   url   - Site URL.
+ * @param {string}   url       - Site URL.
  * @param {string}   apiKey    - API key for the site.
  * @param {Function} addNotice - Function to display notices.
  * @return {Promise<Object|null>} - Health check result or null on error.

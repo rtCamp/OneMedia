@@ -26,12 +26,12 @@ import { Icon, edit } from '@wordpress/icons';
 /**
  * Internal dependencies
  */
-import syncIcon from './syncIcon';
-import versionIcon from './versionIcon';
-import BrowserUploaderButton from './browser-uploader';
+import syncIcon from './components/syncIcon';
+import versionIcon from './components/versionIcon';
+import BrowserUploaderButton from './components/browser-uploader';
 import { ONEMEDIA_PLUGIN_TAXONOMY_TERM, ONEMEDIA_MEDIA_SHARING, MEDIA_PER_PAGE, UPLOAD_NONCE } from '../../components/constants';
-import ShareMediaModal from '../../components/governing-settings/ShareMediaModal';
-import VersionModal from '../../components/governing-settings/VersionModal';
+import ShareMediaModal from './components/ShareMediaModal';
+import VersionModal from './components/VersionModal';
 import { fetchSyncedSites as fetchSyncedSitesApi, fetchMediaItems as fetchMediaItemsApi, fetchBrandSites as fetchBrandSitesApi, shareMedia as shareMediaApi, uploadMedia } from '../../components/api';
 import { getNoticeClass, trimTitle, debounce, getFrameProperty } from '../../js/utils';
 import fallbackImage from '../../images/fallback-image.svg';
