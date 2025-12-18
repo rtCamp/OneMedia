@@ -59,7 +59,7 @@ function constants(): void {
 	 */
 	define( 'ONEMEDIA_PLUGIN_BUILD_PATH', ONEMEDIA_DIR . '/assets/build' );
 	define( 'ONEMEDIA_PLUGIN_SRC_PATH', ONEMEDIA_DIR . '/assets/src' );
-	define( 'ONEMEDIA_PLUGIN_TEMPLATES_PATH', ONEMEDIA_DIR . '/inc/templates' );
+	define( 'ONEMEDIA_PLUGIN_TEMPLATES_PATH', ONEMEDIA_DIR . '/inc/Modules/MediaSharing/templates' );
 	define( 'ONEMEDIA_PLUGIN_BUILD_URI', ONEMEDIA_URL . '/assets/build' );
 	define( 'ONEMEDIA_PLUGIN_SLUG', 'onemedia' );
 	define( 'ONEMEDIA_PLUGIN_GOVERNING_SITE', 'governing-site' );
