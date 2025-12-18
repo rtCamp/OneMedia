@@ -101,7 +101,7 @@ final class Assets implements Registrable {
 	 * {@inheritDoc}
 	 */
 	public function register_hooks(): void {
-		add_action( 'admin_enqueue_scripts', [ $this, 'register_assets' ], 20, 1 );
+		add_action( 'admin_enqueue_scripts', [ $this, 'register_assets' ], 20 );
 
 		// Add defer attribute to certain plugin bundles to improve admin load performance.
 		add_filter( 'script_loader_tag', [ $this, 'defer_scripts' ], 10, 2 );
@@ -112,7 +112,7 @@ final class Assets implements Registrable {
 	 *
 	 * Assets are registered once centrally, and enqueued in the modules that need them.
 	 */
-	public function register_assets( string $hook_suffix ): void {
+	public function register_assets(): void {
 		// Register scripts related to media sharing page.
 		$this->register_script( self::MEDIA_SHARING_SCRIPT_HANDLE, 'media-sharing' );
 		$this->register_style( self::MAIN_STYLE_HANDLE, 'main' );

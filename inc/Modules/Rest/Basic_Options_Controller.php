@@ -448,7 +448,7 @@ class Basic_Options_Controller extends Abstract_REST_Controller {
 			}
 
 			// Perform health check request.
-			$response = wp_remote_get(
+			$response = wp_safe_remote_get(
 				$site_url . '/wp-json/' . Abstract_REST_Controller::NAMESPACE . '/health-check',
 				[
 					'timeout' => self::HEALTH_CHECK_REQUEST_TIMEOUT, // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout

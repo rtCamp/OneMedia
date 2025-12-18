@@ -1781,7 +1781,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 			'sslverify' => false,
 		];
 
-		$response  = wp_remote_get( $url, $args );
+		$response  = wp_safe_remote_get( $url, $args );
 		$status    = wp_remote_retrieve_response_code( $response );
 		$file_data = wp_remote_retrieve_body( $response );
 		$errors    = [];
