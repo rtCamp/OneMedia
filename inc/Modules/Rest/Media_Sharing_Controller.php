@@ -7,29 +7,27 @@
 
 namespace OneMedia\Modules\Rest;
 
-use OneMedia\Constants;
 use OneMedia\Modules\MediaSharing\MediaActions;
 use OneMedia\Modules\MediaSharing\MediaReplacement;
 use OneMedia\Modules\Settings\Settings;
-use OneMedia\Utils;
 use WP_REST_Server;
 
 /**
  * Class Media_Sharing
  */
-class Media_Sharing_Controller extends Abstract_REST_Controller  {
+class Media_Sharing_Controller extends Abstract_REST_Controller {
 
 	/**
 	 * Sync media request timeout.
 	 *
-	 * @var number
+	 * @var \OneMedia\Modules\Rest\number
 	 */
 	public const SYNC_MEDIA_REQUEST_TIMEOUT = 15;
 
 	/**
 	 * Fetch media request timeout.
 	 *
-	 * @var number
+	 * @var \OneMedia\Modules\Rest\number
 	 */
 	public const FETCH_MEDIA_REQUEST_TIMEOUT = 30;
 
@@ -77,7 +75,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 	 *
 	 * @var array
 	 */
-	public const ALLOWED_MIME_TYPES = array(
+	public const ALLOWED_MIME_TYPES = [
 		'image/jpg',
 		'image/jpeg',
 		'image/png',
@@ -85,7 +83,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 		'image/webp',
 		'image/bmp',
 		'image/svg+xml',
-	);
+	];
 
 	/**
 	 * Register REST API routes.
@@ -99,41 +97,41 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 		register_rest_route(
 			Abstract_REST_Controller::NAMESPACE,
 			'/media',
-			array(
+			[
 				'methods'             => WP_REST_Server::READABLE,
-				'callback'            => array( $this, 'get_media_files' ),
+				'callback'            => [ $this, 'get_media_files' ],
 				'permission_callback' => [ $this, 'check_api_permissions' ],
-				'args'                => array(
-					'search_term' => array(
+				'args'                => [
+					'search_term' => [
 						'required'          => false,
 						'sanitize_callback' => 'sanitize_text_field',
-						'validate_callback' => function ( $param ) {
+						'validate_callback' => static function ( $param ) {
 							return is_string( $param );
 						},
-					),
-					'page'        => array(
+					],
+					'page'        => [
 						'required'          => false,
 						'sanitize_callback' => 'absint',
-						'validate_callback' => function ( $param ) {
+						'validate_callback' => static function ( $param ) {
 							return is_numeric( $param );
 						},
-					),
-					'per_page'    => array(
+					],
+					'per_page'    => [
 						'required'          => false,
 						'sanitize_callback' => 'absint',
-						'validate_callback' => function ( $param ) {
+						'validate_callback' => static function ( $param ) {
 							return is_numeric( $param );
 						},
-					),
-					'image_type'  => array(
+					],
+					'image_type'  => [
 						'required'          => false,
 						'sanitize_callback' => 'sanitize_text_field',
-						'validate_callback' => function ( $param ) {
+						'validate_callback' => static function ( $param ) {
 							return is_string( $param );
 						},
-					),
-				),
-			)
+					],
+				],
+			]
 		);
 
 		/**
@@ -142,32 +140,32 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 		register_rest_route(
 			Abstract_REST_Controller::NAMESPACE,
 			'/sync-media',
-			array(
+			[
 				'methods'             => WP_REST_Server::CREATABLE,
-				'callback'            => array( $this, 'sync_media_files' ),
+				'callback'            => [ $this, 'sync_media_files' ],
 				'permission_callback' => [ $this, 'check_api_permissions' ],
-				'args'                => array(
-					'brand_sites'   => array(
+				'args'                => [
+					'brand_sites'   => [
 						'required'          => true,
-						'validate_callback' => function ( $param ) {
+						'validate_callback' => static function ( $param ) {
 							return is_array( $param );
 						},
-					),
-					'media_details' => array(
+					],
+					'media_details' => [
 						'required'          => true,
-						'validate_callback' => function ( $param ) {
+						'validate_callback' => static function ( $param ) {
 							return is_array( $param );
 						},
-					),
-					'sync_option'   => array(
+					],
+					'sync_option'   => [
 						'required'          => true,
 						'sanitize_callback' => 'sanitize_text_field',
-						'validate_callback' => function ( $param ) {
+						'validate_callback' => static function ( $param ) {
 							return is_string( $param );
 						},
-					),
-				),
-			)
+					],
+				],
+			]
 		);
 
 		/**
@@ -176,26 +174,26 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 		register_rest_route(
 			Abstract_REST_Controller::NAMESPACE,
 			'/add-media',
-			array(
+			[
 				'methods'             => WP_REST_Server::CREATABLE,
-				'callback'            => array( $this, 'add_media_files' ),
+				'callback'            => [ $this, 'add_media_files' ],
 				'permission_callback' => [ $this, 'check_api_permissions' ],
-				'args'                => array(
-					'media_files' => array(
+				'args'                => [
+					'media_files' => [
 						'required'          => true,
-						'validate_callback' => function ( $param ) {
+						'validate_callback' => static function ( $param ) {
 							return is_array( $param );
 						},
-					),
-					'sync_option' => array(
+					],
+					'sync_option' => [
 						'required'          => false,
 						'sanitize_callback' => 'sanitize_text_field',
-						'validate_callback' => function ( $param ) {
+						'validate_callback' => static function ( $param ) {
 							return is_string( $param );
 						},
-					),
-				),
-			)
+					],
+				],
+			]
 		);
 
 		/**
@@ -204,33 +202,33 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 		register_rest_route(
 			Abstract_REST_Controller::NAMESPACE,
 			'/update-attachment',
-			array(
+			[
 				'methods'             => WP_REST_Server::CREATABLE,
-				'callback'            => array( $this, 'update_media_files' ),
+				'callback'            => [ $this, 'update_media_files' ],
 				'permission_callback' => [ $this, 'check_api_permissions' ],
-				'args'                => array(
-					'attachment_id'   => array(
+				'args'                => [
+					'attachment_id'   => [
 						'required'          => true,
 						'sanitize_callback' => 'absint',
-						'validate_callback' => function ( $param ) {
+						'validate_callback' => static function ( $param ) {
 							return is_numeric( $param );
 						},
-					),
-					'attachment_url'  => array(
+					],
+					'attachment_url'  => [
 						'required'          => true,
 						'sanitize_callback' => 'esc_url_raw',
-						'validate_callback' => function ( $param ) {
+						'validate_callback' => static function ( $param ) {
 							return is_string( $param );
 						},
-					),
-					'attachment_data' => array(
+					],
+					'attachment_data' => [
 						'required'          => true,
-						'validate_callback' => function ( $param ) {
+						'validate_callback' => static function ( $param ) {
 							return is_array( $param );
 						},
-					),
-				),
-			)
+					],
+				],
+			]
 		);
 
 		/**
@@ -239,20 +237,20 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 		register_rest_route(
 			Abstract_REST_Controller::NAMESPACE,
 			'/delete-media-metadata',
-			array(
+			[
 				'methods'             => WP_REST_Server::CREATABLE,
-				'callback'            => array( $this, 'delete_media_metadata' ),
+				'callback'            => [ $this, 'delete_media_metadata' ],
 				'permission_callback' => [ $this, 'check_api_permissions' ],
-				'args'                => array(
-					'attachment_id' => array(
+				'args'                => [
+					'attachment_id' => [
 						'required'          => true,
 						'sanitize_callback' => 'absint',
-						'validate_callback' => function ( $param ) {
+						'validate_callback' => static function ( $param ) {
 							return is_numeric( $param );
 						},
-					),
-				),
-			)
+					],
+				],
+			]
 		);
 
 		/**
@@ -261,11 +259,11 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 		register_rest_route(
 			Abstract_REST_Controller::NAMESPACE,
 			'/brand-sites-synced-media',
-			array(
+			[
 				'methods'             => WP_REST_Server::READABLE,
-				'callback'            => array( $this, 'get_brand_sites_synced_media' ),
+				'callback'            => [ $this, 'get_brand_sites_synced_media' ],
 				'permission_callback' => [ $this, 'check_api_permissions' ],
-			)
+			]
 		);
 
 		/**
@@ -274,27 +272,27 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 		register_rest_route(
 			Abstract_REST_Controller::NAMESPACE,
 			'/update-existing-attachment',
-			array(
+			[
 				'methods'             => WP_REST_Server::CREATABLE,
-				'callback'            => array( $this, 'update_existing_attachment' ),
+				'callback'            => [ $this, 'update_existing_attachment' ],
 				'permission_callback' => [ $this, 'check_api_permissions' ],
-				'args'                => array(
-					'attachment_id' => array(
+				'args'                => [
+					'attachment_id' => [
 						'required'          => true,
 						'sanitize_callback' => 'absint',
-						'validate_callback' => function ( $param ) {
+						'validate_callback' => static function ( $param ) {
 							return is_numeric( $param );
 						},
-					),
-					'sync_option'   => array(
+					],
+					'sync_option'   => [
 						'required'          => true,
 						'sanitize_callback' => 'sanitize_text_field',
-						'validate_callback' => function ( $param ) {
+						'validate_callback' => static function ( $param ) {
 							return is_string( $param );
 						},
-					),
-				),
-			)
+					],
+				],
+			]
 		);
 
 		/**
@@ -303,20 +301,20 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 		register_rest_route(
 			Abstract_REST_Controller::NAMESPACE,
 			'/is-sync-attachment',
-			array(
+			[
 				'methods'             => WP_REST_Server::CREATABLE,
-				'callback'            => array( $this, 'is_sync_attachment' ),
+				'callback'            => [ $this, 'is_sync_attachment' ],
 				'permission_callback' => [ $this, 'check_api_permissions' ],
-				'args'                => array(
-					'attachment_id' => array(
+				'args'                => [
+					'attachment_id' => [
 						'required'          => true,
 						'sanitize_callback' => 'absint',
-						'validate_callback' => function ( $param ) {
+						'validate_callback' => static function ( $param ) {
 							return is_numeric( $param );
 						},
-					),
-				),
-			)
+					],
+				],
+			]
 		);
 
 		/**
@@ -325,20 +323,20 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 		register_rest_route(
 			Abstract_REST_Controller::NAMESPACE,
 			'/sync-attachment-versions',
-			array(
+			[
 				'methods'             => WP_REST_Server::CREATABLE,
-				'callback'            => array( $this, 'sync_attachment_versions' ),
+				'callback'            => [ $this, 'sync_attachment_versions' ],
 				'permission_callback' => [ $this, 'check_api_permissions' ],
-				'args'                => array(
-					'attachment_id' => array(
+				'args'                => [
+					'attachment_id' => [
 						'required'          => true,
 						'sanitize_callback' => 'absint',
-						'validate_callback' => function ( $param ) {
+						'validate_callback' => static function ( $param ) {
 							return is_numeric( $param );
 						},
-					),
-				),
-			)
+					],
+				],
+			]
 		);
 	}
 
@@ -352,24 +350,24 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 		$brand_sites_synced_media = self::fetch_brand_sites_synced_media();
 
 		if ( ! is_array( $brand_sites_synced_media ) ) {
-			$brand_sites_synced_media = array();
+			$brand_sites_synced_media = [];
 		}
 
 		// Get all registered brand sites.
 		$all_brand_sites = Settings::get_shared_sites();
 		if ( ! is_array( $all_brand_sites ) ) {
-			$all_brand_sites = array();
+			$all_brand_sites = [];
 		}
 
 		// Create URL to site name mapping first.
-		$url_to_name_mapping = array();
+		$url_to_name_mapping = [];
 		foreach ( $all_brand_sites as $site_data ) {
 			$clean_url                         = rtrim( $site_data['url'], '/' );
 			$url_to_name_mapping[ $clean_url ] = $site_data['name'];
 		}
 
 		// Create the desired mapping structure: 'id' => array('siteURL' => 'name').
-		$site_mapping = array();
+		$site_mapping = [];
 
 		foreach ( $brand_sites_synced_media as $id => $site_data ) {
 			foreach ( $site_data as $site_url => $media_id ) {
@@ -381,11 +379,11 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 
 		// Return the response.
 		return rest_ensure_response(
-			array(
+			[
 				'status'  => 200,
 				'data'    => $site_mapping,
 				'success' => true,
-			)
+			]
 		);
 	}
 
@@ -403,10 +401,10 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 			return new \WP_Error(
 				'invalid_data',
 				__( 'Invalid data provided.', 'onemedia' ),
-				array(
+				[
 					'status'  => 400,
 					'success' => false,
-				)
+				]
 			);
 		}
 
@@ -416,11 +414,11 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 		delete_post_meta( $attachment_id, self::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY );
 
 		return rest_ensure_response(
-			array(
+			[
 				'message' => __( 'Media metadata deleted successfully.', 'onemedia' ),
 				'status'  => 200,
 				'success' => true,
-			)
+			]
 		);
 	}
 
@@ -441,10 +439,10 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 			return new \WP_Error(
 				'invalid_data',
 				__( 'Invalid data provided.', 'onemedia' ),
-				array(
+				[
 					'status'  => 400,
 					'success' => false,
-				)
+				]
 			);
 		}
 
@@ -453,10 +451,10 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 			return new \WP_Error(
 				'invalid_data',
 				__( 'Invalid data provided.', 'onemedia' ),
-				array(
+				[
 					'status'  => 400,
 					'success' => false,
-				)
+				]
 			);
 		}
 
@@ -473,10 +471,10 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 			return new \WP_Error(
 				'invalid_data',
 				__( 'Invalid attachment data provided.', 'onemedia' ),
-				array(
+				[
 					'status'  => 400,
 					'success' => false,
-				)
+				]
 			);
 		}
 
@@ -491,13 +489,13 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 		wp_update_attachment_metadata( $attachment_id, $attachment_data );
 
 		// Update attachment title, alt_text, caption, description.
-		$attachment_post = array(
+		$attachment_post = [
 			'ID'           => $attachment_id,
 			'post_title'   => isset( $attachment_data['title'] ) ? sanitize_text_field( $attachment_data['title'] ) : '',
 			'post_excerpt' => isset( $attachment_data['caption'] ) ? sanitize_text_field( $attachment_data['caption'] ) : '',
 			'post_content' => isset( $attachment_data['description'] ) ? sanitize_textarea_field( $attachment_data['description'] ) : '',
-			'post_terms'   => isset( $attachment_data['terms'] ) ? array_map( 'sanitize_text_field', $attachment_data['terms'] ) : array(),
-		);
+			'post_terms'   => isset( $attachment_data['terms'] ) ? array_map( 'sanitize_text_field', $attachment_data['terms'] ) : [],
+		];
 
 		// Decode HTML entities in title.
 		$attachment_post['post_title'] = self::decode_filename( $attachment_post['post_title'] );
@@ -515,10 +513,10 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 			return new \WP_Error(
 				'file_download_failed',
 				__( 'Failed to download file from URL.', 'onemedia' ),
-				array(
+				[
 					'status'  => 500,
 					'success' => false,
-				)
+				]
 			);
 		}
 
@@ -550,10 +548,10 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 			return new \WP_Error(
 				'post_update_failed',
 				__( 'Failed to update attachment post.', 'onemedia' ),
-				array(
+				[
 					'status'  => 500,
 					'success' => false,
-				)
+				]
 			);
 		}
 
@@ -576,11 +574,11 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 		);
 
 		return rest_ensure_response(
-			array(
+			[
 				'message' => __( 'Media file updated successfully.', 'onemedia' ),
 				'status'  => 200,
 				'success' => true,
-			)
+			]
 		);
 	}
 
@@ -615,10 +613,10 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 				return new \WP_Error(
 					'invalid_image_type',
 					__( 'Invalid image type provided.', 'onemedia' ),
-					array(
+					[
 						'status'  => 400,
 						'success' => false,
-					)
+					]
 				);
 			}
 		}
@@ -626,7 +624,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 		// Validate search term param.
 		$search_term = isset( $search_term ) && is_string( $search_term ) ? sanitize_text_field( $search_term ) : '';
 
-		$args = array(
+		$args = [
 			'post_type'      => 'attachment',
 			'posts_per_page' => $per_page,
 			'paged'          => $page,
@@ -635,7 +633,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 			'order'          => 'DESC',
 			'menu_order'     => 'ASC',
 			'post_mime_type' => self::get_supported_mime_types(),
-		);
+		];
 
 		// Add search functionality.
 		if ( ! empty( $search_term ) ) {
@@ -645,46 +643,46 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 		// If image_type is provided, filter by onemedia_media_type taxonomy.
 		if ( ! empty( $image_type ) ) {
          	// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
-			$args['tax_query'] = array(
-				array(
+			$args['tax_query'] = [
+				[
 					'taxonomy' => ONEMEDIA_PLUGIN_TAXONOMY,
 					'field'    => 'slug',
 					'terms'    => $image_type,
 					'operator' => 'IN',
-				),
-			);
+				],
+			];
 		} else {
 			// Exclude onemedia_media_type taxonomy.
          	// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
-			$args['tax_query'] = array(
-				array(
+			$args['tax_query'] = [
+				[
 					'taxonomy' => ONEMEDIA_PLUGIN_TAXONOMY,
 					'field'    => 'slug',
-					'terms'    => array( ONEMEDIA_PLUGIN_TAXONOMY_TERM ), // Exclude 'onemedia' term.
+					'terms'    => [ ONEMEDIA_PLUGIN_TAXONOMY_TERM ], // Exclude 'onemedia' term.
 					'operator' => 'NOT IN',
-				),
-			);
+				],
+			];
 		}
 		$query       = new \WP_Query( $args );
-		$media_files = array();
+		$media_files = [];
 
 		if ( $query->have_posts() ) {
 			while ( $query->have_posts() ) {
 				$query->the_post();
 				$post_id       = get_the_ID();
 				$title         = self::decode_filename( get_the_title( $post_id ) );
-				$media_files[] = array(
+				$media_files[] = [
 					'id'        => $post_id,
 					'url'       => wp_get_attachment_url( $post_id ),
 					'title'     => $title,
 					'mime_type' => get_post_mime_type( $post_id ),
 					'revision'  => get_post_meta( $post_id, MediaActions::ONEMEDIA_SYNC_VERSIONS_POSTMETA_KEY, true ),
-				);
+				];
 			}
 			wp_reset_postdata();
 		}
 
-		$response = array(
+		$response = [
 			'page'        => $page,
 			'per_page'    => $per_page,
 			'total'       => $query->found_posts,
@@ -692,7 +690,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 			'media_files' => $media_files,
 			'status'      => 200,
 			'success'     => true,
-		);
+		];
 
 		return rest_ensure_response( $response );
 	}
@@ -714,10 +712,10 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 			return new \WP_Error(
 				'invalid_data',
 				__( 'Invalid brand sites provided.', 'onemedia' ),
-				array(
+				[
 					'status'  => 400,
 					'success' => false,
-				)
+				]
 			);
 		}
 
@@ -731,10 +729,10 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 				return new \WP_Error(
 					'invalid_site_url',
 					__( 'Invalid site URL(s) provided.', 'onemedia' ),
-					array(
+					[
 						'status'  => 400,
 						'success' => false,
-					)
+					]
 				);
 			}
 		}
@@ -744,10 +742,10 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 			return new \WP_Error(
 				'invalid_sync_option',
 				__( 'Invalid sync option provided.', 'onemedia' ),
-				array(
+				[
 					'status'  => 400,
 					'success' => false,
-				)
+				]
 			);
 		}
 
@@ -756,10 +754,10 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 			return new \WP_Error(
 				'invalid_data',
 				__( 'Invalid media details provided', 'onemedia' ),
-				array(
+				[
 					'status'  => 400,
 					'success' => false,
-				)
+				]
 			);
 		}
 
@@ -784,10 +782,10 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 				return new \WP_Error(
 					'invalid_media_details',
 					__( 'Invalid media details provided.', 'onemedia' ),
-					array(
+					[
 						'status'  => 400,
 						'success' => false,
-					)
+					]
 				);
 			}
 
@@ -796,10 +794,10 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 				return new \WP_Error(
 					'invalid_mime_type',
 					__( 'Invalid mime type provided.', 'onemedia' ),
-					array(
+					[
 						'status'  => 400,
 						'success' => false,
-					)
+					]
 				);
 			}
 
@@ -829,7 +827,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 		$brand_site_prefix = '/wp-json/' . Abstract_REST_Controller::NAMESPACE . '/add-media';
 
 		// Failed to sync media files to brand sites.
-		$failed_sites = array();
+		$failed_sites = [];
 
 		// Get all registered brand sites to compare endpoint and get API token before sharing media.
 		$all_brand_sites = Settings::get_shared_sites();
@@ -842,7 +840,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 			$site_token = '';
 
 			if ( empty( $site_url ) ) {
-				$failed_sites[] = array(
+				$failed_sites[] = [
 					'site'      => $site,
 					'message'   => sprintf(
 						/* translators: %s: site URL */
@@ -852,7 +850,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 					'site_url'  => $site_url . $brand_site_prefix,
 					'token'     => $site_token,
 					'child_key' => Settings::get_api_key(),
-				);
+				];
 				continue;
 			}
 
@@ -868,25 +866,23 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 			}
 
 			// Success response.
-			$success_response = array();
+			$success_response = [];
 
 			// Prepare the request to the brand site.
 			$response = wp_remote_post(
 				$site_url . $brand_site_prefix,
-				array(
-					'headers'   => array(
-							'X-OneMedia-Token' => ( $site_token ),
+				[
+					'headers'   => [
+							'X-OneMedia-Token' => $site_token ,
 							'Cache-Control'    => 'no-cache, no-store, must-revalidate',
-					),
-					'body'      => (
-						array(
+					],
+					'body'      => [
 							'media_files' => $media_details,
 							'sync_option' => $sync_option,
-						)
-					),
+						],
 					'timeout'   => self::SYNC_MEDIA_REQUEST_TIMEOUT, // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout
 					'sslverify' => false,
-				)
+				]
 			);
 
 			$response_body = wp_remote_retrieve_body( $response );
@@ -896,10 +892,10 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 			$response_code = wp_remote_retrieve_response_code( $response );
 
 			if ( is_wp_error( $response ) || 200 !== $response_code ) {
-				$errors             = $response_body['data']['errors'] ?? array();
+				$errors             = $response_body['data']['errors'] ?? [];
 				$is_mime_type_error = $response_body['data']['is_mime_type_error'] ?? false;
 
-				$failed_sites[] = array(
+				$failed_sites[] = [
 					'site_name'          => $site_name,
 					'site'               => $site_url,
 					'message'            => $response_body['message'] ?? __( 'Failed to sync media files.', 'onemedia' ),
@@ -908,79 +904,87 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 					'token'              => $site_token,
 					'child_key'          => Settings::get_api_key(),
 					'is_mime_type_error' => $is_mime_type_error,
-				);
+				];
 			}
 
 			// If there are any successful media syncs, process them.
 			// Successful response from the brand site, the media files were synced.
 			$success_response[] = $response_body;
 
-			$media_response_list = isset( $response_body['media'] ) ? $response_body['media'] : array();
+			$media_response_list = isset( $response_body['media'] ) ? $response_body['media'] : [];
 
 			// In case of error response, media list is in data key.
 			if ( empty( $media_response_list ) && isset( $response_body['data']['media'] ) ) {
 				$media_response_list = $response_body['data']['media'];
 			}
 
-			if ( ! empty( $media_response_list ) ) {
-				foreach ( $media_response_list as $media ) {
-					// Get onemedia_sync_sites meta for each parent_id media.
-					$parent_id           = $media['parent_id'];
-					$onemedia_sync_sites = Basic_Options_Controller::get_sync_sites_postmeta( $parent_id );
+			if ( empty( $media_response_list ) ) {
+				continue;
+			}
 
-					if ( ! is_array( $onemedia_sync_sites ) ) {
-						$onemedia_sync_sites = array();
-					}
+			foreach ( $media_response_list as $media ) {
+				// Get onemedia_sync_sites meta for each parent_id media.
+				$parent_id           = $media['parent_id'];
+				$onemedia_sync_sites = Basic_Options_Controller::get_sync_sites_postmeta( $parent_id );
 
-					// Add brand site with its id so that it can be used to sync media files.
-					$onemedia_sync_sites[] = array(
-						'site' => $site,
-						'id'   => $media['id'],
-					);
-
-					// Update onemedia_sync_sites meta for each parent_id media.
-					update_post_meta( $parent_id, self::ONEMEDIA_SYNC_SITES_POSTMETA_KEY, $onemedia_sync_sites );
-
-					// Create option to store siteurl, parent media id and brand site media id.
-					if ( 'sync' === $sync_option ) {
-						$brand_sites_synced_media = self::fetch_brand_sites_synced_media();
-
-						if ( ! is_array( $brand_sites_synced_media ) ) {
-							$brand_sites_synced_media = array();
-						}
-
-						// Add brand site media id to the option.
-						$parent_sync_media_mapping = array(
-							$site => $media['id'],
-						);
-
-						if ( ! isset( $brand_sites_synced_media[ $parent_id ] ) ) {
-							$brand_sites_synced_media[ $parent_id ] = array();
-						}
-
-						$brand_sites_synced_media[ $parent_id ] = array_merge(
-							$brand_sites_synced_media[ $parent_id ],
-							$parent_sync_media_mapping
-						);
-
-						// Update the synced media mapping option only if there is a change.
-						$saved_brand_sites_synced_media = self::fetch_brand_sites_synced_media();
-						if ( ! hash_equals( wp_json_encode( $saved_brand_sites_synced_media ), wp_json_encode( $brand_sites_synced_media ) ) ) {
-							$success = update_option( self::BRAND_SITES_SYNCED_MEDIA_OPTION, $brand_sites_synced_media );
-
-							if ( ! $success ) {
-								$failed_sites[] = array(
-									'site_name' => $site_name,
-									'site'      => $site,
-									'message'   => __( 'Failed to update synced media.', 'onemedia' ),
-									'site_url'  => $site_url . $brand_site_prefix,
-									'token'     => $site_token,
-									'child_key' => Settings::get_api_key(),
-								);
-							}
-						}
-					}
+				if ( ! is_array( $onemedia_sync_sites ) ) {
+					$onemedia_sync_sites = [];
 				}
+
+				// Add brand site with its id so that it can be used to sync media files.
+				$onemedia_sync_sites[] = [
+					'site' => $site,
+					'id'   => $media['id'],
+				];
+
+				// Update onemedia_sync_sites meta for each parent_id media.
+				update_post_meta( $parent_id, self::ONEMEDIA_SYNC_SITES_POSTMETA_KEY, $onemedia_sync_sites );
+
+				// Create option to store siteurl, parent media id and brand site media id.
+				if ( 'sync' !== $sync_option ) {
+					continue;
+				}
+
+				$brand_sites_synced_media = self::fetch_brand_sites_synced_media();
+
+				if ( ! is_array( $brand_sites_synced_media ) ) {
+					$brand_sites_synced_media = [];
+				}
+
+				// Add brand site media id to the option.
+				$parent_sync_media_mapping = [
+					$site => $media['id'],
+				];
+
+				if ( ! isset( $brand_sites_synced_media[ $parent_id ] ) ) {
+					$brand_sites_synced_media[ $parent_id ] = [];
+				}
+
+				$brand_sites_synced_media[ $parent_id ] = array_merge(
+					$brand_sites_synced_media[ $parent_id ],
+					$parent_sync_media_mapping
+				);
+
+				// Update the synced media mapping option only if there is a change.
+				$saved_brand_sites_synced_media = self::fetch_brand_sites_synced_media();
+				if ( hash_equals( wp_json_encode( $saved_brand_sites_synced_media ), wp_json_encode( $brand_sites_synced_media ) ) ) {
+					continue;
+				}
+
+				$success = update_option( self::BRAND_SITES_SYNCED_MEDIA_OPTION, $brand_sites_synced_media );
+
+				if ( $success ) {
+					continue;
+				}
+
+				$failed_sites[] = [
+					'site_name' => $site_name,
+					'site'      => $site,
+					'message'   => __( 'Failed to update synced media.', 'onemedia' ),
+					'site_url'  => $site_url . $brand_site_prefix,
+					'token'     => $site_token,
+					'child_key' => Settings::get_api_key(),
+				];
 			}
 		}
 
@@ -988,22 +992,22 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 			return new \WP_Error(
 				'sync_failed',
 				__( 'Failed to sync media files to some brand sites.', 'onemedia' ),
-				array(
+				[
 					'status'       => 500,
 					'failed_sites' => $failed_sites,
 					'success'      => false,
-				)
+				]
 			);
 		}
 
 		return rest_ensure_response(
-			array(
+			[
 				'message'              => __( 'Media files synced successfully.', 'onemedia' ),
 				'status'               => 200,
 				'success'              => true,
 				'success_response'     => $success_response,
 				'onemedia_sync_option' => self::fetch_brand_sites_synced_media(),
-			)
+			]
 		);
 	}
 
@@ -1023,10 +1027,10 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 			return new \WP_Error(
 				'invalid_sync_option',
 				__( 'Invalid sync option provided.', 'onemedia' ),
-				array(
+				[
 					'status'  => 400,
 					'success' => false,
-				)
+				]
 			);
 		}
 
@@ -1035,16 +1039,16 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 			return new \WP_Error(
 				'invalid_data',
 				__( 'Invalid media files provided.', 'onemedia' ),
-				array(
+				[
 					'status'  => 400,
 					'success' => false,
-				)
+				]
 			);
 		}
 
-		$successful_uploads     = array();
-		$errors                 = array();
-		$unsupported_file_types = array();
+		$successful_uploads     = [];
+		$errors                 = [];
+		$unsupported_file_types = [];
 
 		// Include necessary WordPress media handling functions.
 		if ( ! function_exists( 'media_sideload_image' ) ) {
@@ -1059,7 +1063,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 			$parent_media_id = isset( $media_file['id'] ) ? intval( $media_file['id'] ) : 0;
 			$media_title     = isset( $media_file['title'] ) ? $media_file['title'] : basename( $media_url );
 			$media_mime_type = isset( $media_file['mime_type'] ) ? sanitize_text_field( $media_file['mime_type'] ) : '';
-			$attachment_data = isset( $media_file['attachment_data'] ) ? $media_file['attachment_data'] : array();
+			$attachment_data = isset( $media_file['attachment_data'] ) ? $media_file['attachment_data'] : [];
 
 			// Validate each media.
 			if (
@@ -1077,10 +1081,10 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 				return new \WP_Error(
 					'invalid_media_details',
 					__( 'Invalid media details provided.', 'onemedia' ),
-					array(
+					[
 						'status'  => 400,
 						'success' => false,
-					)
+					]
 				);
 			}
 
@@ -1088,12 +1092,12 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 			$attachment_data = array_map( 'sanitize_text_field', $attachment_data );
 
 			// Add attachment title, alt_text, caption, description.
-			$attachment_metadata = array(
+			$attachment_metadata = [
 				'post_title'   => isset( $attachment_data['post_title'] ) ? sanitize_text_field( $attachment_data['post_title'] ) : '',
 				'alt_text'     => isset( $attachment_data['alt_text'] ) ? sanitize_text_field( $attachment_data['alt_text'] ) : '',
 				'post_excerpt' => isset( $attachment_data['caption'] ) ? sanitize_text_field( $attachment_data['caption'] ) : '',
 				'post_content' => isset( $attachment_data['description'] ) ? sanitize_textarea_field( $attachment_data['description'] ) : '',
-			);
+			];
 
 			// Decode HTML entities in title.
 			$attachment_metadata['post_title'] = self::decode_filename( $attachment_metadata['post_title'] );
@@ -1123,30 +1127,30 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 						}
 					}
 
-					$successful_uploads[] = array(
+					$successful_uploads[] = [
 						'id'           => $saved_attachment_id,
 						'url'          => wp_get_attachment_url( $saved_attachment_id ),
 						'title'        => $media_title,
 						'parent_id'    => $parent_media_id,
-						'parent_terms' => self::get_onemedia_attachment_terms( $saved_attachment_id ) ?? array(),
-					);
+						'parent_terms' => self::get_onemedia_attachment_terms( $saved_attachment_id ) ?? [],
+					];
 				} else {
 					// Media already shared but in different configuration. Convert media from non-sync to sync.
 					if ( ! is_numeric( $attachment_id ) || 'attachment' !== get_post_type( $attachment_id ) ) {
-						$errors[] = array(
+						$errors[] = [
 							'url'   => $media_url,
 							'title' => $media_title,
 							'error' => __( 'Invalid attachment ID provided for converted media.', 'onemedia' ),
-						);
+						];
 						continue;
 					}
 
 					if ( ! hash_equals( wp_json_encode( $saved_attachment_id ), wp_json_encode( $attachment_id ) ) ) {
-						$errors[] = array(
+						$errors[] = [
 							'url'   => $media_url,
 							'title' => $media_title,
 							'error' => __( 'Attachment ID does not match the saved attachment ID for the parent media.', 'onemedia' ),
-						);
+						];
 						continue;
 					}
 
@@ -1158,13 +1162,13 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 					// Update the existing attachment with new metadata if any changes are present.
 					$this->add_source_metadata_to_file( $attachment_id, $attachment_metadata );
 
-					$successful_uploads[] = array(
+					$successful_uploads[] = [
 						'id'           => $attachment_id,
 						'url'          => wp_get_attachment_url( $attachment_id ),
 						'title'        => $media_title,
 						'parent_id'    => $parent_media_id,
-						'parent_terms' => self::get_onemedia_attachment_terms( $attachment_id ) ?? array(),
-					);
+						'parent_terms' => self::get_onemedia_attachment_terms( $attachment_id ) ?? [],
+					];
 				}
 			} else { // New media file, not shared previously.
 
@@ -1178,16 +1182,16 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 				$file_details = $this->handle_local_url( $media_url );
 
 				if ( is_wp_error( $file_details ) ) {
-					$errors[] = array(
+					$errors[] = [
 						'url'   => $media_url,
 						'title' => $media_title,
 						'error' => $file_details->get_error_message(),
-					);
+					];
 					continue;
 				}
 
 				// Get all terms of onemedia_media_type taxonomy from current media file.
-				$terms = array( ONEMEDIA_PLUGIN_TAXONOMY_TERM );
+				$terms = [ ONEMEDIA_PLUGIN_TAXONOMY_TERM ];
 
 				// Add the source attachment metadata to the media file.
 				$file_details['attachment_metadata'] = $attachment_metadata;
@@ -1200,11 +1204,11 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 					if ( isset( $file_details['temp_file'] ) && file_exists( $file_details['temp_file'] ) ) {
 						// Ignoring the PHPCS warning because the $temp_file is in the /tmp/ directory.
 						if ( ! unlink( $file_details['temp_file'] ) ) { // phpcs:ignore WordPressVIPMinimum.Functions.RestrictedFunctions.file_ops_unlink
-							$errors[] = array(
+							$errors[] = [
 								'url'   => $media_url,
 								'title' => $media_title,
 								'error' => __( 'Failed to delete temporary file.', 'onemedia' ),
-							);
+							];
 						}
 					}
 
@@ -1212,17 +1216,17 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 					$attachment_errors = $attachment_id->get_error_messages();
 
 					if ( ! is_array( $attachment_errors ) || empty( $attachment_errors ) ) {
-						$attachment_errors = array(
+						$attachment_errors = [
 							__( 'Unknown error occurred while creating attachment.', 'onemedia' ),
-						);
+						];
 					}
 
 					foreach ( $attachment_errors as $error_message ) {
-						$errors[] = array(
+						$errors[] = [
 							'url'   => $media_url,
 							'title' => $media_title,
 							'error' => $error_message,
-						);
+						];
 					}
 					continue;
 				}
@@ -1235,22 +1239,22 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 					$success = update_option( self::ONEMEDIA_ATTACHMENT_KEY_MAP_OPTION, $attachment_key_map );
 
 					if ( ! $success ) {
-						$errors[] = array(
+						$errors[] = [
 							'url'   => $media_url,
 							'title' => $media_title,
 							'error' => __( 'Failed to update attachment key map option.', 'onemedia' ),
-						);
+						];
 						continue;
 					}
 				}
 
-				$successful_uploads[] = array(
+				$successful_uploads[] = [
 					'id'           => $attachment_id,
 					'url'          => wp_get_attachment_url( $attachment_id ),
 					'title'        => $media_title,
 					'parent_id'    => $parent_media_id,
-					'parent_terms' => self::get_onemedia_attachment_terms( $attachment_id ) ?? array(),
-				);
+					'parent_terms' => self::get_onemedia_attachment_terms( $attachment_id ) ?? [],
+				];
 			}
 		}
 
@@ -1268,13 +1272,13 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 					Basic_Options_Controller::get_sitename_by_url( get_bloginfo( 'url' ) ),
 					$unsupported_file_types,
 				),
-				array(
+				[
 					'status'             => 500,
 					'errors'             => $errors,
 					'media'              => $successful_uploads,
 					'success'            => false,
 					'is_mime_type_error' => true,
-				)
+				]
 			);
 		}
 
@@ -1287,22 +1291,22 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 					__( 'Some media files failed to upload to %s site.', 'onemedia' ),
 					get_bloginfo( 'name' )
 				),
-				array(
+				[
 					'status'  => 500,
 					'errors'  => $errors,
 					'media'   => $successful_uploads,
 					'success' => false,
-				)
+				]
 			);
 		}
 
 		return rest_ensure_response(
-			array(
+			[
 				'message' => __( 'Media files added.', 'onemedia' ),
 				'media'   => $successful_uploads,
 				'status'  => 200,
 				'success' => true,
-			)
+			]
 		);
 	}
 
@@ -1321,10 +1325,10 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 			return new \WP_Error(
 				'invalid_data',
 				__( 'Invalid data provided.', 'onemedia' ),
-				array(
+				[
 					'status'  => 400,
 					'success' => false,
-				)
+				]
 			);
 		}
 
@@ -1332,10 +1336,10 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 			return new \WP_Error(
 				'invalid_data',
 				__( 'Invalid data provided.', 'onemedia' ),
-				array(
+				[
 					'status'  => 400,
 					'success' => false,
-				)
+				]
 			);
 		}
 
@@ -1347,10 +1351,10 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 			return new \WP_Error(
 				'invalid_data',
 				__( 'Invalid attachment file type provided.', 'onemedia' ),
-				array(
+				[
 					'status'  => 400,
 					'success' => false,
-				)
+				]
 			);
 		}
 
@@ -1363,10 +1367,10 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 					return new \WP_Error(
 						'error',
 						__( 'Failed to assign term to attachment.', 'onemedia' ),
-						array(
+						[
 							'status'  => 500,
 							'success' => false,
-						)
+						]
 					);
 				}
 			}
@@ -1375,11 +1379,11 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 			$is_sync_media = MediaActions::is_sync_attachment( $attachment_id );
 			if ( $is_sync_media ) {
 				return rest_ensure_response(
-					array(
+					[
 						'message' => __( 'Media has been added already.', 'onemedia' ),
 						'status'  => 500,
 						'success' => false,
-					)
+					]
 				);
 			}
 
@@ -1394,10 +1398,10 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 				$brand_site_prefix = '/wp-json/' . Abstract_REST_Controller::NAMESPACE . '/add-media';
 
 				// Failed to sync media files to brand sites.
-				$failed_sites = array();
+				$failed_sites = [];
 
 				// Success response.
-				$success_response = array();
+				$success_response = [];
 
 				// Get all registered brand sites to compare endpoint and get API token before sharing media.
 				$all_brand_sites = Settings::get_shared_sites();
@@ -1411,14 +1415,14 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 					$site_token = '';
 
 					if ( empty( $site_url ) ) {
-						$failed_sites[] = array(
+						$failed_sites[] = [
 							'site_name' => $site_name,
 							'site'      => $site,
 							'message'   => __( 'Invalid site URL.', 'onemedia' ),
 							'site_url'  => $site_url . $brand_site_prefix,
 							'token'     => $site_token,
 							'child_key' => Settings::get_api_key(),
-						);
+						];
 						continue;
 					}
 
@@ -1434,14 +1438,14 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 					// This is the attachment id on the brand site since this media was previously shared.
 					$child_id = $site['id'];
 					if ( ! isset( $child_id ) ) {
-						$failed_sites[] = array(
+						$failed_sites[] = [
 							'site_name' => $site_name,
 							'site'      => $site,
 							'message'   => __( 'Invalid child ID data.', 'onemedia' ),
 							'site_url'  => $site_url . $brand_site_prefix,
 							'token'     => $site_token,
 							'child_key' => Settings::get_api_key(),
-						);
+						];
 						continue;
 					}
 
@@ -1458,34 +1462,34 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 					$attachment_data['description'] = get_post_field( 'post_content', $attachment_id );
 
 					// Add the file to convert its type from non sync to sync.
-					$media_files = array(
-						array(
+					$media_files = [
+						[
 							'id'              => $attachment_id,
 							'url'             => wp_get_attachment_url( $attachment_id ),
 							'title'           => $title,
 							'child_id'        => $child_id,
 							'mime_type'       => $attachment_file_type,
 							'attachment_data' => $attachment_data,
-						),
-					);
+						],
+					];
 
 					// Prepare the request to the brand site.
 					$response = wp_remote_post(
 						$site_url . $brand_site_prefix,
-						array(
-							'headers'   => array(
-								'X-OneMedia-Token' => ( $site_token ),
+						[
+							'headers'   => [
+								'X-OneMedia-Token' => $site_token,
 								'Cache-Control'    => 'no-cache, no-store, must-revalidate',
-							),
+							],
 							'body'      => (
-								array(
+								[
 									'media_files' => $media_files,
 									'sync_option' => $sync_option,
-								)
+								]
 							),
 							'timeout'   => self::SYNC_MEDIA_REQUEST_TIMEOUT, // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout
 							'sslverify' => false,
-						)
+						]
 					);
 
 					$response_body = wp_remote_retrieve_body( $response );
@@ -1495,10 +1499,10 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 					$response_code = wp_remote_retrieve_response_code( $response );
 
 					if ( is_wp_error( $response ) || 200 !== $response_code ) {
-						$errors             = $response_body['data']['errors'] ?? array();
+						$errors             = $response_body['data']['errors'] ?? [];
 						$is_mime_type_error = $response_body['data']['is_mime_type_error'] ?? false;
 
-						$failed_sites[] = array(
+						$failed_sites[] = [
 							'site_name'          => $site_name,
 							'site'               => $site,
 							'message'            => $response_body['message'] ?? __( 'Failed to sync media files.', 'onemedia' ),
@@ -1507,61 +1511,65 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 							'token'              => $site_token,
 							'child_key'          => Settings::get_api_key(),
 							'is_mime_type_error' => $is_mime_type_error,
-						);
+						];
 					}
 
 					// If there are any successful media syncs, process them.
 					// Successful response from the brand site, the media files were synced.
 					$success_response[] = $response_body;
 
-					$media_response_list = isset( $response_body['media'] ) ? $response_body['media'] : array();
+					$media_response_list = isset( $response_body['media'] ) ? $response_body['media'] : [];
 
 					// In case of error response, media list is in data key.
 					if ( empty( $media_response_list ) && isset( $response_body['data']['media'] ) ) {
 						$media_response_list = $response_body['data']['media'];
 					}
 
-					if ( ! empty( $media_response_list ) ) {
-						foreach ( $media_response_list as $media ) {
-							$parent_id = $media['parent_id'];
+					if ( empty( $media_response_list ) ) {
+						continue;
+					}
 
-							// Create option to store siteurl, parent media id and brand site media id.
-							$brand_sites_synced_media = self::fetch_brand_sites_synced_media();
-							if ( ! is_array( $brand_sites_synced_media ) ) {
-								$brand_sites_synced_media = array();
-							}
+					foreach ( $media_response_list as $media ) {
+						$parent_id = $media['parent_id'];
 
-							// Add brand site media id to the option.
-							$parent_sync_media_mapping = array(
-								$site_url => $media['id'],
-							);
+						// Create option to store siteurl, parent media id and brand site media id.
+						$brand_sites_synced_media = self::fetch_brand_sites_synced_media();
+						if ( ! is_array( $brand_sites_synced_media ) ) {
+							$brand_sites_synced_media = [];
+						}
 
-							if ( ! isset( $brand_sites_synced_media[ $parent_id ] ) ) {
-								$brand_sites_synced_media[ $parent_id ] = array();
-							}
+						// Add brand site media id to the option.
+						$parent_sync_media_mapping = [
+							$site_url => $media['id'],
+						];
 
-							$brand_sites_synced_media[ $parent_id ] = array_merge(
-								$brand_sites_synced_media[ $parent_id ],
-								$parent_sync_media_mapping
-							);
+						if ( ! isset( $brand_sites_synced_media[ $parent_id ] ) ) {
+							$brand_sites_synced_media[ $parent_id ] = [];
+						}
 
-							// Update the synced media mapping option only if there is a change.
-							$saved_brand_sites_synced_media = self::fetch_brand_sites_synced_media();
-							if ( ! hash_equals( wp_json_encode( $saved_brand_sites_synced_media ), wp_json_encode( $brand_sites_synced_media ) ) ) {
-								$success = update_option( self::BRAND_SITES_SYNCED_MEDIA_OPTION, $brand_sites_synced_media );
+						$brand_sites_synced_media[ $parent_id ] = array_merge(
+							$brand_sites_synced_media[ $parent_id ],
+							$parent_sync_media_mapping
+						);
 
-								if ( ! $success ) {
-									$failed_sites[] = array(
-										'site_name' => $site_name,
-										'site'      => $site,
-										'message'   => __( 'Failed to update synced media.', 'onemedia' ),
-										'site_url'  => $site_url . $brand_site_prefix,
-										'token'     => $site_token,
-										'child_key' => Settings::get_api_key(),
-									);
-									continue;
-								}
-							}
+						// Update the synced media mapping option only if there is a change.
+						$saved_brand_sites_synced_media = self::fetch_brand_sites_synced_media();
+						if ( hash_equals( wp_json_encode( $saved_brand_sites_synced_media ), wp_json_encode( $brand_sites_synced_media ) ) ) {
+							continue;
+						}
+
+						$success = update_option( self::BRAND_SITES_SYNCED_MEDIA_OPTION, $brand_sites_synced_media );
+
+						if ( ! $success ) {
+							$failed_sites[] = [
+								'site_name' => $site_name,
+								'site'      => $site,
+								'message'   => __( 'Failed to update synced media.', 'onemedia' ),
+								'site_url'  => $site_url . $brand_site_prefix,
+								'token'     => $site_token,
+								'child_key' => Settings::get_api_key(),
+							];
+							continue;
 						}
 					}
 				}
@@ -1570,24 +1578,24 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 					return new \WP_Error(
 						'sync_failed',
 						__( 'Failed to sync media files to some brand sites.', 'onemedia' ),
-						array(
+						[
 							'attachment_id' => $attachment_id,
 							'status'        => 500,
 							'failed_sites'  => $failed_sites,
 							'success'       => false,
-						)
+						]
 					);
 				}
 
 				return rest_ensure_response(
-					array(
+					[
 						'message'              => __( 'Sync media added successfully!', 'onemedia' ),
 						'status'               => 200,
 						'success_response'     => $success_response,
 						'attachment_id'        => $attachment_id,
 						'onemedia_sync_option' => self::fetch_brand_sites_synced_media(),
 						'success'              => true,
-					)
+					]
 				);
 			}
 		} else {
@@ -1597,12 +1605,12 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 
 		// Return success response with attachment ID.
 		return rest_ensure_response(
-			array(
+			[
 				'attachment_id' => $attachment_id,
 				'message'       => __( 'Attachment marked as sync media.', 'onemedia' ),
 				'status'        => 200,
 				'success'       => true,
-			)
+			]
 		);
 	}
 
@@ -1621,22 +1629,22 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 			return new \WP_Error(
 				'invalid_attachment_id',
 				__( 'Invalid attachment ID provided.', 'onemedia' ),
-				array(
+				[
 					'status'  => 400,
 					'success' => false,
-				)
+				]
 			);
 		}
 
 		$is_sync = MediaActions::is_sync_attachment( $attachment_id );
 
 		return rest_ensure_response(
-			array(
+			[
 				'attachment_id' => $attachment_id,
 				'is_sync'       => $is_sync,
 				'status'        => 200,
 				'success'       => true,
-			)
+			]
 		);
 	}
 
@@ -1655,10 +1663,10 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 			return new \WP_Error(
 				'invalid_attachment_id',
 				__( 'Invalid attachment ID provided.', 'onemedia' ),
-				array(
+				[
 					'status'  => 400,
 					'success' => false,
-				)
+				]
 			);
 		}
 
@@ -1668,22 +1676,22 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 			return new \WP_Error(
 				'not_sync_attachment',
 				__( 'Attachment is not a sync attachment.', 'onemedia' ),
-				array(
+				[
 					'status'  => 400,
 					'success' => false,
-				)
+				]
 			);
 		}
 
 		$versions = MediaActions::get_sync_attachment_versions( $attachment_id );
 
 		return rest_ensure_response(
-			array(
+			[
 				'attachment_id' => $attachment_id,
 				'versions'      => $versions,
 				'status'        => 200,
 				'success'       => true,
-			)
+			]
 		);
 	}
 
@@ -1702,15 +1710,15 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 			return new \WP_Error(
 				'invalid_url',
 				__( 'URL does not contain a valid path', 'onemedia' ),
-				array(
+				[
 					'status'  => 400,
 					'success' => false,
-				)
+				]
 			);
 		}
 
 		// Try multiple possible paths to find the file.
-		$possible_paths = array(
+		$possible_paths = [
 			// Direct absolute path conversion.
 			ABSPATH . ltrim( $parsed_url['path'], '/' ),
 
@@ -1722,7 +1730,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 
 			// In case of different domain pointing to same file structure.
 			dirname( ABSPATH ) . $parsed_url['path'],
-		);
+		];
 
 		$file_path = null;
 
@@ -1735,12 +1743,12 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 
 		// If file found locally.
 		if ( $file_path ) {
-			return array(
+			return [
 				'path'   => $file_path,
 				'name'   => basename( $file_path ),
 				'type'   => wp_check_filetype( basename( $file_path ) )['type'],
 				'source' => 'local',
-			);
+			];
 		}
 
 		// If file not found directly, try curl fallback.
@@ -1764,26 +1772,26 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 		}
 
 		$host = wp_parse_url( $url, PHP_URL_HOST );
-		$args = array(
-			'headers'   => array(
+		$args = [
+			'headers'   => [
 				'Host'       => $host,
 				'User-Agent' => 'Mozilla/5.0 WordPress/' . get_bloginfo( 'version' ),
-			),
+			],
 			'timeout'   => self::FETCH_MEDIA_REQUEST_TIMEOUT, // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout
 			'sslverify' => false,
-		);
+		];
 
 		$response  = wp_remote_get( $url, $args );
 		$status    = wp_remote_retrieve_response_code( $response );
 		$file_data = wp_remote_retrieve_body( $response );
-		$errors    = array();
+		$errors    = [];
 
 		if ( is_wp_error( $response ) || 200 !== $status || empty( $file_data ) ) {
 			// Ignoring the PHPCS warning because the $temp_file is in the /tmp/ directory.
 			if ( file_exists( $temp_file ) && ! unlink( $temp_file ) ) { // phpcs:ignore WordPressVIPMinimum.Functions.RestrictedFunctions.file_ops_unlink
-				$errors[] = array(
+				$errors[] = [
 					'error' => __( 'Failed to delete temporary file.', 'onemedia' ),
-				);
+				];
 			}
 			return new \WP_Error(
 				'download_failed',
@@ -1792,10 +1800,10 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 					__( 'Failed to download file from remote URL. Server status: %s', 'onemedia' ),
 					$status
 				),
-				array(
+				[
 					'status'  => 500,
 					'success' => false,
-				)
+				]
 			);
 		}
 
@@ -1804,7 +1812,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 			file_put_contents( $temp_file, $file_data ); // phpcs:ignore WordPressVIPMinimum.Functions.RestrictedFunctions.file_ops_file_put_contents
 		}
 
-		return array(
+		return [
 			'path'      => $temp_file,
 			'name'      => basename( $url ),
 			'type'      => wp_check_filetype( basename( $url ) )['type'],
@@ -1812,7 +1820,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 			'file_data' => $file_data,
 			'temp_file' => $temp_file, // Flag so we know to clean it up later.
 			'errors'    => $errors,
-		);
+		];
 	}
 
 	/**
@@ -1825,7 +1833,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 	 *
 	 * @return int|\WP_Error Attachment ID or error
 	 */
-	private function create_attachment_from_file( array $file_details, string $title, string $sync_status, array $terms = array() ): int|\WP_Error {
+	private function create_attachment_from_file( array $file_details, string $title, string $sync_status, array $terms = [] ): int|\WP_Error {
 		// Get upload directory info.
 		$uploads = wp_upload_dir();
 
@@ -1833,10 +1841,10 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 			return new \WP_Error(
 				'upload_dir_error',
 				$uploads['error'],
-				array(
+				[
 					'status'  => 500,
 					'success' => false,
-				)
+				]
 			);
 		}
 
@@ -1849,33 +1857,33 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 			return new \WP_Error(
 				'file_copy_failed',
 				__( 'Failed to copy file to uploads directory', 'onemedia' ),
-				array(
+				[
 					'status'  => 500,
 					'success' => false,
-				)
+				]
 			);
 		}
 
 		// Create attachment post.
-		$attachment = array(
+		$attachment = [
 			'guid'           => $uploads['url'] . '/' . $filename,
 			'post_mime_type' => $file_details['type'],
 			'post_title'     => $title,
 			'post_content'   => '',
 			'post_status'    => 'inherit',
-		);
+		];
 
 		// Insert the attachment.
 		$attachment_id = wp_insert_attachment( $attachment, $new_file );
 
-		$errors = array();
+		$errors = [];
 
 		if ( is_wp_error( $attachment_id ) ) {
 			// Ignoring the PHPCS warning because the $temp_file is in the /tmp/ directory.
 			if ( file_exists( $new_file ) && ! unlink( $new_file ) ) { // phpcs:ignore WordPressVIPMinimum.Functions.RestrictedFunctions.file_ops_unlink
-				$errors[] = array(
+				$errors[] = [
 					'error' => __( 'Failed to delete file after failed attachment insert.', 'onemedia' ),
-				);
+				];
 			}
 			return $attachment_id;
 		}
@@ -1893,9 +1901,9 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 		$attachment_data = wp_generate_attachment_metadata( $attachment_id, $new_file );
 
 		if ( ! $attachment_data || empty( $attachment_data ) ) {
-			$errors[] = array(
+			$errors[] = [
 				'error' => __( 'Failed to generate attachment metadata.', 'onemedia' ),
-			);
+			];
 		}
 
 		if ( ! function_exists( 'wp_update_attachment_metadata' ) ) {
@@ -1905,11 +1913,11 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 		wp_update_attachment_metadata( $attachment_id, $attachment_data );
 
 		// Update attachment metadata from source file.
-		$source_metadata = $file_details['attachment_metadata'] ?? array();
+		$source_metadata = $file_details['attachment_metadata'] ?? [];
 		$this->add_source_metadata_to_file( $attachment_id, $source_metadata );
 
 		// Delete all onemedia_media_type terms for this attachment.
-		wp_set_object_terms( $attachment_id, array(), ONEMEDIA_PLUGIN_TAXONOMY, false );
+		wp_set_object_terms( $attachment_id, [], ONEMEDIA_PLUGIN_TAXONOMY, false );
 
 		// Set the attachment terms if provided.
 		if ( is_array( $terms ) ) {
@@ -1922,12 +1930,12 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 			return new \WP_Error(
 				'attachment_errors',
 				__( 'Attachment created with some errors.', 'onemedia' ),
-				array(
+				[
 					'attachment_id' => $attachment_id,
 					'status'        => 500,
 					'errors'        => $errors,
 					'success'       => false,
-				)
+				]
 			);
 		}
 
@@ -1947,9 +1955,9 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 			return;
 		}
 
-		$update_post = array(
+		$update_post = [
 			'ID' => $attachment_id,
-		);
+		];
 
 		// Update the post title.
 		if ( ! empty( $source_metadata['post_title'] ) ) {
@@ -1972,9 +1980,11 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 		}
 
 		// Update alt text if provided.
-		if ( ! empty( $source_metadata['alt_text'] ) ) {
-			update_post_meta( $attachment_id, '_wp_attachment_image_alt', $source_metadata['alt_text'] );
+		if ( empty( $source_metadata['alt_text'] ) ) {
+			return;
 		}
+
+		update_post_meta( $attachment_id, '_wp_attachment_image_alt', $source_metadata['alt_text'] );
 	}
 
 	/**
@@ -1985,7 +1995,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 	 * @return array Array of brand site's synced media.
 	 */
 	public static function fetch_brand_sites_synced_media(): array {
-		return get_option( Media_Sharing_Controller::BRAND_SITES_SYNCED_MEDIA_OPTION, array() );
+		return get_option( self::BRAND_SITES_SYNCED_MEDIA_OPTION, [] );
 	}
 
 	/**
@@ -1998,11 +2008,10 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 	 */
 	public static function get_attachment_key_map(): array {
 		if ( ! Settings::is_consumer_site() ) {
-			return array();
+			return [];
 		}
-		return get_option( Media_Sharing_Controller::ONEMEDIA_ATTACHMENT_KEY_MAP_OPTION, array() );
+		return get_option( self::ONEMEDIA_ATTACHMENT_KEY_MAP_OPTION, [] );
 	}
-
 
 	/**
 	 * Decode filename to handle special characters.
@@ -2078,12 +2087,12 @@ class Media_Sharing_Controller extends Abstract_REST_Controller  {
 	 */
 	public static function get_onemedia_attachment_terms( int|\WP_Post $attachment_id ): array {
 		if ( ! $attachment_id ) {
-			return array();
+			return [];
 		}
 
 		$terms = get_the_terms( $attachment_id, ONEMEDIA_PLUGIN_TAXONOMY );
 		if ( is_wp_error( $terms ) || ! $terms ) {
-			return array();
+			return [];
 		}
 		return $terms;
 	}

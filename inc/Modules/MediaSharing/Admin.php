@@ -16,6 +16,7 @@ use OneMedia\Modules\Settings\Settings;
  * Class Admin
  */
 class Admin implements Registrable {
+
 	/**
 	 * {@inheritDoc}
 	 */
