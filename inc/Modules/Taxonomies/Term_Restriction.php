@@ -8,8 +8,6 @@
 namespace OneMedia\Modules\Taxonomies;
 
 use OneMedia\Contracts\Interfaces\Registrable;
-use OneMedia\Constants;
-use OneMedia\Utils;
 
 /**
  * Class CPT_Restriction
@@ -20,13 +18,13 @@ class Term_Restriction implements Registrable {
 	 * {@inheritDoc}
 	 */
 	public function register_hooks(): void {
-		add_action( 'init', array( $this, 'add_default_terms' ) );
-		add_action( 'edited_term', array( $this, 'on_term_change' ), 10, 3 );
-		add_action( 'delete_term', array( $this, 'on_term_delete' ), 10, 4 );
-		add_filter( 'pre_insert_term', array( $this, 'maybe_block_term_insert' ), 10, 2 );
-		add_action( 'pre_delete_term', array( $this, 'maybe_block_term_delete' ), 10, 2 );
-		add_action( 'edit_terms', array( $this, 'maybe_block_term_edit' ), 10, 2 );
-		add_filter( 'tag_row_actions', array( $this, 'remove_term_actions' ), 10, 2 );
+		add_action( 'init', [ $this, 'add_default_terms' ] );
+		add_action( 'edited_term', [ $this, 'on_term_change' ], 10, 3 );
+		add_action( 'delete_term', [ $this, 'on_term_delete' ], 10, 4 );
+		add_filter( 'pre_insert_term', [ $this, 'maybe_block_term_insert' ], 10, 2 );
+		add_action( 'pre_delete_term', [ $this, 'maybe_block_term_delete' ], 10, 2 );
+		add_action( 'edit_terms', [ $this, 'maybe_block_term_edit' ], 10, 2 );
+		add_filter( 'tag_row_actions', [ $this, 'remove_term_actions' ], 10, 2 );
 	}
 
 	/**
@@ -63,16 +61,18 @@ class Term_Restriction implements Registrable {
 	public function add_default_terms(): void {
 		$term_exists_fn = function_exists( 'wpcom_vip_term_exists' ) ? 'wpcom_vip_term_exists' : 'term_exists';
 
-		if ( ! $term_exists_fn( ONEMEDIA_PLUGIN_TAXONOMY_TERM, ONEMEDIA_PLUGIN_TAXONOMY ) ) {
-			wp_insert_term(
-				ONEMEDIA_PLUGIN_TERM_NAME,
-				ONEMEDIA_PLUGIN_TAXONOMY,
-				array(
-					'description' => __( 'To indicate media type which can not be deleted.', 'onemedia' ),
-					'slug'        => ONEMEDIA_PLUGIN_TAXONOMY_TERM,
-				)
-			);
+		if ( $term_exists_fn( ONEMEDIA_PLUGIN_TAXONOMY_TERM, ONEMEDIA_PLUGIN_TAXONOMY ) ) {
+			return;
 		}
+
+		wp_insert_term(
+			ONEMEDIA_PLUGIN_TERM_NAME,
+			ONEMEDIA_PLUGIN_TAXONOMY,
+			[
+				'description' => __( 'To indicate media type which can not be deleted.', 'onemedia' ),
+				'slug'        => ONEMEDIA_PLUGIN_TAXONOMY_TERM,
+			]
+		);
 	}
 
 	/**
@@ -86,7 +86,7 @@ class Term_Restriction implements Registrable {
 	 *
 	 * @return void
 	 */
-	public function  on_term_change( int $term_id, int $tt_id, string $taxonomy ): void {
+	public function on_term_change( int $term_id, int $tt_id, string $taxonomy ): void {
 		$this->show_onemedia_term_change_message( $term_id, $taxonomy, __( 'modify', 'onemedia' ) );
 	}
 
@@ -103,9 +103,11 @@ class Term_Restriction implements Registrable {
 	 * @return void
 	 */
 	public function on_term_delete( \WP_Term $term, int $tt_id, string $taxonomy, \WP_Term $deleted_term ): void {
-		if ( ONEMEDIA_PLUGIN_TAXONOMY === $taxonomy && ONEMEDIA_PLUGIN_TAXONOMY_TERM === $deleted_term->slug ) {
-			$this->add_default_terms();
+		if ( ONEMEDIA_PLUGIN_TAXONOMY !== $taxonomy || ONEMEDIA_PLUGIN_TAXONOMY_TERM !== $deleted_term->slug ) {
+			return;
 		}
+
+		$this->add_default_terms();
 	}
 
 	/**
@@ -114,8 +116,8 @@ class Term_Restriction implements Registrable {
 	 * This method prevents the addition of new terms to the ONEMEDIA_PLUGIN_TAXONOMY taxonomy,
 	 * except for the 'onemedia' term.
 	 *
-	 * @param string|array|WP_Error $term     The term being inserted.
-	 * @param string                $taxonomy The taxonomy slug.
+	 * @param string|array|\OneMedia\Modules\Taxonomies\WP_Error $term     The term being inserted.
+	 * @param string                                             $taxonomy The taxonomy slug.
 	 *
 	 * @return string|array|\WP_Error The term if valid, or a WP_Error if blocked.
 	 */
@@ -179,38 +181,42 @@ class Term_Restriction implements Registrable {
 	 * @return void
 	 */
 	public function show_onemedia_term_change_message( int $term_id, string $taxonomy, string $action ): void {
-		if ( ONEMEDIA_PLUGIN_TAXONOMY === $taxonomy ) {
-			$term = get_term( $term_id, $taxonomy );
-
-			if ( ! is_wp_error( $term ) && $term && ! empty( $term ) && ONEMEDIA_PLUGIN_TAXONOMY_TERM === $term->slug ) {
-				switch ( $action ) {
-					case 'edit':
-						$die_title = __( 'Editing', 'onemedia' );
-						break;
-					case 'delete':
-						$die_title = __( 'Deletion', 'onemedia' );
-						break;
-					case 'modify':
-						$die_title = __( 'Modification', 'onemedia' );
-						break;
-					default:
-						$die_title = __( 'Action', 'onemedia' );
-				}
-
-				wp_die(
-					sprintf(
-					/* translators: %s: action being performed (edit, delete, or modify) */
-						esc_html__( 'You cannot %s the default "onemedia" term.', 'onemedia' ),
-						esc_html( $action )
-					),
-					sprintf(
-					/* translators: %s: action being performed (edit, delete, or modify) */
-						esc_html__( 'Term %s Blocked', 'onemedia' ),
-						esc_html( $die_title )
-					),
-					array( 'response' => 403 )
-				);
-			}
+		if ( ONEMEDIA_PLUGIN_TAXONOMY !== $taxonomy ) {
+			return;
 		}
+
+		$term = get_term( $term_id, $taxonomy );
+
+		if ( is_wp_error( $term ) || ! $term || empty( $term ) || ONEMEDIA_PLUGIN_TAXONOMY_TERM !== $term->slug ) {
+			return;
+		}
+
+		switch ( $action ) {
+			case 'edit':
+				$die_title = __( 'Editing', 'onemedia' );
+				break;
+			case 'delete':
+				$die_title = __( 'Deletion', 'onemedia' );
+				break;
+			case 'modify':
+				$die_title = __( 'Modification', 'onemedia' );
+				break;
+			default:
+				$die_title = __( 'Action', 'onemedia' );
+		}
+
+		wp_die(
+			sprintf(
+			/* translators: %s: action being performed (edit, delete, or modify) */
+				esc_html__( 'You cannot %s the default "onemedia" term.', 'onemedia' ),
+				esc_html( $action )
+			),
+			sprintf(
+			/* translators: %s: action being performed (edit, delete, or modify) */
+				esc_html__( 'Term %s Blocked', 'onemedia' ),
+				esc_html( $die_title )
+			),
+			[ 'response' => 403 ]
+		);
 	}
 }

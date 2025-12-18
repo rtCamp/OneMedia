@@ -7,13 +7,10 @@
 
 namespace OneMedia\Modules\MediaLibrary;
 
-use OneMedia\Constants;
 use OneMedia\Contracts\Interfaces\Registrable;
 use OneMedia\Modules\Core\Assets;
-use OneMedia\Modules\Rest\Abstract_REST_Controller;
 use OneMedia\Modules\Settings\Admin as Settings_Admin;
 use OneMedia\Modules\Settings\Settings;
-use OneMedia\Utils;
 
 /**
  * Class Admin
@@ -31,8 +28,8 @@ class Admin implements Registrable {
 	 */
 	public function register_hooks(): void {
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_scripts' ], 20, 1 );
-		add_filter( 'ajax_query_attachments_args', [ $this,'onemedia_filter_ajax_query_attachments_args'] );
-		add_filter( 'ajax_query_attachments_args', [ $this,'onemedia_filter_ajax_query_attachments'] );
+		add_filter( 'ajax_query_attachments_args', [ $this,'onemedia_filter_ajax_query_attachments_args' ] );
+		add_filter( 'ajax_query_attachments_args', [ $this,'onemedia_filter_ajax_query_attachments' ] );
 	}
 
 	/**
@@ -43,15 +40,15 @@ class Admin implements Registrable {
 	public function enqueue_scripts( string $hook ): void {
 		$current_screen = get_current_screen();
 
-		if ( ! $current_screen instanceof \WP_Screen) {
+		if ( ! $current_screen instanceof \WP_Screen ) {
 			return;
 		}
 
-		if ( in_array( $current_screen->id, array( 'upload', 'edit-onemedia_media_type' ), true ) ) {
+		if ( in_array( $current_screen->id, [ 'upload', 'edit-onemedia_media_type' ], true ) ) {
 			wp_enqueue_style( Assets::MEDIA_TAXONOMY_STYLE_HANDLE );
 		}
 
-		if ( 'upload' !== $current_screen->id && !Settings::is_consumer_site() ) {
+		if ( 'upload' !== $current_screen->id && ! Settings::is_consumer_site() ) {
 			return;
 		}
 
@@ -95,31 +92,31 @@ class Admin implements Registrable {
 		}
 
 		// Handle direct URL parameter for grid mode.
-		$request_query = array_map( 'sanitize_text_field', isset( $_REQUEST['query'] ) ? $_REQUEST['query'] : array() );
+		$request_query = array_map( 'sanitize_text_field', isset( $_REQUEST['query'] ) ? $_REQUEST['query'] : [] );
 		if ( isset( $request_query ) && ! empty( $request_query ) && isset( $request_query['onemedia_sync_status'] ) && ! empty( $request_query['onemedia_sync_status'] ) ) {
 			$sync_status = sanitize_text_field( wp_unslash( $request_query['onemedia_sync_status'] ) );
 
 			if ( 'sync' === $sync_status ) {
-				$query['meta_query'] = array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
-					array(
+				$query['meta_query'] = [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+					[
 						'key'     => 'onemedia_sync_status',
 						'value'   => 'sync',
 						'compare' => '=',
-					),
-				);
+					],
+				];
 			} elseif ( 'no_sync' === $sync_status ) {
-				$query['meta_query'] = array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+				$query['meta_query'] = [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 					'relation' => 'OR',
-					array(
+					[
 						'key'     => 'onemedia_sync_status',
 						'value'   => 'no_sync',
 						'compare' => '=',
-					),
-					array(
+					],
+					[
 						'key'     => 'onemedia_sync_status',
 						'compare' => 'NOT EXISTS',
-					),
-				);
+					],
+				];
 			}
 		}
 
@@ -151,7 +148,7 @@ class Admin implements Registrable {
 				return $query;
 			}
 
-			$post_query = array_map( 'sanitize_text_field', isset( $_POST['query'] ) ? $_POST['query'] : array() );
+			$post_query = array_map( 'sanitize_text_field', isset( $_POST['query'] ) ? $_POST['query'] : [] );
 			if ( ! isset( $post_query ) || empty( $post_query ) || ! isset( $post_query['onemedia_sync_media_filter'] ) || empty( $post_query['onemedia_sync_media_filter'] ) ) {
 				return $query;
 			}
@@ -159,25 +156,25 @@ class Admin implements Registrable {
 			$onemedia_sync_media_filter = sanitize_text_field( wp_unslash( $post_query['onemedia_sync_media_filter'] ) );
 
 			if ( 'true' === $onemedia_sync_media_filter ) {
-				$query['tax_query'] = array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
-					array(
+				$query['tax_query'] = [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
+					[
 						'taxonomy' => ONEMEDIA_PLUGIN_TAXONOMY,
 						'field'    => 'slug',
 						'terms'    => ONEMEDIA_PLUGIN_TAXONOMY_TERM,
-					),
-				);
+					],
+				];
 			}
 
 			// If onemedia_sync_media_filter: false then exclude onemedia.
 			if ( 'false' === $onemedia_sync_media_filter ) {
-				$query['tax_query'] = array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
-					array(
+				$query['tax_query'] = [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
+					[
 						'taxonomy' => ONEMEDIA_PLUGIN_TAXONOMY,
 						'field'    => 'slug',
 						'terms'    => ONEMEDIA_PLUGIN_TAXONOMY_TERM,
 						'operator' => 'NOT IN',
-					),
-				);
+					],
+				];
 			}
 		}
 		return $query;

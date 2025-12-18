@@ -9,15 +9,10 @@
 
 namespace OneMedia\Modules\MediaLibrary;
 
-use OneMedia\Constants;
 use OneMedia\Contracts\Interfaces\Registrable;
-use OneMedia\Modules\Core\Assets;
-use OneMedia\Modules\Rest\Abstract_REST_Controller;
-use OneMedia\Modules\Rest\Media_Sharing_Controller;
-use OneMedia\Modules\Settings\Admin as Settings_Admin;
 use OneMedia\Modules\MediaSharing\Admin as MediaSharingAdmin;
+use OneMedia\Modules\Rest\Media_Sharing_Controller;
 use OneMedia\Modules\Settings\Settings;
-use OneMedia\Utils;
 
 /**
  * Class Admin
@@ -34,29 +29,29 @@ class ConsumerAdmin implements Registrable {
 		}
 
 		// Prevent attachment deletion if onemedia_sync_status is set to 'sync'.
-		add_filter( 'delete_attachment', array( $this, 'prevent_attachment_deletion' ), 10, 2 );
+		add_filter( 'delete_attachment', [ $this, 'prevent_attachment_deletion' ], 10, 2 );
 
 		// Admin notice for attachment deletion.
-		add_action( 'admin_notices', array( $this, 'show_deletion_notice' ) );
+		add_action( 'admin_notices', [ $this, 'show_deletion_notice' ] );
 
 		// Prevent attachment edit if onemedia_sync_status is set to 'sync'.
-		add_action( 'load-post.php', array( $this, 'prevent_attachment_edit' ) );
-		add_action( 'wp_ajax_save-attachment', array( $this, 'prevent_save_attachment_ajax' ), 0 );
+		add_action( 'load-post.php', [ $this, 'prevent_attachment_edit' ] );
+		add_action( 'wp_ajax_save-attachment', [ $this, 'prevent_save_attachment_ajax' ], 0 );
 
 		// Remove edit & delete links for synced attachments.
-		add_filter( 'media_row_actions', array( $this, 'remove_edit_delete_links' ), 10, 2 );
+		add_filter( 'media_row_actions', [ $this, 'remove_edit_delete_links' ], 10, 2 );
 
 		// Add column for synced attachments.
-		add_filter( 'manage_media_columns', array( $this, 'add_sync_column' ) );
-		add_action( 'manage_media_custom_column', array( $this, 'render_sync_column' ), 10, 2 );
+		add_filter( 'manage_media_columns', [ $this, 'add_sync_column' ] );
+		add_action( 'manage_media_custom_column', [ $this, 'render_sync_column' ], 10, 2 );
 
 		// Add column for source identification.
-		add_action( 'manage_media_columns', array( $this, 'add_source_column' ), 10, 2 );
-		add_action( 'manage_media_custom_column', array( $this, 'render_source_column' ), 10, 2 );
+		add_action( 'manage_media_columns', [ $this, 'add_source_column' ], 10, 2 );
+		add_action( 'manage_media_custom_column', [ $this, 'render_source_column' ], 10, 2 );
 
 		// Create media filter for synced attachments.
-		add_action( 'restrict_manage_posts', array( $this, 'add_sync_filter' ) );
-		add_action( 'parse_query', array( $this, 'filter_sync_attachments' ) );
+		add_action( 'restrict_manage_posts', [ $this, 'add_sync_filter' ] );
+		add_action( 'parse_query', [ $this, 'filter_sync_attachments' ] );
 	}
 
 	/**
@@ -67,23 +62,25 @@ class ConsumerAdmin implements Registrable {
 	public function add_sync_filter(): void {
 		global $pagenow;
 
-		if ( 'upload.php' === $pagenow ) {
-			// Nonce verification for filter form.
-			$nonce = filter_input( INPUT_GET, 'onemedia_sync_nonce', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
-			$nonce = isset( $nonce ) ? sanitize_text_field( wp_unslash( $nonce ) ) : '';
+		if ( 'upload.php' !== $pagenow ) {
+			return;
+		}
 
-			if ( ! $nonce ) {
-				// This means this is the first load of the page, so we don't have onemedia_sync_filter nonce yet.
-				echo MediaSharingAdmin::onemedia_get_template_content( 'brand-site/sync-status' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			} elseif ( $nonce && wp_verify_nonce( $nonce, 'onemedia_sync_filter' ) ) {
-				// This means the form has been submitted, so we have a nonce to verify.
-				$sync_status = isset( $_GET[ Media_Sharing_Controller::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY ] )
-					? sanitize_text_field( wp_unslash( $_GET[ Media_Sharing_Controller::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY ] ) )
-					: '';
+		// Nonce verification for filter form.
+		$nonce = filter_input( INPUT_GET, 'onemedia_sync_nonce', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+		$nonce = isset( $nonce ) ? sanitize_text_field( wp_unslash( $nonce ) ) : '';
 
-				// Escaping handled in the template file.
-				echo MediaSharingAdmin::onemedia_get_template_content( 'brand-site/sync-status', array( 'sync_status' => $sync_status ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			}
+		if ( ! $nonce ) {
+			// This means this is the first load of the page, so we don't have onemedia_sync_filter nonce yet.
+			echo MediaSharingAdmin::onemedia_get_template_content( 'brand-site/sync-status' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		} elseif ( $nonce && wp_verify_nonce( $nonce, 'onemedia_sync_filter' ) ) {
+			// This means the form has been submitted, so we have a nonce to verify.
+			$sync_status = isset( $_GET[ Media_Sharing_Controller::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY ] )
+				? sanitize_text_field( wp_unslash( $_GET[ Media_Sharing_Controller::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY ] ) )
+				: '';
+
+			// Escaping handled in the template file.
+			echo MediaSharingAdmin::onemedia_get_template_content( 'brand-site/sync-status', [ 'sync_status' => $sync_status ] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		}
 	}
 
@@ -113,29 +110,29 @@ class ConsumerAdmin implements Registrable {
 			if ( 'sync' === $sync_status ) {
 				$query->set(
 					'meta_query',
-					array(
-						array(
+					[
+						[
 							'key'     => Media_Sharing_Controller::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY,
 							'value'   => 'sync',
 							'compare' => '=',
-						),
-					)
+						],
+					]
 				);
 			} elseif ( 'no_sync' === $sync_status ) {
 				$query->set(
 					'meta_query',
-					array(
+					[
 						'relation' => 'OR',
-						array(
+						[
 							'key'     => Media_Sharing_Controller::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY,
 							'value'   => 'no_sync',
 							'compare' => '=',
-						),
-						array(
+						],
+						[
 							'key'     => Media_Sharing_Controller::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY,
 							'compare' => 'NOT EXISTS',
-						),
-					)
+						],
+					]
 				);
 			}
 		}
@@ -190,15 +187,17 @@ class ConsumerAdmin implements Registrable {
 		}
 
 		// Check for edit notice transient.
-		if ( get_transient( 'onemedia_sync_edit_notice' ) ) {
-			?>
-			<div class="notice notice-error is-dismissible">
-				<p><?php esc_html_e( 'This file is synced from Governing site, please edit it over there.', 'onemedia' ); ?></p>
-			</div>
-			<?php
-			// Delete the transient so the notice only shows once.
-			delete_transient( 'onemedia_sync_edit_notice' );
+		if ( ! get_transient( 'onemedia_sync_edit_notice' ) ) {
+			return;
 		}
+
+		?>
+		<div class="notice notice-error is-dismissible">
+			<p><?php esc_html_e( 'This file is synced from Governing site, please edit it over there.', 'onemedia' ); ?></p>
+		</div>
+		<?php
+		// Delete the transient so the notice only shows once.
+		delete_transient( 'onemedia_sync_edit_notice' );
 	}
 
 	/**
@@ -258,9 +257,9 @@ class ConsumerAdmin implements Registrable {
 		if ( 'sync' === $onemedia_sync_status ) {
 			set_transient( 'onemedia_sync_edit_notice', true, 30 );
 			wp_send_json_error(
-				array(
+				[
 					'message' => __( 'This file is synced from the Governing Site, please edit it over there.', 'onemedia' ),
-				),
+				],
 				500
 			);
 			exit;
@@ -317,13 +316,15 @@ class ConsumerAdmin implements Registrable {
 	 * @return void
 	 */
 	public function render_sync_column( string $column_name, int $post_id ): void {
-		if ( 'onemedia_sync_status' === $column_name ) {
-			$onemedia_sync_status = self::get_sync_status_postmeta( $post_id );
-			if ( 'sync' === $onemedia_sync_status ) {
-				echo '<span class="onemedia-sync-badge dashicons dashicons-yes"></span>';
-			} else {
-				echo '<span class="dashicons dashicons-no"></span>';
-			}
+		if ( 'onemedia_sync_status' !== $column_name ) {
+			return;
+		}
+
+		$onemedia_sync_status = self::get_sync_status_postmeta( $post_id );
+		if ( 'sync' === $onemedia_sync_status ) {
+			echo '<span class="onemedia-sync-badge dashicons dashicons-yes"></span>';
+		} else {
+			echo '<span class="dashicons dashicons-no"></span>';
 		}
 	}
 
@@ -348,31 +349,32 @@ class ConsumerAdmin implements Registrable {
 	 * @return void
 	 */
 	public function render_source_column( string $column_name, int $post_id ): void {
-		if ( 'onemedia_source' === $column_name ) {
-			$terms                = UserInterface::get_onemedia_attachment_post_terms( $post_id, array( 'fields' => 'names' ) );
-			$onemedia_sync_status = self::get_sync_status_postmeta( $post_id );
+		if ( 'onemedia_source' !== $column_name ) {
+			return;
+		}
 
-			// Add governing_site_url link to the output.
-			if ( ! empty( $terms ) && isset( array_flip( $terms )[ ONEMEDIA_PLUGIN_TAXONOMY_TERM ] ) && ! empty( $onemedia_sync_status ) && $onemedia_sync_status ) {
-				$saved_governing_site_url = Settings::get_parent_site_url();
-				if ( $saved_governing_site_url ) {
-					printf(
-					/* translators: %1$s is the site URL, %2$s is the link text. */
-						'<a href="%1$s">%2$s</a>',
-						esc_url( $saved_governing_site_url ),
-						esc_html__( 'Governing Site', 'onemedia' )
-					);
+		$terms                = UserInterface::get_onemedia_attachment_post_terms( $post_id, [ 'fields' => 'names' ] );
+		$onemedia_sync_status = self::get_sync_status_postmeta( $post_id );
 
-				} else {
-					esc_html_e( 'Governing Site', 'onemedia' );
-				}
-			} else {
+		// Add governing_site_url link to the output.
+		if ( ! empty( $terms ) && isset( array_flip( $terms )[ ONEMEDIA_PLUGIN_TAXONOMY_TERM ] ) && ! empty( $onemedia_sync_status ) && $onemedia_sync_status ) {
+			$saved_governing_site_url = Settings::get_parent_site_url();
+			if ( $saved_governing_site_url ) {
 				printf(
-				/* translators: %s is the screen reader text. */
-					'<span aria-hidden="true">&#8212;</span><span class="screen-reader-text">%s</span>',
-					esc_html__( '(no author)', 'onemedia' )
+				/* translators: %1$s is the site URL, %2$s is the link text. */
+					'<a href="%1$s">%2$s</a>',
+					esc_url( $saved_governing_site_url ),
+					esc_html__( 'Governing Site', 'onemedia' )
 				);
+			} else {
+				esc_html_e( 'Governing Site', 'onemedia' );
 			}
+		} else {
+			printf(
+			/* translators: %s is the screen reader text. */
+				'<span aria-hidden="true">&#8212;</span><span class="screen-reader-text">%s</span>',
+				esc_html__( '(no author)', 'onemedia' )
+			);
 		}
 	}
 

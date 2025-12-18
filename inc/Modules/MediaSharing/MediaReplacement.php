@@ -10,19 +10,11 @@
 
 namespace OneMedia\Modules\MediaSharing;
 
-use OneMedia\Constants;
-use OneMedia\Contracts\Interfaces\Registrable;
-use OneMedia\Modules\Core\Assets;
-use OneMedia\Modules\Rest\Abstract_REST_Controller;
-use OneMedia\Modules\Rest\Media_Sharing_Controller;
-use OneMedia\Modules\Settings\Admin as Settings_Admin;
-use OneMedia\Modules\Settings\Settings;
-use OneMedia\Utils;
-
 /**
  * Class Admin
  */
-class MediaReplacement{
+class MediaReplacement {
+
 	/**
 	 * Replace image across all post types.
 	 *
@@ -58,14 +50,14 @@ class MediaReplacement{
 		}
 
 		// Updated regex pattern to match both block editor and classic editor images.
-		$patterns = array(
+		$patterns = [
 			// Block editor pattern (more flexible).
 			'/<!-- wp:image \{[^}]*?"id":\s*' . $attachment_id . '[^}]*?\} -->\s*<figure[^>]*>.*?<img[^>]+wp-image-' . $attachment_id . '[^>]*>.*?(?:<figcaption[^>]*>.*?<\/figcaption>)?\s*<\/figure>\s*<!-- \/wp:image -->/is',
 			// Classic editor / HTML pattern.
 			'/<figure[^>]*class="[^"]*wp-block-image[^"]*"[^>]*>\s*<img[^>]+wp-image-' . $attachment_id . '[^>]*>.*?(?:<figcaption[^>]*>.*?<\/figcaption>)?\s*<\/figure>/is',
 			// Simple img tag with wp-image class.
 			'/<img[^>]+wp-image-' . $attachment_id . '[^>]*>/is',
-		);
+		];
 
 		foreach ( $posts_with_image as $post ) {
 			$original_content = $post->post_content;
@@ -75,7 +67,7 @@ class MediaReplacement{
 			foreach ( $patterns as $pattern ) {
 				$updated_content = preg_replace_callback(
 					$pattern,
-					function ( $matches ) use ( $attachment_permalink, $alt_text, $caption, $attachment_id ) {
+					static function ( $matches ) use ( $attachment_permalink, $alt_text, $caption ) {
 						$content = $matches[0];
 
 						// Replace src attribute.
@@ -135,23 +127,27 @@ class MediaReplacement{
 			}
 
 			// Update the post if content changed.
-			if ( $updated_content !== $original_content ) {
-				$wpdb->update( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
-					$wpdb->posts,
-					array( 'post_content' => $updated_content ),
-					array( 'ID' => $post->ID ),
-					array( '%s' ),
-					array( '%d' )
-				);
-
-				// Clear any caches for this post.
-				clean_post_cache( $post->ID );
-
-				// For wp_template posts, also clear template cache.
-				if ( 'wp_template' === $post->post_type ) {
-					wp_cache_delete( 'theme_template_' . $post->ID, 'themes' );
-				}
+			if ( $updated_content === $original_content ) {
+				continue;
 			}
+
+			$wpdb->update( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+				$wpdb->posts,
+				[ 'post_content' => $updated_content ],
+				[ 'ID' => $post->ID ],
+				[ '%s' ],
+				[ '%d' ]
+			);
+
+			// Clear any caches for this post.
+			clean_post_cache( $post->ID );
+
+			// For wp_template posts, also clear template cache.
+			if ( 'wp_template' !== $post->post_type ) {
+				continue;
+			}
+
+			wp_cache_delete( 'theme_template_' . $post->ID, 'themes' );
 		}
 
 		// Also search and replace in meta fields that might contain image references.
@@ -176,7 +172,7 @@ class MediaReplacement{
 			foreach ( $patterns as $pattern ) {
 				$updated_meta = preg_replace_callback(
 					$pattern,
-					function ( $matches ) use ( $attachment_permalink, $alt_text, $caption, $attachment_id ) {
+					static function ( $matches ) use ( $attachment_permalink, $alt_text, $caption ) {
 						$content = $matches[0];
 
 						// Same replacement logic as above.
@@ -215,9 +211,11 @@ class MediaReplacement{
 			}
 
 			// Update meta if changed.
-			if ( $updated_meta !== $meta->meta_value ) {
-				update_post_meta( $meta->post_id, $meta->meta_key, $updated_meta );
+			if ( $updated_meta === $meta->meta_value ) {
+				continue;
 			}
+
+			update_post_meta( $meta->post_id, $meta->meta_key, $updated_meta );
 		}
 	}
 }

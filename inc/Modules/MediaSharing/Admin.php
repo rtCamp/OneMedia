@@ -9,10 +9,8 @@ namespace OneMedia\Modules\MediaSharing;
 
 use OneMedia\Contracts\Interfaces\Registrable;
 use OneMedia\Modules\Core\Assets;
-use OneMedia\Modules\Rest\Abstract_REST_Controller;
 use OneMedia\Modules\Settings\Admin as Settings_Admin;
 use OneMedia\Modules\Settings\Settings;
-use OneMedia\Utils;
 
 /**
  * Class Admin
@@ -30,7 +28,7 @@ class Admin implements Registrable {
 	 */
 	public function register_hooks(): void {
 		add_action( 'admin_menu', [ $this, 'add_submenu' ], 20 ); // 20 priority to make sure settings page respect its position.
-		add_action( 'current_screen', array( $this, 'add_help_tabs' ) );
+		add_action( 'current_screen', [ $this, 'add_help_tabs' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_scripts' ], 20, 1 );
 	}
 
@@ -49,7 +47,7 @@ class Admin implements Registrable {
 			'<span class="onemedia-media-sharing-page">' . __( 'Media Sharing', 'onemedia' ) . '</span>',
 			'manage_options',
 			Settings_Admin::MENU_SLUG,
-			array( $this, 'screen_callback' ),
+			[ $this, 'screen_callback' ],
 			1
 		);
 	}
@@ -122,38 +120,38 @@ class Admin implements Registrable {
 
 		// Overview tab.
 		$screen->add_help_tab(
-			array(
+			[
 				'id'      => 'onemedia-overview',
 				'title'   => __( 'Overview', 'onemedia' ),
 				'content' => $help_overview_content,
-			)
+			]
 		);
 
 		// How to Share tab.
 		$screen->add_help_tab(
-			array(
+			[
 				'id'      => 'onemedia-how-to-share',
 				'title'   => __( 'How to Share', 'onemedia' ),
 				'content' => $help_how_to_share_content,
-			)
+			]
 		);
 
 		// Sharing Modes tab.
 		$screen->add_help_tab(
-			array(
+			[
 				'id'      => 'onemedia-sharing-modes',
 				'title'   => __( 'Sharing Modes', 'onemedia' ),
 				'content' => $help_sharing_modes_content,
-			)
+			]
 		);
 
 		// Best Practices tab.
 		$screen->add_help_tab(
-			array(
+			[
 				'id'      => 'onemedia-best-practices',
 				'title'   => __( 'Tips & Best Practices', 'onemedia' ),
 				'content' => $help_best_practices_content,
-			)
+			]
 		);
 	}
 
@@ -165,7 +163,7 @@ class Admin implements Registrable {
 	 *
 	 * @return string Template markup.
 	 */
-	public static function onemedia_get_template_content( string $slug, array $vars = array() ): string {
+	public static function onemedia_get_template_content( string $slug, array $vars = [] ): string {
 		ob_start();
 
 		$template = sprintf( '%s.php', $slug );
@@ -181,13 +179,11 @@ class Admin implements Registrable {
 
 		// Ensure vars is an array.
 		if ( ! is_array( $vars ) ) {
-			$vars = array();
+			$vars = [];
 		}
 
 		include $located_template; // phpcs:ignore WordPressVIPMinimum.Files.IncludingFile.UsingVariable
 
-		$markup = ob_get_clean();
-
-		return $markup;
+		return ob_get_clean();
 	}
 }

@@ -10,11 +10,8 @@ declare( strict_types = 1 );
 namespace OneMedia\Modules\Core;
 
 use OneMedia\Contracts\Interfaces\Registrable;
-use OneMedia\Modules\Rest\Abstract_REST_Controller;
 use OneMedia\Modules\Rest\Media_Sharing_Controller;
 use OneMedia\Modules\Settings\Settings;
-use OneMedia\Constants;
-use OneMedia\Utils;
 
 /**
  * Class Assets
@@ -34,21 +31,21 @@ final class Assets implements Registrable {
 	/**
 	 * Asset handles
 	 */
-	public const ADMIN_STYLES_HANDLE          = self::PREFIX . 'admin';
-	public const SETTINGS_SCRIPT_HANDLE       = self::PREFIX . 'settings';
-	public const ONBOARDING_SCRIPT_HANDLE     = self::PREFIX . 'setup';
+	public const ADMIN_STYLES_HANDLE      = self::PREFIX . 'admin';
+	public const SETTINGS_SCRIPT_HANDLE   = self::PREFIX . 'settings';
+	public const ONBOARDING_SCRIPT_HANDLE = self::PREFIX . 'setup';
 
-	public const MEDIA_SHARING_SCRIPT_HANDLE    = self::PREFIX . 'media-sharing';
+	public const MEDIA_SHARING_SCRIPT_HANDLE = self::PREFIX . 'media-sharing';
 
-	public const MAIN_STYLE_HANDLE          = self::PREFIX . 'main';
+	public const MAIN_STYLE_HANDLE = self::PREFIX . 'main';
 
 	public const HIDE_DELETE_BUTTON_STYLE_HANDLE = self::PREFIX . 'hide-delete-button';
 
-	public const MEDIA_FRAME_SCRIPT_HANDLE    = self::PREFIX . 'media-frame';
+	public const MEDIA_FRAME_SCRIPT_HANDLE = self::PREFIX . 'media-frame';
 
-	public const MEDIA_SYNC_FILTER_SCRIPT_HANDLE    = self::PREFIX . 'media-sync-filter';
+	public const MEDIA_SYNC_FILTER_SCRIPT_HANDLE = self::PREFIX . 'media-sync-filter';
 
-	public const MEDIA_TAXONOMY_STYLE_HANDLE    = self::PREFIX . 'media-taxonomy';
+	public const MEDIA_TAXONOMY_STYLE_HANDLE = self::PREFIX . 'media-taxonomy';
 
 	/**
 	 * Localized data for scripts.
@@ -77,21 +74,21 @@ final class Assets implements Registrable {
 	public static function get_localized_data(): array {
 		if ( empty( self::$localized_data ) ) {
 			self::$localized_data = [
-				'restUrl'      => esc_url( home_url( '/wp-json' ) ),
-				'restNonce'    => wp_create_nonce( 'wp_rest' ),
-				'apiKey'       => Settings::get_api_key(),
-				'settingsLink' => esc_url( admin_url( 'admin.php?page=onemedia-settings' ) ),
-				'siteType'     => Settings::get_site_type(),
-				'siteName'     => get_bloginfo( 'name' ),
+				'restUrl'          => esc_url( home_url( '/wp-json' ) ),
+				'restNonce'        => wp_create_nonce( 'wp_rest' ),
+				'apiKey'           => Settings::get_api_key(),
+				'settingsLink'     => esc_url( admin_url( 'admin.php?page=onemedia-settings' ) ),
+				'siteType'         => Settings::get_site_type(),
+				'siteName'         => get_bloginfo( 'name' ),
 				'ajaxUrl'          => admin_url( 'admin-ajax.php' ),
 				'uploadNonce'      => wp_create_nonce( 'onemedia_upload_media' ),
 				'allowedMimeTypes' => Media_Sharing_Controller::get_supported_mime_types(),
-				'mediaSyncNonce'        => wp_create_nonce( 'onemedia_check_sync_status' ),
-				'allLabel'     => __( 'All media', 'onemedia' ),
-				'syncLabel'    => __( 'Synced', 'onemedia' ),
-				'notSyncLabel' => __( 'Not Synced', 'onemedia' ),
-				'filterLabel'  => __( 'Sync Status', 'onemedia' ),
-				'syncStatus'   => Media_Sharing_Controller::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY,
+				'mediaSyncNonce'   => wp_create_nonce( 'onemedia_check_sync_status' ),
+				'allLabel'         => __( 'All media', 'onemedia' ),
+				'syncLabel'        => __( 'Synced', 'onemedia' ),
+				'notSyncLabel'     => __( 'Not Synced', 'onemedia' ),
+				'filterLabel'      => __( 'Sync Status', 'onemedia' ),
+				'syncStatus'       => Media_Sharing_Controller::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY,
 			];
 		}
 
@@ -121,19 +118,16 @@ final class Assets implements Registrable {
 	 *
 	 * Assets are registered once centrally, and enqueued in the modules that need them.
 	 */
-	public function register_assets(string $hook_suffix): void {
-			// Register scripts related to media sharing page.
-			$this->register_script( self::MEDIA_SHARING_SCRIPT_HANDLE, 'media-sharing' );
-			$this->register_style( self::MAIN_STYLE_HANDLE, 'main' );
-			$this->register_style( self::HIDE_DELETE_BUTTON_STYLE_HANDLE, 'hide-delete-button' );
-			$this->register_script( self::MEDIA_FRAME_SCRIPT_HANDLE, 'media-frame' );
-
-
+	public function register_assets( string $hook_suffix ): void {
+		// Register scripts related to media sharing page.
+		$this->register_script( self::MEDIA_SHARING_SCRIPT_HANDLE, 'media-sharing' );
+		$this->register_style( self::MAIN_STYLE_HANDLE, 'main' );
+		$this->register_style( self::HIDE_DELETE_BUTTON_STYLE_HANDLE, 'hide-delete-button' );
+		$this->register_script( self::MEDIA_FRAME_SCRIPT_HANDLE, 'media-frame' );
 
 		// Register scripts related to media library.
 		$this->register_script( self::MEDIA_SYNC_FILTER_SCRIPT_HANDLE, 'media-sync-filter' );
 		$this->register_style( self::MEDIA_TAXONOMY_STYLE_HANDLE, 'media-taxonomy', );
-
 
 		$this->register_script( self::SETTINGS_SCRIPT_HANDLE, 'settings' );
 		$this->register_style( self::SETTINGS_SCRIPT_HANDLE, 'settings', [ 'wp-components' ] );

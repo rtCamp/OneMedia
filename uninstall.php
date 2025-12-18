@@ -90,15 +90,15 @@ function delete_plugin_data(): void {
 		// Remove all relationships for this term.
 		$wpdb->delete( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$term_relationships_table,
-			array( 'term_taxonomy_id' => $term_taxonomy_id ),
-			array( '%d' )
+			[ 'term_taxonomy_id' => $term_taxonomy_id ],
+			[ '%d' ]
 		);
 
 		// Remove the term and its taxonomy entry.
 		$wpdb->delete( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$term_taxonomy_table,
-			array( 'term_taxonomy_id' => $term_taxonomy_id ),
-			array( '%d' )
+			[ 'term_taxonomy_id' => $term_taxonomy_id ],
+			[ '%d' ]
 		);
 
 		$delete_query = sprintf(

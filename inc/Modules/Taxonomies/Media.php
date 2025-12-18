@@ -7,7 +7,6 @@
 
 namespace OneMedia\Modules\Taxonomies;
 
-
 /**
  * Class Template
  */
@@ -16,7 +15,7 @@ class Media extends Abstract_Taxonomy {
 	public function register_hooks(): void {
 		parent::register_hooks();
 
-		add_action( 'init', array( $this, 'add_media_taxonomy_to_post_type' ) );
+		add_action( 'init', [ $this, 'add_media_taxonomy_to_post_type' ] );
 	}
 
 	/**
@@ -34,8 +33,8 @@ class Media extends Abstract_Taxonomy {
 		register_taxonomy(
 			self::get_slug(),
 			'attachment',
-			array(
-				'labels'       => array(
+			[
+				'labels'       => [
 					'name'          => __( 'Image Type', 'onemedia' ),
 					'singular_name' => __( 'Image Type', 'onemedia' ),
 					'all_items'     => __( 'All Image Types', 'onemedia' ),
@@ -46,24 +45,24 @@ class Media extends Abstract_Taxonomy {
 					'new_item_name' => __( 'New Image Type Name', 'onemedia' ),
 					'search_items'  => __( 'Search Image Types', 'onemedia' ),
 					'not_found'     => __( 'No image types found', 'onemedia' ),
-				),
+				],
 				'public'       => false,
 				'show_ui'      => true,
 				'hierarchical' => true,
 				'show_in_menu' => false,
 				'show_in_rest' => true,
 				'meta_box_cb'  => false,
-				'rewrite'      => array(
+				'rewrite'      => [
 					'slug'       => self::get_slug(),
 					'with_front' => false,
-				),
-				'capabilities' => array(
+				],
+				'capabilities' => [
 					'manage_terms' => 'manage_options',
 					'edit_terms'   => 'manage_options',
 					'delete_terms' => 'manage_options',
 					'assign_terms' => 'edit_posts',
-				),
-			)
+				],
+			]
 		);
 	}
 

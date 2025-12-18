@@ -56,12 +56,6 @@ final class Main {
 	 * Setup the plugin.
 	 */
 	private function setup(): void {
-		// Ensure all dependencies are met before loading any functionality.
-//		$dependencies_ready = Dependencies::is_ready();
-//		if ( ! $dependencies_ready ) {
-//			return;
-//		}
-
 		// Load the plugin classes.
 		$this->load();
 

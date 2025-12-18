@@ -8,8 +8,6 @@
 namespace OneMedia\Modules\MediaSharing;
 
 use OneMedia\Contracts\Interfaces\Registrable;
-use OneMedia\Constants;
-use OneMedia\Utils;
 
 /**
  * Class CPT_Restriction
@@ -20,9 +18,9 @@ class MediaProtection implements Registrable {
 	 * {@inheritDoc}
 	 */
 	public function register_hooks(): void {
-		add_filter( 'delete_attachment', array( $this, 'maybe_block_media_delete' ), 10, 1 );
-		add_action( 'admin_notices', array( $this, 'show_deletion_notice' ) );
-		add_action( 'add_attachment', array( $this, 'add_onemedia_term_to_attachment' ) );
+		add_filter( 'delete_attachment', [ $this, 'maybe_block_media_delete' ], 10, 1 );
+		add_action( 'admin_notices', [ $this, 'show_deletion_notice' ] );
+		add_action( 'add_attachment', [ $this, 'add_onemedia_term_to_attachment' ] );
 	}
 
 	/**
@@ -34,14 +32,18 @@ class MediaProtection implements Registrable {
 	 */
 	public function add_onemedia_term_to_attachment( int $attachment_id ): void {
 		$is_onemedia_attachment = metadata_exists( 'post', $attachment_id, Media_Sharing_Controller::IS_ONEMEDIA_SYNC_POSTMETA_KEY );
-		if ( $attachment_id && taxonomy_exists( ONEMEDIA_PLUGIN_TAXONOMY ) && $is_onemedia_attachment ) {
-			// Assign the 'onemedia' term to the attachment.
-			$success = wp_set_object_terms( $attachment_id, ONEMEDIA_PLUGIN_TAXONOMY_TERM, ONEMEDIA_PLUGIN_TAXONOMY, true );
-
-			if ( is_wp_error( $success ) ) {
-				wp_send_json_error( array( 'message' => __( 'Failed to assign taxonomy term to attachment.', 'onemedia' ) ), 500 );
-			}
+		if ( ! $attachment_id || ! taxonomy_exists( ONEMEDIA_PLUGIN_TAXONOMY ) || ! $is_onemedia_attachment ) {
+			return;
 		}
+
+		// Assign the 'onemedia' term to the attachment.
+		$success = wp_set_object_terms( $attachment_id, ONEMEDIA_PLUGIN_TAXONOMY_TERM, ONEMEDIA_PLUGIN_TAXONOMY, true );
+
+		if ( ! is_wp_error( $success ) ) {
+			return;
+		}
+
+		wp_send_json_error( [ 'message' => __( 'Failed to assign taxonomy term to attachment.', 'onemedia' ) ], 500 );
 	}
 
 	/**
@@ -55,7 +57,7 @@ class MediaProtection implements Registrable {
 	 * @return int|\WP_Error The attachment ID if deletion is allowed, or a WP_Error if blocked.
 	 */
 	public function maybe_block_media_delete( int $attachment_id ): int|\WP_Error {
-		$terms = UserInterface::get_onemedia_attachment_post_terms( $attachment_id, array( 'fields' => 'slugs' ) );
+		$terms = UserInterface::get_onemedia_attachment_post_terms( $attachment_id, [ 'fields' => 'slugs' ] );
 		if ( ! is_wp_error( $terms ) && ! empty( $terms ) && isset( array_flip( $terms )[ ONEMEDIA_PLUGIN_TAXONOMY_TERM ] ) ) {
 			// Set a transient to show a notice on the next admin page load.
 			set_transient( 'onemedia_delete_notice', true, 30 );
@@ -67,7 +69,6 @@ class MediaProtection implements Registrable {
 		return $attachment_id;
 	}
 
-
 	/**
 	 * Show a notice when trying to delete media that is assigned to the 'onemedia' term.
 	 *
@@ -78,14 +79,16 @@ class MediaProtection implements Registrable {
 	 */
 	public function show_deletion_notice(): void {
 		$onemedia_delete_transient = get_transient( 'onemedia_delete_notice' );
-		if ( $onemedia_delete_transient ) {
-			?>
-			<div class="notice notice-error is-dismissible">
-				<p><?php esc_html_e( 'You cannot delete media that is assigned to the "onemedia" term.', 'onemedia' ); ?></p>
-			</div>
-			<?php
-			// Delete the transient so the notice only shows once.
-			delete_transient( 'onemedia_delete_notice' );
+		if ( ! $onemedia_delete_transient ) {
+			return;
 		}
+
+		?>
+		<div class="notice notice-error is-dismissible">
+			<p><?php esc_html_e( 'You cannot delete media that is assigned to the "onemedia" term.', 'onemedia' ); ?></p>
+		</div>
+		<?php
+		// Delete the transient so the notice only shows once.
+		delete_transient( 'onemedia_delete_notice' );
 	}
 }

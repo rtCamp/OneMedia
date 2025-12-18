@@ -48,8 +48,8 @@ abstract class Abstract_Taxonomy implements Registrable {
 	 */
 	public function default_args(): array {
 		return [
-			'show_in_rest'  => true,
-			'public'        => true,
+			'show_in_rest' => true,
+			'public'       => true,
 		];
 	}
 }

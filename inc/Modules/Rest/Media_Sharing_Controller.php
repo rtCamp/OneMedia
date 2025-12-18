@@ -10,7 +10,6 @@ namespace OneMedia\Modules\Rest;
 use OneMedia\Constants;
 use OneMedia\Modules\MediaSharing\MediaActions;
 use OneMedia\Modules\Settings\Settings;
-use OneMedia\Traits\Singleton;
 use OneMedia\Utils;
 use WP_REST_Server;
 

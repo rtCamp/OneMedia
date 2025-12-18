@@ -10,15 +10,11 @@
 
 namespace OneMedia\Modules\MediaSharing;
 
-use OneMedia\Constants;
 use OneMedia\Contracts\Interfaces\Registrable;
-use OneMedia\Modules\Core\Assets;
 use OneMedia\Modules\Rest\Abstract_REST_Controller;
 use OneMedia\Modules\Rest\Basic_Options_Controller;
 use OneMedia\Modules\Rest\Media_Sharing_Controller;
-use OneMedia\Modules\Settings\Admin as Settings_Admin;
 use OneMedia\Modules\Settings\Settings;
-use OneMedia\Utils;
 
 /**
  * Class Admin
@@ -35,7 +31,7 @@ class MediaActions implements Registrable {
 	/**
 	 * Sync request timeout.
 	 *
-	 * @var number
+	 * @var \OneMedia\Modules\MediaSharing\number
 	 */
 	public const SYNC_REQUEST_TIMEOUT = 25;
 
@@ -46,50 +42,53 @@ class MediaActions implements Registrable {
 	 */
 	public const ONEMEDIA_SYNC_VERSIONS_POSTMETA_KEY = 'onemedia_sync_versions';
 
-
 	/**
 	 * {@inheritDoc}
 	 */
 	public function register_hooks(): void {
 		// Prevent updating attachment if connected sites are not available.
-		add_action( 'pre_post_update', array( $this, 'pre_update_sync_attachments' ), 10, 1 );
-		add_action( 'wp_ajax_save-attachment', array( $this, 'pre_update_sync_attachments_ajax' ), 0 );
+		add_action( 'pre_post_update', [ $this, 'pre_update_sync_attachments' ], 10, 1 );
+		add_action( 'wp_ajax_save-attachment', [ $this, 'pre_update_sync_attachments_ajax' ], 0 );
 
 		// Handle syncing the attachment metadata to brand sites for a sync media file.
-		add_action( 'attachment_updated', array( $this, 'update_sync_attachments' ), 10, 1 );
+		add_action( 'attachment_updated', [ $this, 'update_sync_attachments' ], 10, 1 );
 
 		// Remove sync option if attachment is deleted.
-		add_action( 'delete_attachment', array( $this, 'remove_sync_meta' ), 10, 1 );
+		add_action( 'delete_attachment', [ $this, 'remove_sync_meta' ], 10, 1 );
 
 		// Make sure onemedia_media_type is private on brand sites.
 		add_action(
 			'init',
-			function () {
-				if ( Settings::is_consumer_site() ) {
-					// Get onemedia_media_type.
-					$taxonomy = get_taxonomy( ONEMEDIA_PLUGIN_TAXONOMY );
-					if ( $taxonomy && $taxonomy->show_ui ) {
-						// Set onemedia_media_type to private.
-						$taxonomy->show_ui = false;
-					}
+			static function () {
+				if ( ! Settings::is_consumer_site() ) {
+					return;
 				}
+
+				// Get onemedia_media_type.
+				$taxonomy = get_taxonomy( ONEMEDIA_PLUGIN_TAXONOMY );
+				if ( ! $taxonomy || ! $taxonomy->show_ui ) {
+					return;
+				}
+
+				// Set onemedia_media_type to private.
+				$taxonomy->show_ui = false;
 			},
 			PHP_INT_MAX
 		);
 
 		// Add replace media button to media library react view.
-		add_action( 'attachment_fields_to_edit', array( $this, 'add_replace_media_button' ), 10, 2 );
+		add_action( 'attachment_fields_to_edit', [ $this, 'add_replace_media_button' ], 10, 2 );
 
-		add_action( 'wp_ajax_onemedia_sync_media_upload', array( $this, 'handle_sync_media_upload' ) );
-		add_action( 'wp_ajax_onemedia_replace_media', array( $this, 'handle_media_replace' ) );
+		add_action( 'wp_ajax_onemedia_sync_media_upload', [ $this, 'handle_sync_media_upload' ] );
+		add_action( 'wp_ajax_onemedia_replace_media', [ $this, 'handle_media_replace' ] );
 
 		// Add sync status to attachment data for JavaScript (Media Modal).
-		add_filter( 'wp_prepare_attachment_for_js', array( $this, 'add_sync_meta' ), 10, 3 );
+		add_filter( 'wp_prepare_attachment_for_js', [ $this, 'add_sync_meta' ], 10, 3 );
 
 		// Clear cache when attachment sync status changes.
-		add_action( 'updated_post_meta', array( $this, 'clear_sync_cache' ), 10, 4 );
-		add_action( 'added_post_meta', array( $this, 'clear_sync_cache' ), 10, 4 );
-		add_action( 'deleted_post_meta', array( $this, 'clear_sync_cache' ), 10, 4 );
+		add_action( 'updated_post_meta', [ $this, 'clear_sync_cache' ], 10, 4 );
+		add_action( 'added_post_meta', [ $this, 'clear_sync_cache' ], 10, 4 );
+		add_action( 'deleted_post_meta', [ $this, 'clear_sync_cache' ], 10, 4 );
 	}
 
 	/**
@@ -112,7 +111,7 @@ class MediaActions implements Registrable {
 			return $form_fields;
 		}
 
-		$form_fields['replace_media'] = array(
+		$form_fields['replace_media'] = [
 			'label' => __( 'Replace Media', 'onemedia' ),
 			'input' => 'html',
 			'html'  => sprintf(
@@ -120,7 +119,7 @@ class MediaActions implements Registrable {
 				'<div class="replace-media-react-container" data-attachment-id="%d"></div>',
 				$post->ID
 			),
-		);
+		];
 
 		return $form_fields;
 	}
@@ -148,7 +147,7 @@ class MediaActions implements Registrable {
 		delete_post_meta( $attachment_id, Media_Sharing_Controller::IS_ONEMEDIA_SYNC_POSTMETA_KEY );
 
 		// Delete onemedia_sync_status from remote sites.
-		$synced_sites = $synced_brand_site_media[ $attachment_id ] ?? array();
+		$synced_sites = $synced_brand_site_media[ $attachment_id ] ?? [];
 
 		foreach ( $synced_sites as $site => $site_media_id ) {
 			$site_url      = rtrim( $site, '/' );
@@ -169,49 +168,53 @@ class MediaActions implements Registrable {
 			// Make POST request to delete attachment on brand sites.
 			$response = wp_remote_post(
 				$site_url . '/wp-json/' . Abstract_REST_Controller::NAMESPACE . '/delete-media-metadata',
-				array(
+				[
 					'body'      => wp_json_encode(
-						array(
+						[
 							'attachment_id' => (int) $site_media_id,
-						)
+						]
 					),
 					'timeout'   => self::SYNC_REQUEST_TIMEOUT, // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout
-					'headers'   => array(
-						'X-OneMedia-Token' => ( $site_api_key ),
+					'headers'   => [
+						'X-OneMedia-Token' => $site_api_key,
 						'Cache-Control'    => 'no-cache, no-store, must-revalidate',
-					),
+					],
 					'sslverify' => false,
-				)
+				]
 			);
 
 			// Check if response is successful.
-			if ( is_wp_error( $response ) ) {
-				// Show notice in admin that media metadata deletion failed.
-				add_action(
-					'admin_notices',
-					function () use ( $site_url, $response ) {
-						$error_message = $response->get_error_message();
-						/* translators: %1$s is the site URL, %2$s is the error message. */
-						echo '<div class="notice notice-error"><p>' . esc_html( sprintf( __( 'Failed to delete media metadata on site %1$s: %2$s', 'onemedia' ), esc_html( $site_url ), esc_html( $error_message ) ) ) . '</p></div>';
-					}
-				);
-
-				wp_die(
-					sprintf(
-					/* translators: %1$s is the site URL, %2$s is the error message. */
-						esc_html__( 'Failed to delete media metadata on site %1$s: %2$s', 'onemedia' ),
-						esc_html( $site_url ),
-						esc_html( $response->get_error_message() )
-					)
-				);
+			if ( ! is_wp_error( $response ) ) {
+				continue;
 			}
+
+			// Show notice in admin that media metadata deletion failed.
+			add_action(
+				'admin_notices',
+				static function () use ( $site_url, $response ) {
+					$error_message = $response->get_error_message();
+					/* translators: %1$s is the site URL, %2$s is the error message. */
+					echo '<div class="notice notice-error"><p>' . esc_html( sprintf( __( 'Failed to delete media metadata on site %1$s: %2$s', 'onemedia' ), esc_html( $site_url ), esc_html( $error_message ) ) ) . '</p></div>';
+				}
+			);
+
+			wp_die(
+				sprintf(
+				/* translators: %1$s is the site URL, %2$s is the error message. */
+					esc_html__( 'Failed to delete media metadata on site %1$s: %2$s', 'onemedia' ),
+					esc_html( $site_url ),
+					esc_html( $response->get_error_message() )
+				)
+			);
 		}
 
 		// Delete synced media from options.
-		if ( isset( $synced_brand_site_media[ $attachment_id ] ) ) {
-			unset( $synced_brand_site_media[ $attachment_id ] );
-			update_option( Media_Sharing_Controller::BRAND_SITES_SYNCED_MEDIA_OPTION, $synced_brand_site_media );
+		if ( ! isset( $synced_brand_site_media[ $attachment_id ] ) ) {
+			return;
 		}
+
+		unset( $synced_brand_site_media[ $attachment_id ] );
+		update_option( Media_Sharing_Controller::BRAND_SITES_SYNCED_MEDIA_OPTION, $synced_brand_site_media );
 	}
 
 	/**
@@ -239,19 +242,21 @@ class MediaActions implements Registrable {
 		$success                      = isset( $health_check_connected_sites['success'] ) ? $health_check_connected_sites['success'] : false;
 
 		// If any of the connected brand sites are not reachable, prevent updating the attachment.
-		if ( ! $success ) {
-			$error_message = sprintf(
-			/* translators: %s is the error message. */
-				__( 'Failed to update media. %s', 'onemedia' ),
-				( $health_check_connected_sites['message'] ?? __( 'Some connected brand sites are unreachable.', 'onemedia' ) )
-			);
-			wp_send_json_error(
-				array(
-					'message' => $error_message,
-				),
-				500
-			);
+		if ( $success ) {
+			return;
 		}
+
+		$error_message = sprintf(
+		/* translators: %s is the error message. */
+			__( 'Failed to update media. %s', 'onemedia' ),
+			( $health_check_connected_sites['message'] ?? __( 'Some connected brand sites are unreachable.', 'onemedia' ) )
+		);
+		wp_send_json_error(
+			[
+				'message' => $error_message,
+			],
+			500
+		);
 	}
 
 	/**
@@ -268,9 +273,9 @@ class MediaActions implements Registrable {
 
 		if ( ! current_user_can( 'edit_post', $attachment_id ) ) {
 			wp_send_json_error(
-				array(
+				[
 					'message' => __( 'You do not have permission to edit this attachment.', 'onemedia' ),
-				),
+				],
 				403
 			);
 		}
@@ -290,19 +295,21 @@ class MediaActions implements Registrable {
 		$success                      = isset( $health_check_connected_sites['success'] ) ? $health_check_connected_sites['success'] : false;
 
 		// If any of the connected brand sites are not reachable, prevent updating the attachment.
-		if ( ! $success ) {
-			$error_message = sprintf(
-			/* translators: %s is the error message. */
-				__( 'Failed to update media. %s', 'onemedia' ),
-				( $health_check_connected_sites['message'] ?? __( 'Some connected brand sites are unreachable.', 'onemedia' ) )
-			);
-			wp_send_json_error(
-				array(
-					'message' => $error_message,
-				),
-				500
-			);
+		if ( $success ) {
+			return;
 		}
+
+		$error_message = sprintf(
+		/* translators: %s is the error message. */
+			__( 'Failed to update media. %s', 'onemedia' ),
+			( $health_check_connected_sites['message'] ?? __( 'Some connected brand sites are unreachable.', 'onemedia' ) )
+		);
+		wp_send_json_error(
+			[
+				'message' => $error_message,
+			],
+			500
+		);
 	}
 
 	/**
@@ -354,7 +361,7 @@ class MediaActions implements Registrable {
 			$attachment_data = wp_get_attachment_metadata( $attachment_id );
 
 			if ( ! $attachment_data || ! is_array( $attachment_data ) ) {
-				$attachment_data = array();
+				$attachment_data = [];
 			}
 
 			// Get attachment title, alt text, caption and description.
@@ -364,8 +371,8 @@ class MediaActions implements Registrable {
 			$attachment_description = get_post_field( 'post_content', $attachment_id );
 
 			// Get attachment terms.
-			$attachment_terms = Media_Sharing_Controller::get_onemedia_attachment_terms( $attachment_id ) ?? array();
-			$attachment_terms = is_array( $attachment_terms ) ? wp_list_pluck( $attachment_terms, 'slug' ) : array();
+			$attachment_terms = Media_Sharing_Controller::get_onemedia_attachment_terms( $attachment_id ) ?? [];
+			$attachment_terms = is_array( $attachment_terms ) ? wp_list_pluck( $attachment_terms, 'slug' ) : [];
 
 			// Set attachment data.
 			$attachment_data['title']       = $attachment_title;
@@ -377,20 +384,18 @@ class MediaActions implements Registrable {
 			// Make POST request to update existing attachment on brand sites.
 			wp_remote_post(
 				$site_url . $post_request_suffix,
-				array(
-					'body'    => (
-					array(
+				[
+					'body'    => [
 						'attachment_id'   => (int) $site_media_id,
 						'attachment_url'  => $attachment_url,
 						'attachment_data' => $attachment_data,
-					)
-					),
+					],
 					'timeout' => self::SYNC_REQUEST_TIMEOUT, // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout
-					'headers' => array(
-						'X-OneMedia-Token' => ( $site_api_key ),
+					'headers' => [
+						'X-OneMedia-Token' => $site_api_key,
 						'Cache-Control'    => 'no-cache, no-store, must-revalidate',
-					),
-				)
+					],
+				]
 			);
 		}
 	}
@@ -404,48 +409,48 @@ class MediaActions implements Registrable {
 	 */
 	public function handle_sync_media_upload(): void {
 		if ( ! current_user_can( 'manage_options' ) || ! check_ajax_referer( 'onemedia_upload_media' ) ) {
-			wp_send_json_error( array( 'message' => __( 'You do not have permission to upload sync media.', 'onemedia' ) ), 403 );
+			wp_send_json_error( [ 'message' => __( 'You do not have permission to upload sync media.', 'onemedia' ) ], 403 );
 		}
 
 		if ( ! isset( $_FILES['file'] ) || empty( $_FILES['file']['name'] ) ) {
-			wp_send_json_error( array( 'message' => __( 'No file uploaded.', 'onemedia' ) ), 400 );
+			wp_send_json_error( [ 'message' => __( 'No file uploaded.', 'onemedia' ) ], 400 );
 		}
 
-		$file = array(
+		$file = [
 			'name'     => isset( $_FILES['file']['name'] ) ? sanitize_file_name( $_FILES['file']['name'] ) : '',
 			'type'     => isset( $_FILES['file']['type'] ) ? sanitize_mime_type( $_FILES['file']['type'] ) : '',
 			'tmp_name' => isset( $_FILES['file']['tmp_name'] ) ? sanitize_text_field( $_FILES['file']['tmp_name'] ) : '',
 			'error'    => isset( $_FILES['file']['error'] ) ? intval( $_FILES['file']['error'] ) : 0,
 			'size'     => isset( $_FILES['file']['size'] ) ? intval( $_FILES['file']['size'] ) : 0,
-		);
+		];
 
 		// Decode filename to handle special characters.
 		$file['name'] = Media_Sharing_Controller::decode_filename( $file['name'] );
 
 		// Validate file type.
 		if ( ! in_array( $file['type'], Media_Sharing_Controller::get_supported_mime_types(), true ) ) {
-			wp_send_json_error( array( 'message' => __( 'Invalid file type. Only JPG, PNG, WEBP, BMP, SVG and GIF files are allowed.', 'onemedia' ) ), 400 );
+			wp_send_json_error( [ 'message' => __( 'Invalid file type. Only JPG, PNG, WEBP, BMP, SVG and GIF files are allowed.', 'onemedia' ) ], 400 );
 		}
 
 		// Move the uploaded file to the uploads directory.
 		$upload_dir  = wp_upload_dir();
 		$target_path = $upload_dir['path'] . '/' . basename( $file['name'] );
 		if ( ! move_uploaded_file( $file['tmp_name'], $target_path ) ) {
-			wp_send_json_error( array( 'message' => __( 'Failed to move uploaded file.', 'onemedia' ) ), 500 );
+			wp_send_json_error( [ 'message' => __( 'Failed to move uploaded file.', 'onemedia' ) ], 500 );
 		}
 
 		// Insert the file into the media library.
-		$attachment    = array(
+		$attachment    = [
 			'guid'           => $upload_dir['url'] . '/' . basename( $file['name'] ),
 			'post_mime_type' => $file['type'],
 			'post_title'     => sanitize_file_name( pathinfo( $file['name'], PATHINFO_FILENAME ) ),
 			'post_content'   => '',
 			'post_status'    => 'inherit',
-		);
+		];
 		$attachment_id = wp_insert_attachment( $attachment, $target_path );
 
 		if ( is_wp_error( $attachment_id ) ) {
-			wp_send_json_error( array( 'message' => __( 'Failed to insert attachment into media library.', 'onemedia' ) ), 500 );
+			wp_send_json_error( [ 'message' => __( 'Failed to insert attachment into media library.', 'onemedia' ) ], 500 );
 		}
 
 		// Generate attachment metadata and update the attachment.
@@ -453,7 +458,7 @@ class MediaActions implements Registrable {
 		$metadata = wp_generate_attachment_metadata( $attachment_id, $target_path );
 
 		if ( ! $metadata ) {
-			wp_send_json_error( array( 'message' => __( 'Failed to generate attachment metadata.', 'onemedia' ) ), 500 );
+			wp_send_json_error( [ 'message' => __( 'Failed to generate attachment metadata.', 'onemedia' ) ], 500 );
 		}
 		wp_update_attachment_metadata( $attachment_id, $metadata );
 
@@ -467,10 +472,10 @@ class MediaActions implements Registrable {
 
 		// Return success response with attachment ID.
 		wp_send_json_success(
-			array(
+			[
 				'attachment_id' => $attachment_id,
 				'message'       => __( 'Sync media uploaded successfully.', 'onemedia' ),
-			)
+			]
 		);
 	}
 
@@ -481,7 +486,7 @@ class MediaActions implements Registrable {
 	 */
 	public function handle_media_replace(): void {
 		if ( ! current_user_can( 'manage_options' ) || ! check_ajax_referer( 'onemedia_upload_media' ) ) {
-			wp_send_json_error( array( 'message' => __( 'You do not have permission to replace media.', 'onemedia' ) ), 403 );
+			wp_send_json_error( [ 'message' => __( 'You do not have permission to replace media.', 'onemedia' ) ], 403 );
 		}
 
 		// Check if this is a version restore operation.
@@ -508,13 +513,13 @@ class MediaActions implements Registrable {
 		$file = $this->sanitize_file_input( $input_file );
 
 		if ( is_wp_error( $file ) ) {
-			wp_send_json_error( array( 'message' => $file->get_error_message() ), 400 );
+			wp_send_json_error( [ 'message' => $file->get_error_message() ], 400 );
 		}
 
 		// Get and validate media ID.
 		$current_media_id = filter_input( INPUT_POST, 'current_media_id', FILTER_VALIDATE_INT );
 		if ( empty( $current_media_id ) ) {
-			wp_send_json_error( array( 'message' => __( 'Invalid media ID.', 'onemedia' ) ), 400 );
+			wp_send_json_error( [ 'message' => __( 'Invalid media ID.', 'onemedia' ) ], 400 );
 		}
 		$current_media_id = absint( $current_media_id );
 
@@ -522,14 +527,14 @@ class MediaActions implements Registrable {
 			$result = $this->restore_attachment_version( $current_media_id, $file );
 		} else {
 			// Capture original file information before updating.
-			$original_data = array(
+			$original_data = [
 				'attachment' => get_post( $current_media_id ),
 				'metadata'   => wp_get_attachment_metadata( $current_media_id ),
 				'file_path'  => get_attached_file( $current_media_id ),
 				'url'        => wp_get_attachment_url( $current_media_id ),
 				'alt_text'   => get_post_meta( $current_media_id, '_wp_attachment_image_alt', true ),
 				'caption'    => wp_get_attachment_caption( $current_media_id ),
-			);
+			];
 
 			// Update the attachment with the new file.
 			$result = $this->update_attachment( $current_media_id, $file );
@@ -541,15 +546,15 @@ class MediaActions implements Registrable {
 		}
 
 		if ( is_wp_error( $result ) ) {
-			wp_send_json_error( array( 'message' => $result->get_error_message() ), 500 );
+			wp_send_json_error( [ 'message' => $result->get_error_message() ], 500 );
 		}
 
 		// Return success response.
 		wp_send_json_success(
-			array(
+			[
 				'attachment_id' => $current_media_id,
 				'message'       => __( 'Media replaced successfully.', 'onemedia' ),
-			)
+			]
 		);
 	}
 
@@ -558,7 +563,7 @@ class MediaActions implements Registrable {
 	 *
 	 * @param array|null $input_file The raw input file data.
 	 *
-	 * @return array|WP_Error Sanitized file array or WP_Error on failure.
+	 * @return array|\OneMedia\Modules\MediaSharing\WP_Error Sanitized file array or WP_Error on failure.
 	 */
 	public function sanitize_file_input( $input_file ): array|\WP_Error {
 		// Verify file input exists.
@@ -567,13 +572,13 @@ class MediaActions implements Registrable {
 		}
 
 		// Sanitize all file fields.
-		$file = array(
+		$file = [
 			'name'     => isset( $input_file['name'] ) ? sanitize_file_name( $input_file['name'] ) : '',
 			'type'     => isset( $input_file['type'] ) ? sanitize_mime_type( $input_file['type'] ) : '',
 			'tmp_name' => isset( $input_file['tmp_name'] ) ? sanitize_text_field( $input_file['tmp_name'] ) : '',
 			'error'    => isset( $input_file['error'] ) ? intval( $input_file['error'] ) : 0,
 			'size'     => isset( $input_file['size'] ) ? intval( $input_file['size'] ) : 0,
-		);
+		];
 
 		if ( isset( $input_file['attachment_id'] ) ) {
 			$file['attachment_id'] = intval( $input_file['attachment_id'] );
@@ -631,9 +636,9 @@ class MediaActions implements Registrable {
 	 * @param bool  $is_version_restore Whether this is a version restore operation.
 	 * @param array $version_data     Version data for restore operations.
 	 *
-	 * @return array|WP_Error Result data or WP_Error on failure.
+	 * @return array|\OneMedia\Modules\MediaSharing\WP_Error Result data or WP_Error on failure.
 	 */
-	public function update_attachment( int $attachment_id, array $file, bool $is_version_restore = false, array $version_data = array() ): array|\WP_Error {
+	public function update_attachment( int $attachment_id, array $file, bool $is_version_restore = false, array $version_data = [] ): array|\WP_Error {
 		// Get existing attachment data.
 		$attachment = get_post( $attachment_id );
 		if ( ! $attachment || 'attachment' !== $attachment->post_type ) {
@@ -664,7 +669,7 @@ class MediaActions implements Registrable {
 			$title       = sanitize_file_name( pathinfo( $file_data['name'], PATHINFO_FILENAME ) );
 
 			// Use existing metadata from version history.
-			$metadata = $file_data['metadata'] ?? array();
+			$metadata = $file_data['metadata'] ?? [];
 		} else {
 			// For new uploads, process the uploaded file.
 			$upload_dir  = wp_upload_dir();
@@ -696,12 +701,12 @@ class MediaActions implements Registrable {
 		);
 
 		// Update attachment data.
-		$attachment_data = array(
+		$attachment_data = [
 			'ID'             => $attachment_id,
 			'guid'           => $new_url,
 			'post_mime_type' => $mime_type,
 			'post_title'     => $title,
-		);
+		];
 
 		$result = wp_update_post( $attachment_data );
 		if ( is_wp_error( $result ) ) {
@@ -716,7 +721,7 @@ class MediaActions implements Registrable {
 
 		// Preserve existing taxonomy terms.
 		if ( taxonomy_exists( ONEMEDIA_PLUGIN_TAXONOMY ) ) {
-			$current_terms = wp_get_object_terms( $attachment_id, ONEMEDIA_PLUGIN_TAXONOMY, array( 'fields' => 'slugs' ) );
+			$current_terms = wp_get_object_terms( $attachment_id, ONEMEDIA_PLUGIN_TAXONOMY, [ 'fields' => 'slugs' ] );
 			wp_set_object_terms( $attachment_id, $current_terms, ONEMEDIA_PLUGIN_TAXONOMY, false );
 		}
 
@@ -724,12 +729,12 @@ class MediaActions implements Registrable {
 		$hooks_instance = Hooks::get_instance();
 		$hooks_instance->update_sync_attachments( $attachment_id );
 
-		return array(
+		return [
 			'attachment_id' => $attachment_id,
 			'new_url'       => $new_url,
 			'target_path'   => $target_path,
 			'metadata'      => $metadata,
-		);
+		];
 	}
 
 	/**
@@ -738,13 +743,13 @@ class MediaActions implements Registrable {
 	 * @param int   $attachment_id The attachment ID.
 	 * @param array $version_file  The version file data to restore.
 	 *
-	 * @return array|WP_Error Result data or WP_Error on failure.
+	 * @return array|\OneMedia\Modules\MediaSharing\WP_Error Result data or WP_Error on failure.
 	 */
 	public function restore_attachment_version( int $attachment_id, array $version_file ): array|\WP_Error {
 		// Get existing versions.
 		$existing_versions = self::get_sync_attachment_versions( $attachment_id );
 		$is_new_meta       = ! is_array( $existing_versions ) || empty( $existing_versions );
-		$existing_versions = is_array( $existing_versions ) ? array_values( $existing_versions ) : array();
+		$existing_versions = is_array( $existing_versions ) ? array_values( $existing_versions ) : [];
 
 		// Find the index of the version being restored.
 		$restore_index = null;
@@ -810,7 +815,7 @@ class MediaActions implements Registrable {
 		// Get existing versions.
 		$existing_versions = self::get_sync_attachment_versions( $attachment_id );
 		$is_new_meta       = ! is_array( $existing_versions ) || empty( $existing_versions );
-		$existing_versions = is_array( $existing_versions ) ? array_values( $existing_versions ) : array();
+		$existing_versions = is_array( $existing_versions ) ? array_values( $existing_versions ) : [];
 
 		// Original file information.
 		$attachment   = $original_data['attachment'];
@@ -824,9 +829,9 @@ class MediaActions implements Registrable {
 		$timestamp = time();
 
 		// Snapshot of the current (pre-replacement) file.
-		$current_snapshot = array(
+		$current_snapshot = [
 			'last_used' => $timestamp,
-			'file'      => array(
+			'file'      => [
 				'attachment_id' => $attachment_id,
 				'path'          => $current_file,
 				'url'           => $old_url,
@@ -836,21 +841,21 @@ class MediaActions implements Registrable {
 				'alt'           => $alt_text,
 				'caption'       => $caption,
 				'size'          => ( file_exists( $current_file ) ? (int) filesize( $current_file ) : 0 ),
-				'metadata'      => is_array( $old_metadata ) ? $old_metadata : array(),
-				'dimensions'    => ( is_array( $old_metadata ) && isset( $old_metadata['width'], $old_metadata['height'] ) )
-					? array(
+				'metadata'      => is_array( $old_metadata ) ? $old_metadata : [],
+				'dimensions'    => is_array( $old_metadata ) && isset( $old_metadata['width'], $old_metadata['height'] )
+					? [
 						'width'  => (int) $old_metadata['width'],
 						'height' => (int) $old_metadata['height'],
-					)
-					: array(),
+					]
+					: [],
 				'checksum'      => ( file_exists( $current_file ) ? md5_file( $current_file ) : '' ),
-			),
-		);
+			],
+		];
 
 		// Snapshot of the new file.
-		$new_snapshot = array(
+		$new_snapshot = [
 			'last_used' => $timestamp,
-			'file'      => array(
+			'file'      => [
 				'attachment_id' => $attachment_id,
 				'path'          => $update_result['target_path'],
 				'url'           => $update_result['new_url'],
@@ -860,20 +865,20 @@ class MediaActions implements Registrable {
 				'alt'           => $alt_text,
 				'caption'       => $caption,
 				'size'          => ( file_exists( $update_result['target_path'] ) ? (int) filesize( $update_result['target_path'] ) : (int) $file['size'] ),
-				'metadata'      => $update_result['metadata'] ?? array(),
+				'metadata'      => $update_result['metadata'] ?? [],
 				'dimensions'    => isset( $update_result['metadata']['width'], $update_result['metadata']['height'] )
-					? array(
+					? [
 						'width'  => (int) $update_result['metadata']['width'],
 						'height' => (int) $update_result['metadata']['height'],
-					)
-					: array(),
+					]
+					: [],
 				'checksum'      => ( file_exists( $update_result['target_path'] ) ? md5_file( $update_result['target_path'] ) : '' ),
-			),
-		);
+			],
+		];
 
 		if ( $is_new_meta ) {
 			// First replacement: new (current) at 0, previous (old) at 1.
-			$versions = array( $new_snapshot, $current_snapshot );
+			$versions = [ $new_snapshot, $current_snapshot ];
 		} else {
 			// Subsequent replacement: new goes to index 0, others shift down.
 			$versions = $existing_versions;
@@ -950,16 +955,18 @@ class MediaActions implements Registrable {
 	/**
 	 * Clear sync status cache when the relevant post meta is updated.
 	 *
-	 * @param int|array   $meta_id    The meta ID.
-	 * @param int    $object_id  The object ID.
-	 * @param string $meta_key   The meta key.
+	 * @param int|array $meta_id    The meta ID.
+	 * @param int       $object_id  The object ID.
+	 * @param string    $meta_key   The meta key.
 	 *
 	 * @return void -- clear cache if the meta key matches.
 	 */
 	public function clear_sync_cache( int|array $meta_id, int $object_id, string $meta_key ): void {
-		if ( 'is_onemedia_sync' === $meta_key ) {
-			wp_cache_delete( "onemedia_sync_status_{$object_id}", 'onemedia' );
+		if ( 'is_onemedia_sync' !== $meta_key ) {
+			return;
 		}
+
+		wp_cache_delete( "onemedia_sync_status_{$object_id}", 'onemedia' );
 	}
 
 	/**
@@ -987,12 +994,12 @@ class MediaActions implements Registrable {
 	 */
 	public static function get_sync_attachment_versions( int $attachment_id ): array {
 		if ( ! $attachment_id ) {
-			return array();
+			return [];
 		}
 
 		$versions = get_post_meta( $attachment_id, self::ONEMEDIA_SYNC_VERSIONS_POSTMETA_KEY, true );
 		if ( ! is_array( $versions ) ) {
-			return array();
+			return [];
 		}
 
 		return $versions;

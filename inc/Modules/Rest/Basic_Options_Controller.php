@@ -8,7 +8,6 @@
 namespace OneMedia\Modules\Rest;
 
 use OneMedia\Modules\Settings\Settings;
-use OneMedia\Utils;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_REST_Server;
@@ -21,7 +20,7 @@ class Basic_Options_Controller extends Abstract_REST_Controller {
 	/**
 	 * Health check request timeout.
 	 *
-	 * @var number
+	 * @var \OneMedia\Modules\Rest\number
 	 */
 	public const HEALTH_CHECK_REQUEST_TIMEOUT = 15;
 
@@ -121,17 +120,17 @@ class Basic_Options_Controller extends Abstract_REST_Controller {
 		register_rest_route(
 			self::NAMESPACE,
 			'/check-sites-connected',
-			array(
+			[
 				'methods'             => \WP_REST_Server::CREATABLE,
-				'callback'            => array( $this, 'check_sites_connected' ),
+				'callback'            => [ $this, 'check_sites_connected' ],
 				'permission_callback' => static fn() => current_user_can( 'manage_options' ),
-				'args'                => array(
-					'attachment_id' => array(
+				'args'                => [
+					'attachment_id' => [
 						'type'     => 'integer',
 						'required' => true,
-					),
-				),
-			)
+					],
+				],
+			]
 		);
 
 		/**
@@ -140,11 +139,11 @@ class Basic_Options_Controller extends Abstract_REST_Controller {
 		register_rest_route(
 			self::NAMESPACE,
 			'/multisite-type',
-			array(
+			[
 				'methods'             => \WP_REST_Server::READABLE,
-				'callback'            => array( $this, 'get_multisite_type' ),
+				'callback'            => [ $this, 'get_multisite_type' ],
 				'permission_callback' => static fn() => current_user_can( 'manage_options' ),
-			)
+			]
 		);
 
 		/**
@@ -365,10 +364,10 @@ class Basic_Options_Controller extends Abstract_REST_Controller {
 			return new \WP_Error(
 				'invalid_data',
 				__( 'Invalid data provided.', 'onemedia' ),
-				array(
+				[
 					'status'  => 400,
 					'success' => false,
-				)
+				]
 			);
 		}
 
@@ -386,11 +385,11 @@ class Basic_Options_Controller extends Abstract_REST_Controller {
 	public function get_multisite_type(): \WP_REST_Response {
 		$multisite_type = self::fetch_multisite_type();
 		return new \WP_REST_Response(
-			array(
+			[
 				'status'         => 500,
 				'multisite_type' => $multisite_type,
 				'success'        => true,
-			)
+			]
 		);
 	}
 
@@ -415,26 +414,26 @@ class Basic_Options_Controller extends Abstract_REST_Controller {
 	 */
 	public static function health_check_attachment_brand_sites( int|null $attachment_id ): array {
 		if ( ! $attachment_id ) {
-			return array(
+			return [
 				'success'      => false,
-				'failed_sites' => array(),
+				'failed_sites' => [],
 				'message'      => __( 'Invalid attachment ID.', 'onemedia' ),
-			);
+			];
 		}
 
 		// Get URLs of all sites where this attachment is shared.
 		$site_urls = self::get_sync_site_urls_postmeta( $attachment_id );
 
 		if ( empty( $site_urls ) ) {
-			return array(
+			return [
 				'success'      => true,
-				'failed_sites' => array(),
+				'failed_sites' => [],
 				'message'      => __( 'No connected brand sites for this attachment.', 'onemedia' ),
-			);
+			];
 		}
 
-		$failed_sites = array();
-		$tracked_urls = array();
+		$failed_sites = [];
+		$tracked_urls = [];
 
 		foreach ( $site_urls as $site_url ) {
 			$site_url = rtrim( $site_url, '/' );
@@ -449,59 +448,63 @@ class Basic_Options_Controller extends Abstract_REST_Controller {
 
 			// Brand site not connected.
 			if ( empty( $api_key ) ) {
-				$failed_sites[] = array(
+				$failed_sites[] = [
 					'site_name' => self::get_sitename_by_url( $site_url ),
 					'url'       => $site_url,
 					'message'   => __( 'API key not found', 'onemedia' ),
-				);
+				];
 				continue;
 			}
 
 			// Perform health check request.
 			$response = wp_remote_get(
 				$site_url . '/wp-json/' . Abstract_REST_Controller::NAMESPACE . '/health-check',
-				array(
+				[
 					'timeout' => self::HEALTH_CHECK_REQUEST_TIMEOUT, // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout
-					'headers' => array(
+					'headers' => [
 						'X-OneMedia-Token' => $api_key,
 						'Cache-Control'    => 'no-cache, no-store, must-revalidate',
-					),
-				)
+					],
+				]
 			);
 
 			if ( is_wp_error( $response ) ) {
-				$failed_sites[] = array(
+				$failed_sites[] = [
 					'site_name' => self::get_sitename_by_url( $site_url ),
 					'url'       => $site_url,
 					'message'   => $response->get_error_message(),
-				);
+				];
 				continue;
 			}
 
 			$response_code = wp_remote_retrieve_response_code( $response );
-			if ( 200 !== $response_code ) {
-				$failed_sites[] = array(
-					'site_name' => self::get_sitename_by_url( $site_url ),
-					'url'       => $site_url,
-					'message'   => sprintf(
-					/* translators: %d is the HTTP response code. */
-						__( 'HTTP %d response', 'onemedia' ),
-						$response_code
-					),
-				);
+			if ( 200 === $response_code ) {
+				continue;
 			}
+
+			$failed_sites[] = [
+				'site_name' => self::get_sitename_by_url( $site_url ),
+				'url'       => $site_url,
+				'message'   => sprintf(
+				/* translators: %d is the HTTP response code. */
+					__( 'HTTP %d response', 'onemedia' ),
+					$response_code
+				),
+			];
 		}
 
 		if ( ! empty( $failed_sites ) ) {
-			$failed_sites_list = array();
+			$failed_sites_list = [];
 			foreach ( $failed_sites as $failed_site ) {
 				$site_name = $failed_site['site_name'];
-				if ( ! in_array( $site_name, $failed_sites_list, true ) ) {
-					$failed_sites_list[] = $site_name;
+				if ( in_array( $site_name, $failed_sites_list, true ) ) {
+					continue;
 				}
+
+				$failed_sites_list[] = $site_name;
 			}
 
-			return array(
+			return [
 				'success'      => false,
 				'failed_sites' => $failed_sites,
 				'message'      => sprintf(
@@ -509,14 +512,14 @@ class Basic_Options_Controller extends Abstract_REST_Controller {
 					__( 'Please check your connection for unreachable sites: %s.', 'onemedia' ),
 					implode( ', ', $failed_sites_list )
 				),
-			);
+			];
 		}
 
-		return array(
+		return [
 			'success'      => true,
 			'failed_sites' => $failed_sites,
 			'message'      => __( 'All connected sites are reachable.', 'onemedia' ),
-		);
+		];
 	}
 
 	/**
@@ -529,14 +532,16 @@ class Basic_Options_Controller extends Abstract_REST_Controller {
 	private static function get_sync_site_urls_postmeta( int $attachment_id ): array {
 		$sites = self::get_sync_sites_postmeta( $attachment_id );
 		if ( empty( $sites ) ) {
-			return array();
+			return [];
 		}
 
-		$site_urls = array();
+		$site_urls = [];
 		foreach ( $sites as $site ) {
-			if ( isset( $site['site'] ) ) {
-				$site_urls[] = untrailingslashit( esc_url_raw( $site['site'] ) );
+			if ( ! isset( $site['site'] ) ) {
+				continue;
 			}
+
+			$site_urls[] = untrailingslashit( esc_url_raw( $site['site'] ) );
 		}
 		return $site_urls;
 	}
@@ -550,12 +555,12 @@ class Basic_Options_Controller extends Abstract_REST_Controller {
 	 */
 	public static function get_sync_sites_postmeta( int $attachment_id ): array {
 		if ( ! Settings::is_governing_site() || ! $attachment_id ) {
-			return array();
+			return [];
 		}
 
 		$sites = get_post_meta( $attachment_id, Media_Sharing_Controller::ONEMEDIA_SYNC_SITES_POSTMETA_KEY, true );
 		if ( ! is_array( $sites ) ) {
-			return array();
+			return [];
 		}
 		return $sites;
 	}
@@ -603,7 +608,7 @@ class Basic_Options_Controller extends Abstract_REST_Controller {
 			if ( isset( $parsed_url['host'] ) ) {
 				$host_parts = explode( '.', $parsed_url['host'] );
 				$host_name  = $host_parts[0];
-				$host_name  = str_replace( array( '-', '_' ), ' ', $host_name );
+				$host_name  = str_replace( [ '-', '_' ], ' ', $host_name );
 				$host_name  = ucwords( $host_name );
 				return $host_name;
 			}
