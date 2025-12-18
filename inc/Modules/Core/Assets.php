@@ -31,15 +31,15 @@ final class Assets implements Registrable {
 	/**
 	 * Asset handles
 	 */
-	public const ADMIN_STYLES_HANDLE      = self::PREFIX . 'admin';
-	public const SETTINGS_SCRIPT_HANDLE   = self::PREFIX . 'settings';
-	public const ONBOARDING_SCRIPT_HANDLE = self::PREFIX . 'onboarding';
-	public const MEDIA_SHARING_SCRIPT_HANDLE = self::PREFIX . 'media-sharing';
-	public const MAIN_STYLE_HANDLE = self::PREFIX . 'main';
+	public const ADMIN_STYLES_HANDLE             = self::PREFIX . 'admin';
+	public const SETTINGS_SCRIPT_HANDLE          = self::PREFIX . 'settings';
+	public const ONBOARDING_SCRIPT_HANDLE        = self::PREFIX . 'onboarding';
+	public const MEDIA_SHARING_SCRIPT_HANDLE     = self::PREFIX . 'media-sharing';
+	public const MAIN_STYLE_HANDLE               = self::PREFIX . 'main';
 	public const HIDE_DELETE_BUTTON_STYLE_HANDLE = self::PREFIX . 'hide-delete-button';
-	public const MEDIA_FRAME_SCRIPT_HANDLE = self::PREFIX . 'media-frame';
+	public const MEDIA_FRAME_SCRIPT_HANDLE       = self::PREFIX . 'media-frame';
 	public const MEDIA_SYNC_FILTER_SCRIPT_HANDLE = self::PREFIX . 'media-sync-filter';
-	public const MEDIA_TAXONOMY_STYLE_HANDLE = self::PREFIX . 'media-taxonomy';
+	public const MEDIA_TAXONOMY_STYLE_HANDLE     = self::PREFIX . 'media-taxonomy';
 
 	/**
 	 * Localized data for scripts.

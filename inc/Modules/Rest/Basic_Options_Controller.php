@@ -229,7 +229,7 @@ class Basic_Options_Controller extends Abstract_REST_Controller {
 
 		$body         = $request->get_body();
 		$decoded_body = json_decode( $body, true );
-		$shared_sites   = $decoded_body['shared_sites'] ?? [];
+		$shared_sites = $decoded_body['shared_sites'] ?? [];
 
 		// check if same url exists more than once or not.
 		$urls = [];
@@ -253,7 +253,7 @@ class Basic_Options_Controller extends Abstract_REST_Controller {
 
 		return rest_ensure_response(
 			[
-				'success'    => true,
+				'success'      => true,
 				'shared_sites' => array_values( $shared_sites ),
 			]
 		);
