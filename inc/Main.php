@@ -33,9 +33,11 @@ final class Main {
 		Modules\Taxonomies\Media::class,
 		Modules\Taxonomies\Term_Restriction::class,
 		Modules\MediaLibrary\Admin::class,
+		Modules\MediaLibrary\ConsumerAdmin::class,
 		Modules\MediaSharing\Admin::class,
 		Modules\MediaSharing\UserInterface::class,
 		Modules\MediaSharing\MediaProtection::class,
+		Modules\MediaSharing\MediaActions::class,
 	];
 
 	/**

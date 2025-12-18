@@ -115,10 +115,10 @@ class Admin implements Registrable {
 			return;
 		}
 
-		$help_overview_content       = onemedia_get_template_content( 'help/overview' );
-		$help_how_to_share_content   = onemedia_get_template_content( 'help/how-to-share' );
-		$help_sharing_modes_content  = onemedia_get_template_content( 'help/sharing-modes' );
-		$help_best_practices_content = onemedia_get_template_content( 'help/best-practices' );
+		$help_overview_content       = self::onemedia_get_template_content( 'help/overview' );
+		$help_how_to_share_content   = self::onemedia_get_template_content( 'help/how-to-share' );
+		$help_sharing_modes_content  = self::onemedia_get_template_content( 'help/sharing-modes' );
+		$help_best_practices_content = self::onemedia_get_template_content( 'help/best-practices' );
 
 		// Overview tab.
 		$screen->add_help_tab(
@@ -155,5 +155,39 @@ class Admin implements Registrable {
 				'content' => $help_best_practices_content,
 			)
 		);
+	}
+
+	/**
+	 * Return onemedia template content.
+	 *
+	 * @param string $slug Template path.
+	 * @param array  $vars Template variables.
+	 *
+	 * @return string Template markup.
+	 */
+	public static function onemedia_get_template_content( string $slug, array $vars = array() ): string {
+		ob_start();
+
+		$template = sprintf( '%s.php', $slug );
+
+		$located_template = '';
+		if ( file_exists( ONEMEDIA_PLUGIN_TEMPLATES_PATH . '/' . $template ) ) {
+			$located_template = ONEMEDIA_PLUGIN_TEMPLATES_PATH . '/' . $template;
+		}
+
+		if ( '' === $located_template ) {
+			return '';
+		}
+
+		// Ensure vars is an array.
+		if ( ! is_array( $vars ) ) {
+			$vars = array();
+		}
+
+		include $located_template; // phpcs:ignore WordPressVIPMinimum.Files.IncludingFile.UsingVariable
+
+		$markup = ob_get_clean();
+
+		return $markup;
 	}
 }

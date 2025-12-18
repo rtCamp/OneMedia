@@ -33,7 +33,7 @@ class MediaProtection implements Registrable {
 	 * @return void
 	 */
 	public function add_onemedia_term_to_attachment( int $attachment_id ): void {
-		$is_onemedia_attachment = metadata_exists( 'post', $attachment_id, Constants::IS_ONEMEDIA_SYNC_POSTMETA_KEY );
+		$is_onemedia_attachment = metadata_exists( 'post', $attachment_id, Media_Sharing_Controller::IS_ONEMEDIA_SYNC_POSTMETA_KEY );
 		if ( $attachment_id && taxonomy_exists( ONEMEDIA_PLUGIN_TAXONOMY ) && $is_onemedia_attachment ) {
 			// Assign the 'onemedia' term to the attachment.
 			$success = wp_set_object_terms( $attachment_id, ONEMEDIA_PLUGIN_TAXONOMY_TERM, ONEMEDIA_PLUGIN_TAXONOMY, true );
@@ -55,7 +55,7 @@ class MediaProtection implements Registrable {
 	 * @return int|\WP_Error The attachment ID if deletion is allowed, or a WP_Error if blocked.
 	 */
 	public function maybe_block_media_delete( int $attachment_id ): int|\WP_Error {
-		$terms = Utils::get_onemedia_attachment_post_terms( $attachment_id, array( 'fields' => 'slugs' ) );
+		$terms = UserInterface::get_onemedia_attachment_post_terms( $attachment_id, array( 'fields' => 'slugs' ) );
 		if ( ! is_wp_error( $terms ) && ! empty( $terms ) && isset( array_flip( $terms )[ ONEMEDIA_PLUGIN_TAXONOMY_TERM ] ) ) {
 			// Set a transient to show a notice on the next admin page load.
 			set_transient( 'onemedia_delete_notice', true, 30 );

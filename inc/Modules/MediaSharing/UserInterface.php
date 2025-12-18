@@ -46,7 +46,7 @@ class UserInterface implements Registrable {
 	 */
 	public function display_media_column_content( string $column_name, int $attachment_id ): void {
 		if ( 'image_type' === $column_name ) {
-			$terms    = Utils::get_onemedia_attachment_post_terms( $attachment_id, array( 'fields' => 'names' ) );
+			$terms    = self::get_onemedia_attachment_post_terms( $attachment_id, array( 'fields' => 'names' ) );
 			$is_empty = empty( $terms ) || is_wp_error( $terms );
 
 			if ( $is_empty ) {
@@ -84,7 +84,7 @@ class UserInterface implements Registrable {
 	 */
 	public function filter_media_row_actions( array $actions, \WP_Post $post ): array {
 		if ( 'attachment' === $post->post_type ) {
-			$terms = Utils::get_onemedia_attachment_post_terms( $post->ID, array( 'fields' => 'slugs' ) );
+			$terms = self::get_onemedia_attachment_post_terms( $post->ID, array( 'fields' => 'slugs' ) );
 			if ( ! is_wp_error( $terms ) && ! empty( $terms ) && isset( array_flip( $terms )[ ONEMEDIA_PLUGIN_TAXONOMY_TERM ] ) ) {
 				if ( isset( $actions['delete'] ) ) {
 					unset( $actions['delete'] );
@@ -92,5 +92,25 @@ class UserInterface implements Registrable {
 			}
 		}
 		return $actions;
+	}
+
+	/**
+	 * Get OneMedia attachment terms with args.
+	 *
+	 * @param int|\WP_Post $attachment_id The attachment ID.
+	 * @param array        $args          Arguments to pass to wp_get_post_terms function.
+	 *
+	 * @return array Array of terms.
+	 */
+	public static function get_onemedia_attachment_post_terms( int|\WP_Post $attachment_id, array $args = array() ): array {
+		if ( ! $attachment_id ) {
+			return array();
+		}
+
+		$terms = wp_get_post_terms( $attachment_id, ONEMEDIA_PLUGIN_TAXONOMY, $args );
+		if ( is_wp_error( $terms ) || empty( $terms ) ) {
+			return array();
+		}
+		return $terms;
 	}
 }

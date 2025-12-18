@@ -19,8 +19,8 @@ import { checkBrandSiteHealth } from '../api';
 
 const SiteModal = ( { formData, setFormData, onSubmit, onClose, editing, originalData } ) => {
 	const [ errors, setErrors ] = useState( {
-		siteName: '',
-		siteUrl: '',
+		name: '',
+		url: '',
 		apiKey: '',
 		message: '',
 	} );
@@ -34,8 +34,8 @@ const SiteModal = ( { formData, setFormData, onSubmit, onClose, editing, origina
 		} // Always allow submission for new sites.
 
 		return (
-			formData.siteName !== originalData.siteName ||
-			formData.siteUrl !== originalData.siteUrl ||
+			formData.name !== originalData.name ||
+			formData.url !== originalData.url ||
 			formData.apiKey !== originalData.apiKey
 		);
 	}, [ editing, formData, originalData ] );
@@ -43,9 +43,9 @@ const SiteModal = ( { formData, setFormData, onSubmit, onClose, editing, origina
 	const handleSubmit = async () => {
 		// Validate inputs.
 		let siteUrlError = '';
-		if ( ! formData.siteUrl.trim() ) {
+		if ( ! formData.url.trim() ) {
 			siteUrlError = __( 'Site URL is required.', 'onemedia' );
-		} else if ( ! isValidUrl( formData.siteUrl ) ) {
+		} else if ( ! isValidUrl( formData.url ) ) {
 			siteUrlError = __(
 				'Enter a valid URL (must start with http or https).',
 				'onemedia',
@@ -53,15 +53,15 @@ const SiteModal = ( { formData, setFormData, onSubmit, onClose, editing, origina
 		}
 
 		const newErrors = {
-			siteName: ! formData.siteName.trim() ? __( 'Site Name is required.', 'onemedia' ) : '',
-			siteUrl: siteUrlError,
+			name: ! formData.name.trim() ? __( 'Site Name is required.', 'onemedia' ) : '',
+			url: siteUrlError,
 			apiKey: ! formData.apiKey.trim() ? __( 'API Key is required.', 'onemedia' ) : '',
 			message: '',
 		};
 
 		// Make sure site name is under 20 characters.
-		if ( formData.siteName.length > 20 ) {
-			newErrors.siteName = __( 'Site Name must be under 20 characters.', 'onemedia' );
+		if ( formData.name.length > 20 ) {
+			newErrors.name = __( 'Site Name must be under 20 characters.', 'onemedia' );
 		}
 
 		setErrors( newErrors );
@@ -76,7 +76,7 @@ const SiteModal = ( { formData, setFormData, onSubmit, onClose, editing, origina
 		setIsProcessing( true );
 		setShowNotice( false );
 
-		const healthCheckData = await checkBrandSiteHealth( formData.siteUrl, formData.apiKey );
+		const healthCheckData = await checkBrandSiteHealth( formData.url, formData.apiKey );
 
 		if ( ! healthCheckData?.success ) {
 			setErrors( {
@@ -110,8 +110,8 @@ const SiteModal = ( { formData, setFormData, onSubmit, onClose, editing, origina
 	// 2. Required fields are empty, OR
 	// 3. In editing mode and no changes have been made
 	const isButtonDisabled = isProcessing ||
-		! formData.siteName ||
-		! formData.siteUrl ||
+		! formData.name ||
+		! formData.url ||
 		! formData.apiKey ||
 		( editing && ! hasChanges );
 
@@ -131,17 +131,17 @@ const SiteModal = ( { formData, setFormData, onSubmit, onClose, editing, origina
 					isDismissible={ true }
 					onRemove={ () => setShowNotice( false ) }
 				>
-					{ errors.message || errors.siteName || errors.siteUrl || errors.apiKey }
+					{ errors.message || errors.name || errors.url || errors.apiKey }
 				</Notice>
 			) }
 
 			<TextControl
 				label={ __( 'Site Name*', 'onemedia' ) }
-				value={ formData.siteName }
+				value={ formData.name }
 				onChange={ ( value ) =>
-					setFormData( { ...formData, siteName: value } )
+					setFormData( { ...formData, name: value } )
 				}
-				error={ errors.siteName }
+				error={ errors.name }
 				help={ __(
 					'This is the name of the site that will be registered.',
 					'onemedia',
@@ -151,11 +151,11 @@ const SiteModal = ( { formData, setFormData, onSubmit, onClose, editing, origina
 			/>
 			<TextControl
 				label={ __( 'Site URL*', 'onemedia' ) }
-				value={ formData.siteUrl }
+				value={ formData.url }
 				onChange={ ( value ) =>
-					setFormData( { ...formData, siteUrl: value } )
+					setFormData( { ...formData, url: value } )
 				}
-				error={ errors.siteUrl }
+				error={ errors.url }
 				help={ __(
 					'It must start with http or https and end with /, like: https://onemedia.com/',
 					'onemedia',

@@ -1,40 +1,33 @@
 <?php
 /**
- * Class Admin_Hooks initializes the actions and filters for the brand site.
+ * Handles Media Library admin restrictions for Consumer Sites.
  *
- * @package OneMedia
+ * All hooks are skipped automatically when running on the Governing Site.
+ *
+ * @package OneMedia\Modules\Post_Types;
  */
 
-namespace OneMedia\Brand_Site;
+namespace OneMedia\Modules\MediaLibrary;
 
 use OneMedia\Constants;
-use OneMedia\Traits\Singleton;
+use OneMedia\Contracts\Interfaces\Registrable;
+use OneMedia\Modules\Core\Assets;
+use OneMedia\Modules\Rest\Abstract_REST_Controller;
+use OneMedia\Modules\Rest\Media_Sharing_Controller;
+use OneMedia\Modules\Settings\Admin as Settings_Admin;
+use OneMedia\Modules\MediaSharing\Admin as MediaSharingAdmin;
+use OneMedia\Modules\Settings\Settings;
 use OneMedia\Utils;
 
 /**
- * Class Admin_Hooks
+ * Class Admin
  */
-class Admin_Hooks {
+class ConsumerAdmin implements Registrable {
 
 	/**
-	 * Use Singleton trait.
+	 * {@inheritDoc}
 	 */
-	use Singleton;
-
-	/**
-	 * Protected class constructor.
-	 */
-	protected function __construct() {
-		$this->setup_hooks();
-	}
-
-	/**
-	 * Setup WordPress hooks.
-	 *
-	 * @return void
-	 */
-	public function setup_hooks(): void {
-
+	public function register_hooks(): void {
 		// Skip if not a brand site.
 		if ( Settings::is_governing_site() ) {
 			return;
@@ -81,15 +74,15 @@ class Admin_Hooks {
 
 			if ( ! $nonce ) {
 				// This means this is the first load of the page, so we don't have onemedia_sync_filter nonce yet.
-				echo onemedia_get_template_content( 'brand-site/sync-status' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+				echo MediaSharingAdmin::onemedia_get_template_content( 'brand-site/sync-status' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			} elseif ( $nonce && wp_verify_nonce( $nonce, 'onemedia_sync_filter' ) ) {
 				// This means the form has been submitted, so we have a nonce to verify.
-				$sync_status = isset( $_GET[ Constants::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY ] )
-					? sanitize_text_field( wp_unslash( $_GET[ Constants::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY ] ) )
+				$sync_status = isset( $_GET[ Media_Sharing_Controller::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY ] )
+					? sanitize_text_field( wp_unslash( $_GET[ Media_Sharing_Controller::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY ] ) )
 					: '';
 
 				// Escaping handled in the template file.
-				echo onemedia_get_template_content( 'brand-site/sync-status', array( 'sync_status' => $sync_status ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+				echo MediaSharingAdmin::onemedia_get_template_content( 'brand-site/sync-status', array( 'sync_status' => $sync_status ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			}
 		}
 	}
@@ -103,7 +96,7 @@ class Admin_Hooks {
 	 */
 	public function filter_sync_attachments( \WP_Query $query ): \WP_Query {
 		global $pagenow;
-		$onemedia_sync_status = filter_input( INPUT_GET, Constants::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY, FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+		$onemedia_sync_status = filter_input( INPUT_GET, Media_Sharing_Controller::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY, FILTER_SANITIZE_FULL_SPECIAL_CHARS );
 
 		if ( 'upload.php' === $pagenow && isset( $onemedia_sync_status ) && ! empty( $onemedia_sync_status ) ) {
 			// Nonce verification for filter query.
@@ -114,7 +107,7 @@ class Admin_Hooks {
 				return $query;
 			}
 
-			$sync_status = filter_input( INPUT_GET, Constants::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY, FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+			$sync_status = filter_input( INPUT_GET, Media_Sharing_Controller::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY, FILTER_SANITIZE_FULL_SPECIAL_CHARS );
 			$sync_status = isset( $sync_status ) ? sanitize_text_field( wp_unslash( $sync_status ) ) : '';
 
 			if ( 'sync' === $sync_status ) {
@@ -122,7 +115,7 @@ class Admin_Hooks {
 					'meta_query',
 					array(
 						array(
-							'key'     => Constants::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY,
+							'key'     => Media_Sharing_Controller::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY,
 							'value'   => 'sync',
 							'compare' => '=',
 						),
@@ -134,12 +127,12 @@ class Admin_Hooks {
 					array(
 						'relation' => 'OR',
 						array(
-							'key'     => Constants::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY,
+							'key'     => Media_Sharing_Controller::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY,
 							'value'   => 'no_sync',
 							'compare' => '=',
 						),
 						array(
-							'key'     => Constants::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY,
+							'key'     => Media_Sharing_Controller::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY,
 							'compare' => 'NOT EXISTS',
 						),
 					)
@@ -165,7 +158,7 @@ class Admin_Hooks {
 		}
 
 		// Check if attachment is synced.
-		$onemedia_sync_status = Utils::get_sync_status_postmeta( $post->ID );
+		$onemedia_sync_status = self::get_sync_status_postmeta( $post->ID );
 		if ( 'sync' === $onemedia_sync_status ) {
 			// Set transient to show admin notice.
 			set_transient( 'onemedia_sync_delete_notice', true, 30 );
@@ -229,7 +222,7 @@ class Admin_Hooks {
 		}
 
 		// Check if attachment is synced.
-		$onemedia_sync_status = Utils::get_sync_status_postmeta( $post_id );
+		$onemedia_sync_status = self::get_sync_status_postmeta( $post_id );
 		if ( 'sync' === $onemedia_sync_status ) {
 			// Set transient to show admin notice for edit.
 			set_transient( 'onemedia_sync_edit_notice', true, 30 );
@@ -261,7 +254,7 @@ class Admin_Hooks {
 			return;
 		}
 
-		$onemedia_sync_status = Utils::get_sync_status_postmeta( $attachment_id );
+		$onemedia_sync_status = self::get_sync_status_postmeta( $attachment_id );
 		if ( 'sync' === $onemedia_sync_status ) {
 			set_transient( 'onemedia_sync_edit_notice', true, 30 );
 			wp_send_json_error(
@@ -289,7 +282,7 @@ class Admin_Hooks {
 		}
 
 		// Check if attachment is synced.
-		$onemedia_sync_status = Utils::get_sync_status_postmeta( $post->ID );
+		$onemedia_sync_status = self::get_sync_status_postmeta( $post->ID );
 		if ( 'sync' === $onemedia_sync_status ) {
 			// Remove edit links.
 			if ( isset( $actions['edit'] ) ) {
@@ -325,7 +318,7 @@ class Admin_Hooks {
 	 */
 	public function render_sync_column( string $column_name, int $post_id ): void {
 		if ( 'onemedia_sync_status' === $column_name ) {
-			$onemedia_sync_status = Utils::get_sync_status_postmeta( $post_id );
+			$onemedia_sync_status = self::get_sync_status_postmeta( $post_id );
 			if ( 'sync' === $onemedia_sync_status ) {
 				echo '<span class="onemedia-sync-badge dashicons dashicons-yes"></span>';
 			} else {
@@ -356,15 +349,15 @@ class Admin_Hooks {
 	 */
 	public function render_source_column( string $column_name, int $post_id ): void {
 		if ( 'onemedia_source' === $column_name ) {
-			$terms                = Utils::get_onemedia_attachment_post_terms( $post_id, array( 'fields' => 'names' ) );
-			$onemedia_sync_status = Utils::get_sync_status_postmeta( $post_id );
+			$terms                = UserInterface::get_onemedia_attachment_post_terms( $post_id, array( 'fields' => 'names' ) );
+			$onemedia_sync_status = self::get_sync_status_postmeta( $post_id );
 
 			// Add governing_site_url link to the output.
 			if ( ! empty( $terms ) && isset( array_flip( $terms )[ ONEMEDIA_PLUGIN_TAXONOMY_TERM ] ) && ! empty( $onemedia_sync_status ) && $onemedia_sync_status ) {
 				$saved_governing_site_url = Settings::get_parent_site_url();
 				if ( $saved_governing_site_url ) {
 					printf(
-						/* translators: %1$s is the site URL, %2$s is the link text. */
+					/* translators: %1$s is the site URL, %2$s is the link text. */
 						'<a href="%1$s">%2$s</a>',
 						esc_url( $saved_governing_site_url ),
 						esc_html__( 'Governing Site', 'onemedia' )
@@ -375,11 +368,25 @@ class Admin_Hooks {
 				}
 			} else {
 				printf(
-					/* translators: %s is the screen reader text. */
+				/* translators: %s is the screen reader text. */
 					'<span aria-hidden="true">&#8212;</span><span class="screen-reader-text">%s</span>',
 					esc_html__( '(no author)', 'onemedia' )
 				);
 			}
 		}
+	}
+
+	/**
+	 * Get OneMedia sync status postmeta value.
+	 *
+	 * @param int $attachment_id The attachment ID.
+	 *
+	 * @return string The sync status value.
+	 */
+	public static function get_sync_status_postmeta( int $attachment_id ): string {
+		if ( ! Settings::is_consumer_site() || ! $attachment_id ) {
+			return '';
+		}
+		return get_post_meta( $attachment_id, Media_Sharing_Controller::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY, true );
 	}
 }

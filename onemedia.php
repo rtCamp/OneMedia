@@ -62,8 +62,8 @@ function constants(): void {
 	define( 'ONEMEDIA_PLUGIN_TEMPLATES_PATH', ONEMEDIA_DIR . '/inc/templates' );
 	define( 'ONEMEDIA_PLUGIN_BUILD_URI', ONEMEDIA_URL . '/assets/build' );
 	define( 'ONEMEDIA_PLUGIN_SLUG', 'onemedia' );
-	define( 'ONEMEDIA_PLUGIN_GOVERNING_SITE', 'governing' );
-	define( 'ONEMEDIA_PLUGIN_BRAND_SITE', 'brand' );
+	define( 'ONEMEDIA_PLUGIN_GOVERNING_SITE', 'governing-site' );
+	define( 'ONEMEDIA_PLUGIN_BRAND_SITE', 'brand-site' );
 	define( 'ONEMEDIA_PLUGIN_TAXONOMY', 'onemedia_media_type' );
 	define( 'ONEMEDIA_PLUGIN_TAXONOMY_TERM', 'onemedia' );
 	define( 'ONEMEDIA_PLUGIN_TERM_NAME', 'OneMedia' );

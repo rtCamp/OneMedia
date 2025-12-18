@@ -4,10 +4,10 @@
 import {
 	useState,
 	useEffect,
-	createRoot,
 	useCallback,
 	useMemo,
-} from '@wordpress/element';
+} from 'react';
+import { createRoot } from 'react-dom/client';
 import {
 	Button,
 	Card,
@@ -130,7 +130,7 @@ const MediaSharingApp = ( {
 		// Initialize selected sites state.
 		const initialSelectedSites = {};
 		sitesData.forEach( ( site ) => {
-			initialSelectedSites[ site.siteUrl ] = false;
+			initialSelectedSites[ site.url ] = false;
 		} );
 		setSelectedSites( initialSelectedSites );
 	}, [] );
@@ -299,7 +299,7 @@ const MediaSharingApp = ( {
 		// Get selected brand sites.
 		const selectedBrandSites = Object.entries( selectedSites )
 			.filter( ( [ , isSelected ] ) => isSelected )
-			.map( ( [ siteUrl ] ) => siteUrl );
+			.map( ( [ url ] ) => url );
 
 		if ( 0 === selectedBrandSites.length ) {
 			setNotice( {

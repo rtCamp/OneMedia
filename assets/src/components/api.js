@@ -36,7 +36,7 @@ export const apiFetch = async ( {
 	params = {},
 } ) => {
 	try {
-		let url = `${ baseurl }/${ endpoint }`;
+		let url = `${ baseurl }/onemedia/v1/${ endpoint }`;
 		// Add params to URL if provided.
 		if ( params && Object.keys( params ).length > 0 ) {
 			const searchParams = new URLSearchParams( params ).toString();
@@ -92,11 +92,11 @@ export const apiFetch = async ( {
  */
 export const fetchBrandSites = async ( addNotice ) => {
 	const data = await apiFetch( {
-		endpoint: 'brand-sites',
+		endpoint: 'shared-sites',
 		addNotice,
 		errorMsg: __( 'Error fetching brand sites.', 'onemedia' ),
 	} );
-	const sites = ( data?.sites || [] ).map( ( site ) => ( {
+	const sites = ( data?.shared_sites || [] ).map( ( site ) => ( {
 		...site,
 		id: String( site.id ),
 	} ) );
@@ -106,14 +106,14 @@ export const fetchBrandSites = async ( addNotice ) => {
 /**
  * Performs a health check for a brand site from the governing site.
  *
- * @param {string}   siteUrl   - Site URL.
+ * @param {string}   url   - Site URL.
  * @param {string}   apiKey    - API key for the site.
  * @param {Function} addNotice - Function to display notices.
  * @return {Promise<Object|null>} - Health check result or null on error.
  */
-export const checkBrandSiteHealth = async ( siteUrl, apiKey, addNotice ) => {
+export const checkBrandSiteHealth = async ( url, apiKey, addNotice ) => {
 	const response = await apiFetch( {
-		baseurl: removeTrailingSlash( siteUrl ) + ONEMEDIA_REST_API_BASE,
+		baseurl: removeTrailingSlash( url ) + ONEMEDIA_REST_API_BASE,
 		endpoint: 'health-check',
 		method: 'GET',
 		nonce: '', // No nonce for cross-site requests.

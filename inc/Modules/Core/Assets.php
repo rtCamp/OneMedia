@@ -11,6 +11,7 @@ namespace OneMedia\Modules\Core;
 
 use OneMedia\Contracts\Interfaces\Registrable;
 use OneMedia\Modules\Rest\Abstract_REST_Controller;
+use OneMedia\Modules\Rest\Media_Sharing_Controller;
 use OneMedia\Modules\Settings\Settings;
 use OneMedia\Constants;
 use OneMedia\Utils;
@@ -84,13 +85,13 @@ final class Assets implements Registrable {
 				'siteName'     => get_bloginfo( 'name' ),
 				'ajaxUrl'          => admin_url( 'admin-ajax.php' ),
 				'uploadNonce'      => wp_create_nonce( 'onemedia_upload_media' ),
-				'allowedMimeTypes' => Utils::get_supported_mime_types(),
+				'allowedMimeTypes' => Media_Sharing_Controller::get_supported_mime_types(),
 				'mediaSyncNonce'        => wp_create_nonce( 'onemedia_check_sync_status' ),
 				'allLabel'     => __( 'All media', 'onemedia' ),
 				'syncLabel'    => __( 'Synced', 'onemedia' ),
 				'notSyncLabel' => __( 'Not Synced', 'onemedia' ),
 				'filterLabel'  => __( 'Sync Status', 'onemedia' ),
-				'syncStatus'   => Constants::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY,
+				'syncStatus'   => Media_Sharing_Controller::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY,
 			];
 		}
 

@@ -68,14 +68,14 @@ const ShareMediaModal = ( {
 									// Unselect all.
 									const reset = {};
 									brandSites.forEach( ( site ) => {
-										reset[ site.siteUrl ] = false;
+										reset[ site.url ] = false;
 									} );
 									handleSiteSelect( reset, true );
 								} else {
 									// Select all.
 									const selectAll = {};
 									brandSites.forEach( ( site ) => {
-										selectAll[ site.siteUrl ] = true;
+										selectAll[ site.url ] = true;
 									} );
 									handleSiteSelect( selectAll, true );
 								}
@@ -88,7 +88,7 @@ const ShareMediaModal = ( {
 							onClick={ () => {
 								const reset = {};
 								brandSites.forEach( ( site ) => {
-									reset[ site.siteUrl ] = false;
+									reset[ site.url ] = false;
 								} );
 								handleSiteSelect( reset, true );
 							} }
@@ -106,19 +106,19 @@ const ShareMediaModal = ( {
 								{ brandSites.map( ( site ) => (
 									<div
 										className="onemedia-site-item"
-										key={ site.siteUrl }
+										key={ site.url }
 										role="button"
 										tabIndex={ 0 }
 										onKeyDown={ ( e ) => {
 											if ( e.key === 'Enter' || e.key === ' ' ) {
 												e.preventDefault();
-												handleSiteSelect( site.siteUrl );
+												handleSiteSelect( site.url );
 											}
 										} }
-										aria-pressed={ !! selectedSites[ site.siteUrl ] }
+										aria-pressed={ !! selectedSites[ site.url ] }
 										onClick={ ( event ) => {
 											event.stopPropagation();
-											handleSiteSelect( site.siteUrl );
+											handleSiteSelect( site.url );
 										} }
 									>
 										<CheckboxControl
@@ -127,17 +127,17 @@ const ShareMediaModal = ( {
 												// Adding an onclick on label to handle checkbox event.
 												// eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
 												<div
-													onClick={ () => handleSiteSelect( site.siteUrl ) }
+													onClick={ () => handleSiteSelect( site.url ) }
 												>
 													<div className="onemedia-site-checkbox-item-name">
-														{ site.siteName }
+														{ site.name }
 													</div>
 													<div className="onemedia-site-checkbox-item-url">
-														{ site.siteUrl }
+														{ site.url }
 													</div>
 												</div>
 											}
-											checked={ !! selectedSites[ site.siteUrl ] }
+											checked={ !! selectedSites[ site.url ] }
 											onChange={ () => {
 												// Already handled in parent div's onClick.
 											} }

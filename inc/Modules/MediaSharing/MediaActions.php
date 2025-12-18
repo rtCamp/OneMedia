@@ -1,25 +1,29 @@
 <?php
 /**
- * Add all Admin site classes here.
+ * Admin lifecycle handlers for Media Sharing.
  *
- * @package OneMedia
+ * Manages the admin-side lifecycle of synced media, including pre-update
+ * guards, deletion cleanup, and propagation of attachment changes to Brand Sites.
+ *
+ * @package OneMedia\Modules\Post_Types;
  */
 
-namespace OneMedia;
+namespace OneMedia\Modules\MediaSharing;
 
-use OneMedia\Admin\Media_Taxonomy;
 use OneMedia\Constants;
-use OneMedia\Traits\Singleton;
+use OneMedia\Contracts\Interfaces\Registrable;
+use OneMedia\Modules\Core\Assets;
+use OneMedia\Modules\Rest\Abstract_REST_Controller;
+use OneMedia\Modules\Rest\Basic_Options_Controller;
+use OneMedia\Modules\Rest\Media_Sharing_Controller;
+use OneMedia\Modules\Settings\Admin as Settings_Admin;
+use OneMedia\Modules\Settings\Settings;
+use OneMedia\Utils;
 
 /**
  * Class Admin
  */
-class Admin {
-
-	/**
-	 * Use Singleton trait.
-	 */
-	use Singleton;
+class MediaActions implements Registrable {
 
 	/**
 	 * Number of attachment versions to keep.
@@ -29,19 +33,53 @@ class Admin {
 	const ATTACHMENT_VERSIONS_TO_KEEP = 5;
 
 	/**
-	 * Protected class constructor.
+	 * Sync request timeout.
+	 *
+	 * @var number
 	 */
-	protected function __construct() {
-		$this->setup_hooks();
-	}
+	public const SYNC_REQUEST_TIMEOUT = 25;
 
 	/**
-	 * Setup WordPress hooks.
+	 * OneMedia sync versions postmeta key.
 	 *
-	 * @return void
+	 * @var string
 	 */
-	public function setup_hooks(): void {
-		Media_Taxonomy::get_instance();
+	public const ONEMEDIA_SYNC_VERSIONS_POSTMETA_KEY = 'onemedia_sync_versions';
+
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function register_hooks(): void {
+		// Prevent updating attachment if connected sites are not available.
+		add_action( 'pre_post_update', array( $this, 'pre_update_sync_attachments' ), 10, 1 );
+		add_action( 'wp_ajax_save-attachment', array( $this, 'pre_update_sync_attachments_ajax' ), 0 );
+
+		// Handle syncing the attachment metadata to brand sites for a sync media file.
+		add_action( 'attachment_updated', array( $this, 'update_sync_attachments' ), 10, 1 );
+
+		// Remove sync option if attachment is deleted.
+		add_action( 'delete_attachment', array( $this, 'remove_sync_meta' ), 10, 1 );
+
+		// Make sure onemedia_media_type is private on brand sites.
+		add_action(
+			'init',
+			function () {
+				if ( Settings::is_consumer_site() ) {
+					// Get onemedia_media_type.
+					$taxonomy = get_taxonomy( ONEMEDIA_PLUGIN_TAXONOMY );
+					if ( $taxonomy && $taxonomy->show_ui ) {
+						// Set onemedia_media_type to private.
+						$taxonomy->show_ui = false;
+					}
+				}
+			},
+			PHP_INT_MAX
+		);
+
+		// Add replace media button to media library react view.
+		add_action( 'attachment_fields_to_edit', array( $this, 'add_replace_media_button' ), 10, 2 );
+
 		add_action( 'wp_ajax_onemedia_sync_media_upload', array( $this, 'handle_sync_media_upload' ) );
 		add_action( 'wp_ajax_onemedia_replace_media', array( $this, 'handle_media_replace' ) );
 
@@ -52,6 +90,309 @@ class Admin {
 		add_action( 'updated_post_meta', array( $this, 'clear_sync_cache' ), 10, 4 );
 		add_action( 'added_post_meta', array( $this, 'clear_sync_cache' ), 10, 4 );
 		add_action( 'deleted_post_meta', array( $this, 'clear_sync_cache' ), 10, 4 );
+	}
+
+	/**
+	 * Add replace media button to media library react view.
+	 *
+	 * @param array    $form_fields Form fields.
+	 * @param \WP_Post $post        The WP_Post attachment object.
+	 *
+	 * @return array Modified form fields.
+	 */
+	public function add_replace_media_button( array $form_fields, \WP_Post $post ): array {
+		if ( Settings::is_consumer_site() ) {
+			// Don't show replace media button on brand sites.
+			return $form_fields;
+		}
+
+		// Don't show replace media button for non sync media.
+		$show_replace_media = self::is_sync_attachment( $post->ID );
+		if ( ! $show_replace_media ) {
+			return $form_fields;
+		}
+
+		$form_fields['replace_media'] = array(
+			'label' => __( 'Replace Media', 'onemedia' ),
+			'input' => 'html',
+			'html'  => sprintf(
+			/* translators: %d is the post ID. */
+				'<div class="replace-media-react-container" data-attachment-id="%d"></div>',
+				$post->ID
+			),
+		);
+
+		return $form_fields;
+	}
+
+	/**
+	 * Remove sync meta when attachment is deleted.
+	 *
+	 * @param int $attachment_id Attachment ID.
+	 *
+	 * @return void
+	 */
+	public function remove_sync_meta( int $attachment_id ): void {
+		// On Governing Site.
+
+		// Check post is_onemedia_sync is set to be true.
+		$synced_brand_site_media = Media_Sharing_Controller::fetch_brand_sites_synced_media();
+		if ( ! $synced_brand_site_media || ! isset( $synced_brand_site_media[ $attachment_id ] ) ) {
+			return;
+		}
+
+		// Delete onemedia_sync_sites meta.
+		delete_post_meta( $attachment_id, Media_Sharing_Controller::ONEMEDIA_SYNC_SITES_POSTMETA_KEY );
+
+		// Delete is_onemedia_sync meta.
+		delete_post_meta( $attachment_id, Media_Sharing_Controller::IS_ONEMEDIA_SYNC_POSTMETA_KEY );
+
+		// Delete onemedia_sync_status from remote sites.
+		$synced_sites = $synced_brand_site_media[ $attachment_id ] ?? array();
+
+		foreach ( $synced_sites as $site => $site_media_id ) {
+			$site_url      = rtrim( $site, '/' );
+			$site_media_id = (int) $site_media_id;
+
+			if ( empty( $site_url ) || empty( $site_media_id ) ) {
+				continue;
+			}
+
+			// Get site api key from options.
+			$site_api_key = Basic_Options_Controller::get_brand_site_api_key( $site_url );
+
+			// Check if site api key is empty.
+			if ( empty( $site_api_key ) ) {
+				continue;
+			}
+
+			// Make POST request to delete attachment on brand sites.
+			$response = wp_remote_post(
+				$site_url . '/wp-json/' . Abstract_REST_Controller::NAMESPACE . '/delete-media-metadata',
+				array(
+					'body'      => wp_json_encode(
+						array(
+							'attachment_id' => (int) $site_media_id,
+						)
+					),
+					'timeout'   => self::SYNC_REQUEST_TIMEOUT, // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout
+					'headers'   => array(
+						'X-OneMedia-Token' => ( $site_api_key ),
+						'Cache-Control'    => 'no-cache, no-store, must-revalidate',
+					),
+					'sslverify' => false,
+				)
+			);
+
+			// Check if response is successful.
+			if ( is_wp_error( $response ) ) {
+				// Show notice in admin that media metadata deletion failed.
+				add_action(
+					'admin_notices',
+					function () use ( $site_url, $response ) {
+						$error_message = $response->get_error_message();
+						/* translators: %1$s is the site URL, %2$s is the error message. */
+						echo '<div class="notice notice-error"><p>' . esc_html( sprintf( __( 'Failed to delete media metadata on site %1$s: %2$s', 'onemedia' ), esc_html( $site_url ), esc_html( $error_message ) ) ) . '</p></div>';
+					}
+				);
+
+				wp_die(
+					sprintf(
+					/* translators: %1$s is the site URL, %2$s is the error message. */
+						esc_html__( 'Failed to delete media metadata on site %1$s: %2$s', 'onemedia' ),
+						esc_html( $site_url ),
+						esc_html( $response->get_error_message() )
+					)
+				);
+			}
+		}
+
+		// Delete synced media from options.
+		if ( isset( $synced_brand_site_media[ $attachment_id ] ) ) {
+			unset( $synced_brand_site_media[ $attachment_id ] );
+			update_option( Media_Sharing_Controller::BRAND_SITES_SYNCED_MEDIA_OPTION, $synced_brand_site_media );
+		}
+	}
+
+	/**
+	 * Prevent updating attachment if connected sites are not available.
+	 *
+	 * @param int $post_id Post ID.
+	 *
+	 * @return void
+	 */
+	public function pre_update_sync_attachments( int $post_id ): void {
+		// Check if post type is attachment.
+		$post = get_post( $post_id );
+		if ( ! $post || 'attachment' !== $post->post_type ) {
+			return;
+		}
+
+		// Check post is_onemedia_sync is set to be true.
+		$is_onemedia_sync = self::is_sync_attachment( $post_id );
+
+		if ( ! $is_onemedia_sync ) {
+			return;
+		}
+
+		$health_check_connected_sites = Basic_Options_Controller::health_check_attachment_brand_sites( $post_id );
+		$success                      = isset( $health_check_connected_sites['success'] ) ? $health_check_connected_sites['success'] : false;
+
+		// If any of the connected brand sites are not reachable, prevent updating the attachment.
+		if ( ! $success ) {
+			$error_message = sprintf(
+			/* translators: %s is the error message. */
+				__( 'Failed to update media. %s', 'onemedia' ),
+				( $health_check_connected_sites['message'] ?? __( 'Some connected brand sites are unreachable.', 'onemedia' ) )
+			);
+			wp_send_json_error(
+				array(
+					'message' => $error_message,
+				),
+				500
+			);
+		}
+	}
+
+	/**
+	 * Prevent saving attachment if connected sites are not available.
+	 *
+	 * @return void
+	 */
+	public function pre_update_sync_attachments_ajax(): void {
+		$attachment_id = isset( $_REQUEST['id'] ) ? intval( $_REQUEST['id'] ) : 0;
+
+		check_ajax_referer( 'update-post_' . $attachment_id, 'nonce' );
+
+		$action = isset( $_REQUEST['action'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['action'] ) ) : '';
+
+		if ( ! current_user_can( 'edit_post', $attachment_id ) ) {
+			wp_send_json_error(
+				array(
+					'message' => __( 'You do not have permission to edit this attachment.', 'onemedia' ),
+				),
+				403
+			);
+		}
+
+		if ( ! $attachment_id || 'attachment' !== get_post_type( $attachment_id ) || 'save-attachment' !== $action ) {
+			return;
+		}
+
+		// Check post is_onemedia_sync is set to be true.
+		$is_onemedia_sync = self::is_sync_attachment( $attachment_id );
+
+		if ( ! $is_onemedia_sync ) {
+			return;
+		}
+
+		$health_check_connected_sites = Basic_Options_Controller::health_check_attachment_brand_sites( $attachment_id );
+		$success                      = isset( $health_check_connected_sites['success'] ) ? $health_check_connected_sites['success'] : false;
+
+		// If any of the connected brand sites are not reachable, prevent updating the attachment.
+		if ( ! $success ) {
+			$error_message = sprintf(
+			/* translators: %s is the error message. */
+				__( 'Failed to update media. %s', 'onemedia' ),
+				( $health_check_connected_sites['message'] ?? __( 'Some connected brand sites are unreachable.', 'onemedia' ) )
+			);
+			wp_send_json_error(
+				array(
+					'message' => $error_message,
+				),
+				500
+			);
+		}
+	}
+
+	/**
+	 * Update sync attachments on brand sites.
+	 *
+	 * @param int $attachment_id Attachment ID.
+	 *
+	 * @return void.
+	 */
+	public function update_sync_attachments( int $attachment_id ): void {
+		// Check post is_onemedia_sync is set to be true.
+		$is_onemedia_sync = self::is_sync_attachment( $attachment_id );
+
+		if ( ! $is_onemedia_sync ) {
+			return;
+		}
+
+		// Get the brand sites this media is synced to.
+		$onemedia_sync_sites = Basic_Options_Controller::get_sync_sites_postmeta( $attachment_id );
+		if ( ! is_array( $onemedia_sync_sites ) ) {
+			return;
+		}
+
+		// POST request suffix.
+		$post_request_suffix = '/wp-json/' . Abstract_REST_Controller::NAMESPACE . '/update-attachment';
+
+		// Send updates to all sites.
+		foreach ( $onemedia_sync_sites as $site ) {
+			$site_url = $site['site'];
+			// Trim trailing slash.
+			$site_url      = rtrim( $site_url, '/' );
+			$site_media_id = $site['id'];
+
+			if ( empty( $site_url ) || empty( $site_media_id ) ) {
+				continue;
+			}
+
+			// Get site api key from options.
+			$site_api_key = Basic_Options_Controller::get_brand_site_api_key( $site_url );
+
+			// Check if site api key is empty.
+			if ( empty( $site_api_key ) ) {
+				return;
+			}
+
+			// Get update attachment data and its url.
+			$attachment_url = wp_get_attachment_url( $attachment_id );
+
+			$attachment_data = wp_get_attachment_metadata( $attachment_id );
+
+			if ( ! $attachment_data || ! is_array( $attachment_data ) ) {
+				$attachment_data = array();
+			}
+
+			// Get attachment title, alt text, caption and description.
+			$attachment_title       = get_the_title( $attachment_id );
+			$attachment_alt_text    = get_post_meta( $attachment_id, '_wp_attachment_image_alt', true );
+			$attachment_caption     = get_post_field( 'post_excerpt', $attachment_id );
+			$attachment_description = get_post_field( 'post_content', $attachment_id );
+
+			// Get attachment terms.
+			$attachment_terms = Media_Sharing_Controller::get_onemedia_attachment_terms( $attachment_id ) ?? array();
+			$attachment_terms = is_array( $attachment_terms ) ? wp_list_pluck( $attachment_terms, 'slug' ) : array();
+
+			// Set attachment data.
+			$attachment_data['title']       = $attachment_title;
+			$attachment_data['alt_text']    = $attachment_alt_text;
+			$attachment_data['caption']     = $attachment_caption;
+			$attachment_data['description'] = $attachment_description;
+			$attachment_data['terms']       = $attachment_terms;
+
+			// Make POST request to update existing attachment on brand sites.
+			wp_remote_post(
+				$site_url . $post_request_suffix,
+				array(
+					'body'    => (
+					array(
+						'attachment_id'   => (int) $site_media_id,
+						'attachment_url'  => $attachment_url,
+						'attachment_data' => $attachment_data,
+					)
+					),
+					'timeout' => self::SYNC_REQUEST_TIMEOUT, // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout
+					'headers' => array(
+						'X-OneMedia-Token' => ( $site_api_key ),
+						'Cache-Control'    => 'no-cache, no-store, must-revalidate',
+					),
+				)
+			);
+		}
 	}
 
 	/**
@@ -79,10 +420,10 @@ class Admin {
 		);
 
 		// Decode filename to handle special characters.
-		$file['name'] = Utils::decode_filename( $file['name'] );
+		$file['name'] = Media_Sharing_Controller::decode_filename( $file['name'] );
 
 		// Validate file type.
-		if ( ! in_array( $file['type'], Utils::get_supported_mime_types(), true ) ) {
+		if ( ! in_array( $file['type'], Media_Sharing_Controller::get_supported_mime_types(), true ) ) {
 			wp_send_json_error( array( 'message' => __( 'Invalid file type. Only JPG, PNG, WEBP, BMP, SVG and GIF files are allowed.', 'onemedia' ) ), 400 );
 		}
 
@@ -269,10 +610,10 @@ class Admin {
 		}
 
 		// Decode filename.
-		$file['name'] = Utils::decode_filename( $file['name'] );
+		$file['name'] = Media_Sharing_Controller::decode_filename( $file['name'] );
 
 		// Validate mime type.
-		if ( ! in_array( $file['type'], Utils::get_supported_mime_types(), true ) ) {
+		if ( ! in_array( $file['type'], Media_Sharing_Controller::get_supported_mime_types(), true ) ) {
 			return new \WP_Error(
 				'invalid_file_type',
 				__( 'Invalid file type. Only JPG, PNG, WEBP, BMP, SVG and GIF files are allowed.', 'onemedia' )
@@ -347,7 +688,7 @@ class Admin {
 		}
 
 		// Update attachment URL across posts.
-		onemedia_replace_image_across_all_post_types(
+		MediaReplacement::onemedia_replace_image_across_all_post_types(
 			$attachment_id,
 			$new_url,
 			$alt_text,
@@ -401,7 +742,7 @@ class Admin {
 	 */
 	public function restore_attachment_version( int $attachment_id, array $version_file ): array|\WP_Error {
 		// Get existing versions.
-		$existing_versions = Utils::get_sync_attachment_versions( $attachment_id );
+		$existing_versions = self::get_sync_attachment_versions( $attachment_id );
 		$is_new_meta       = ! is_array( $existing_versions ) || empty( $existing_versions );
 		$existing_versions = is_array( $existing_versions ) ? array_values( $existing_versions ) : array();
 
@@ -450,7 +791,7 @@ class Admin {
 			$existing_versions = array_slice( $existing_versions, 0, self::ATTACHMENT_VERSIONS_TO_KEEP );
 
 			// Update version history.
-			Utils::update_sync_attachment_versions( $attachment_id, $existing_versions );
+			self::update_sync_attachment_versions( $attachment_id, $existing_versions );
 		}
 
 		return $result;
@@ -467,7 +808,7 @@ class Admin {
 	 */
 	public function update_attachment_versions( int $attachment_id, array $file, array $update_result, array $original_data ): void {
 		// Get existing versions.
-		$existing_versions = Utils::get_sync_attachment_versions( $attachment_id );
+		$existing_versions = self::get_sync_attachment_versions( $attachment_id );
 		$is_new_meta       = ! is_array( $existing_versions ) || empty( $existing_versions );
 		$existing_versions = is_array( $existing_versions ) ? array_values( $existing_versions ) : array();
 
@@ -542,7 +883,7 @@ class Admin {
 		// Keep only the 5 most recent versions.
 		$versions = array_slice( $versions, 0, self::ATTACHMENT_VERSIONS_TO_KEEP );
 
-		Utils::update_sync_attachment_versions( $attachment_id, $versions );
+		self::update_sync_attachment_versions( $attachment_id, $versions );
 	}
 
 	/**
@@ -572,7 +913,7 @@ class Admin {
 	 *
 	 * @return bool True if sync attachment, false otherwise.
 	 */
-	private static function is_sync_attachment( int $attachment_id ): bool {
+	public static function is_sync_attachment( int $attachment_id ): bool {
 		// Validate input.
 		$attachment_id = absint( $attachment_id );
 		if ( ! $attachment_id ) {
@@ -591,12 +932,12 @@ class Admin {
 		$meta_value = '';
 		$is_sync    = false;
 		if ( Settings::is_consumer_site() ) { // totally not sure why same meta is not used on both sites & why string instead of boolean.
-			$meta_value = get_post_meta( $attachment_id, Constants::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY, true );
+			$meta_value = get_post_meta( $attachment_id, Media_Sharing_Controller::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY, true );
 			if ( 'sync' === $meta_value ) {
 				$is_sync = true;
 			}
 		} elseif ( Settings::is_governing_site() ) {
-			$meta_value = get_post_meta( $attachment_id, Constants::IS_ONEMEDIA_SYNC_POSTMETA_KEY, true );
+			$meta_value = get_post_meta( $attachment_id, Media_Sharing_Controller::IS_ONEMEDIA_SYNC_POSTMETA_KEY, true );
 			$is_sync    = '1' === $meta_value || 1 === $meta_value || true === $meta_value;
 		}
 
@@ -609,15 +950,51 @@ class Admin {
 	/**
 	 * Clear sync status cache when the relevant post meta is updated.
 	 *
-	 * @param int    $meta_id    The meta ID.
+	 * @param int|array   $meta_id    The meta ID.
 	 * @param int    $object_id  The object ID.
 	 * @param string $meta_key   The meta key.
 	 *
 	 * @return void -- clear cache if the meta key matches.
 	 */
-	public function clear_sync_cache( int $meta_id, int $object_id, string $meta_key ): void {
+	public function clear_sync_cache( int|array $meta_id, int $object_id, string $meta_key ): void {
 		if ( 'is_onemedia_sync' === $meta_key ) {
 			wp_cache_delete( "onemedia_sync_status_{$object_id}", 'onemedia' );
 		}
+	}
+
+	/**
+	 * Update OneMedia sync versions postmeta value.
+	 *
+	 * @param int   $attachment_id The attachment ID.
+	 * @param array $versions      The array of sync versions to set.
+	 *
+	 * @return bool True if the update was successful, false otherwise.
+	 */
+	public static function update_sync_attachment_versions( int $attachment_id, array $versions ): bool {
+		if ( ! $attachment_id || empty( $versions ) ) {
+			return false;
+		}
+
+		return update_post_meta( $attachment_id, self::ONEMEDIA_SYNC_VERSIONS_POSTMETA_KEY, $versions );
+	}
+
+	/**
+	 * Get OneMedia sync versions postmeta value.
+	 *
+	 * @param int $attachment_id The attachment ID.
+	 *
+	 * @return array The array of sync versions.
+	 */
+	public static function get_sync_attachment_versions( int $attachment_id ): array {
+		if ( ! $attachment_id ) {
+			return array();
+		}
+
+		$versions = get_post_meta( $attachment_id, self::ONEMEDIA_SYNC_VERSIONS_POSTMETA_KEY, true );
+		if ( ! is_array( $versions ) ) {
+			return array();
+		}
+
+		return $versions;
 	}
 }
