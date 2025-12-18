@@ -8,6 +8,7 @@
 namespace OneMedia\Modules\MediaSharing;
 
 use OneMedia\Contracts\Interfaces\Registrable;
+use OneMedia\Modules\Rest\Media_Sharing_Controller;
 
 /**
  * Class CPT_Restriction

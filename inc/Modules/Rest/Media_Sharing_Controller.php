@@ -9,6 +9,7 @@ namespace OneMedia\Modules\Rest;
 
 use OneMedia\Constants;
 use OneMedia\Modules\MediaSharing\MediaActions;
+use OneMedia\Modules\MediaSharing\MediaReplacement;
 use OneMedia\Modules\Settings\Settings;
 use OneMedia\Utils;
 use WP_REST_Server;

@@ -726,8 +726,7 @@ class MediaActions implements Registrable {
 		}
 
 		// Update synced media on brand sites.
-		$hooks_instance = Hooks::get_instance();
-		$hooks_instance->update_sync_attachments( $attachment_id );
+		$this->update_sync_attachments( $attachment_id );
 
 		return [
 			'attachment_id' => $attachment_id,
