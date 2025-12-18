@@ -61,7 +61,7 @@ class Term_Restriction implements Registrable {
 	public function add_default_terms(): void {
 		$term_exists_fn = function_exists( 'wpcom_vip_term_exists' ) ? 'wpcom_vip_term_exists' : 'term_exists';
 
-		if ( $term_exists_fn( ONEMEDIA_PLUGIN_TAXONOMY_TERM, ONEMEDIA_PLUGIN_TAXONOMY ) ) {
+		if ( is_callable( $term_exists_fn ) && $term_exists_fn( ONEMEDIA_PLUGIN_TAXONOMY_TERM, ONEMEDIA_PLUGIN_TAXONOMY ) ) {
 			return;
 		}
 

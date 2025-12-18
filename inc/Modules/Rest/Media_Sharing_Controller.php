@@ -609,7 +609,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 			$term_exists_fn = function_exists( 'wpcom_vip_term_exists' ) ? 'wpcom_vip_term_exists' : 'term_exists';
 
 			// Check if the term exists in onemedia_media_type taxonomy.
-			if ( ! $term_exists_fn( $image_type, ONEMEDIA_PLUGIN_TAXONOMY ) ) {
+			if ( is_callable( $term_exists_fn ) && ! $term_exists_fn( $image_type, ONEMEDIA_PLUGIN_TAXONOMY ) ) {
 				return new \WP_Error(
 					'invalid_image_type',
 					__( 'Invalid image type provided.', 'onemedia' ),
