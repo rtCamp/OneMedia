@@ -100,7 +100,7 @@ if ( class_exists( 'OneMedia\Main' ) ) {
 function onemedia_activate(): void { }
 
 // Activation hook.
-register_activation_hook( __FILE__, 'onemedia_activate' );
+register_activation_hook( __FILE__, '\OneMedia\onemedia_activate' );
 
 /**
  * Deactivate the OneMedia plugin.
@@ -112,4 +112,4 @@ register_activation_hook( __FILE__, 'onemedia_activate' );
 function onemedia_deactivate(): void { }
 
 // Deactivation hook.
-register_deactivation_hook( __FILE__, 'onemedia_deactivate' );
+register_deactivation_hook( __FILE__, '\OneMedia\onemedia_deactivate' );

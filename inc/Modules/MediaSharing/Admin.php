@@ -1,6 +1,6 @@
 <?php
 /**
- * Admin class to handle all the admin functionalities related to logs.
+ * Admin class to handle all the admin functionalities related to Media Sharing.
  *
  * @package OneMedia\Modules\Post_Types;
  */
@@ -16,13 +16,6 @@ use OneMedia\Modules\Settings\Settings;
  * Class Admin
  */
 class Admin implements Registrable {
-	/**
-	 * The screen ID for the settings page.
-	 *
-	 * We use the settings menu slug, so it's the default screen.
-	 */
-	public const SCREEN_ID = Settings_Admin::MENU_SLUG;
-
 	/**
 	 * {@inheritDoc}
 	 */

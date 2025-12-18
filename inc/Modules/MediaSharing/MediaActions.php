@@ -1,9 +1,6 @@
 <?php
 /**
- * Admin lifecycle handlers for Media Sharing.
- *
- * Manages the admin-side lifecycle of synced media, including pre-update
- * guards, deletion cleanup, and propagation of attachment changes to Brand Sites.
+ * Handlers for various actions and filters related to Media Sharing.
  *
  * @package OneMedia\Modules\Post_Types;
  */
