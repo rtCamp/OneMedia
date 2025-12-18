@@ -197,9 +197,7 @@ final class Admin implements Registrable {
 		wp_localize_script(
 			Assets::SETTINGS_SCRIPT_HANDLE,
 			'OneMediaSettings',
-			array_merge(
-				Assets::get_localized_data()
-			)
+			Assets::get_localized_data()
 		);
 
 		wp_enqueue_script( Assets::SETTINGS_SCRIPT_HANDLE );
@@ -217,13 +215,12 @@ final class Admin implements Registrable {
 
 		wp_localize_script(
 			Assets::ONBOARDING_SCRIPT_HANDLE,
-			'OneMediaSettings',
-			array_merge(
-				[
-					'site_type' => Settings::get_site_type(),
-				],
-				Assets::get_localized_data()
-			)
+			'OneMediaOnboarding',
+			[
+				'nonce'     => wp_create_nonce( 'wp_rest' ),
+				'setup_url' => admin_url( sprintf( 'admin.php?page=%s', self::SCREEN_ID ) ),
+				'site_type' => Settings::get_site_type(), // @todo We can probably remove this.
+			]
 		);
 
 		wp_enqueue_script( Assets::ONBOARDING_SCRIPT_HANDLE );

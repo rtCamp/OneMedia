@@ -21,7 +21,7 @@ import {
 	TextControl,
 } from '@wordpress/components';
 import { __, sprintf } from '@wordpress/i18n';
-import { Icon, edit } from '@wordpress/icons';
+import { Icon, pencil } from '@wordpress/icons';
 
 /**
  * Internal dependencies
@@ -29,12 +29,16 @@ import { Icon, edit } from '@wordpress/icons';
 import syncIcon from './components/syncIcon';
 import versionIcon from './components/versionIcon';
 import BrowserUploaderButton from './components/browser-uploader';
-import { ONEMEDIA_PLUGIN_TAXONOMY_TERM, ONEMEDIA_MEDIA_SHARING, MEDIA_PER_PAGE, UPLOAD_NONCE } from '../../components/constants';
 import ShareMediaModal from './components/ShareMediaModal';
 import VersionModal from './components/VersionModal';
 import { fetchSyncedSites as fetchSyncedSitesApi, fetchMediaItems as fetchMediaItemsApi, fetchBrandSites as fetchBrandSitesApi, shareMedia as shareMediaApi, uploadMedia } from '../../components/api';
 import { getNoticeClass, trimTitle, debounce, getFrameProperty } from '../../js/utils';
 import fallbackImage from '../../images/fallback-image.svg';
+
+const MEDIA_PER_PAGE = 12;
+const ONEMEDIA_PLUGIN_TAXONOMY_TERM = 'onemedia';
+const UPLOAD_NONCE = window.OneMediaMediaSharing?.uploadNonce || '';
+const ONEMEDIA_MEDIA_SHARING = window.OneMediaMediaSharing || {};
 
 const MediaSharingApp = ( {
 	imageType = '',
@@ -69,7 +73,7 @@ const MediaSharingApp = ( {
 	const localizationError = () => {
 		throw new Error(
 			__(
-				'oneMediaMediaSharing object not found. Make sure it\'s properly localized.',
+				'OneMediaMediaSharing object not found. Make sure it\'s properly localized.',
 				'onemedia',
 			),
 		);
@@ -503,7 +507,7 @@ const MediaSharingApp = ( {
 											<Button
 												size="small"
 												variant="secondary"
-												icon={ edit }
+												icon={ pencil }
 												onClick={ ( e ) => {
 													e.stopPropagation();
 													handleEditMedia(

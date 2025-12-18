@@ -13,8 +13,10 @@ import domReady from '@wordpress/dom-ready';
 /**
  * Internal dependencies
  */
-import { observeElement, getFrameTitle, getFrameProperty, isBrandSite, getNoticeClass, showSnackbarNotice } from './utils';
+import { observeElement, getFrameTitle, getFrameProperty, getNoticeClass, showSnackbarNotice } from './utils';
 import BrowserUploaderButton from '../admin/media-sharing/components/browser-uploader';
+
+const isBrandSite = window.OneMediaMediaFrame.siteType;
 
 /**
  * Get sync status from attachment model/element.
@@ -135,10 +137,8 @@ async function customizeMediaDetails() {
 		},
 	);
 
-	const isBrand = await isBrandSite();
-
 	// Process attachments on brand site.
-	if ( isBrand ) {
+	if ( isBrandSite ) {
 		// Get attachment id from URL parameter if available.
 		const urlParams = new URLSearchParams( window?.location?.search );
 		const attachmentId = urlParams?.get( 'item' );
@@ -165,8 +165,6 @@ async function customizeMediaDetails() {
  * @param {NodeList} attachmentElements - The media attachment elements.
  */
 async function showSyncBadge( attachmentElements ) {
-	const isBrand = await isBrandSite();
-
 	processAttachments(
 		attachmentElements,
 		'data-sync-badge-processed',
@@ -177,7 +175,7 @@ async function showSyncBadge( attachmentElements ) {
 			element.classList.add( 'onemedia-synced-media' );
 
 			// Disable pointer events on sync media for brand site's upload page.
-			if ( isBrand && ! getFrameTitle() ) {
+			if ( isBrandSite && ! getFrameTitle() ) {
 				element.style.pointerEvents = 'none';
 			}
 		},

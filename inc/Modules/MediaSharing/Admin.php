@@ -72,13 +72,13 @@ class Admin implements Registrable {
 
 		wp_localize_script(
 			Assets::MEDIA_SHARING_SCRIPT_HANDLE,
-			'oneMediaMediaSharing',
+			'OneMediaMediaSharing',
 			Assets::get_localized_data(),
 		);
 
 		wp_localize_script(
 			Assets::MEDIA_FRAME_SCRIPT_HANDLE,
-			'oneMediaMediaFrame',
+			'OneMediaMediaFrame',
 			Assets::get_localized_data(),
 		);
 
