@@ -12,6 +12,7 @@ use OneMedia\Modules\Rest\Abstract_REST_Controller;
 use OneMedia\Modules\Rest\Basic_Options_Controller;
 use OneMedia\Modules\Rest\Media_Sharing_Controller;
 use OneMedia\Modules\Settings\Settings;
+use OneMedia\Modules\Taxonomies\Term_Restriction;
 
 /**
  * Class Admin
@@ -62,7 +63,7 @@ class MediaActions implements Registrable {
 				}
 
 				// Get onemedia_media_type.
-				$taxonomy = get_taxonomy( ONEMEDIA_PLUGIN_TAXONOMY );
+				$taxonomy = get_taxonomy( Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY );
 				if ( ! $taxonomy || ! $taxonomy->show_ui ) {
 					return;
 				}
@@ -462,8 +463,8 @@ class MediaActions implements Registrable {
 		$sync_status = filter_input( INPUT_GET, 'onemedia_sync_media_upload', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
 		if ( ! empty( $sync_status ) && 'true' === $sync_status ) {
 			// Assign the 'onemedia' term to the attachment.
-			if ( taxonomy_exists( ONEMEDIA_PLUGIN_TAXONOMY ) ) {
-				wp_set_object_terms( $attachment_id, ONEMEDIA_PLUGIN_TAXONOMY_TERM, ONEMEDIA_PLUGIN_TAXONOMY, true );
+			if ( taxonomy_exists( Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY ) ) {
+				wp_set_object_terms( $attachment_id, Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY_TERM, Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY, true );
 			}
 		}
 
@@ -716,9 +717,9 @@ class MediaActions implements Registrable {
 		update_attached_file( $attachment_id, $target_path );
 
 		// Preserve existing taxonomy terms.
-		if ( taxonomy_exists( ONEMEDIA_PLUGIN_TAXONOMY ) ) {
-			$current_terms = wp_get_object_terms( $attachment_id, ONEMEDIA_PLUGIN_TAXONOMY, [ 'fields' => 'slugs' ] );
-			wp_set_object_terms( $attachment_id, $current_terms, ONEMEDIA_PLUGIN_TAXONOMY, false );
+		if ( taxonomy_exists( Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY ) ) {
+			$current_terms = wp_get_object_terms( $attachment_id, Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY, [ 'fields' => 'slugs' ] );
+			wp_set_object_terms( $attachment_id, $current_terms, Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY, false );
 		}
 
 		// Update synced media on brand sites.

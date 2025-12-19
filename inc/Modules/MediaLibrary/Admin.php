@@ -10,6 +10,7 @@ namespace OneMedia\Modules\MediaLibrary;
 use OneMedia\Contracts\Interfaces\Registrable;
 use OneMedia\Modules\Core\Assets;
 use OneMedia\Modules\Settings\Settings;
+use OneMedia\Modules\Taxonomies\Term_Restriction;
 
 /**
  * Class Admin
@@ -20,17 +21,15 @@ class Admin implements Registrable {
 	 * {@inheritDoc}
 	 */
 	public function register_hooks(): void {
-		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_scripts' ], 20, 1 );
+		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_scripts' ], 20 );
 		add_filter( 'ajax_query_attachments_args', [ $this,'onemedia_filter_ajax_query_attachments_args' ] );
 		add_filter( 'ajax_query_attachments_args', [ $this,'onemedia_filter_ajax_query_attachments' ] );
 	}
 
 	/**
 	 * Enqueue admin scripts.
-	 *
-	 * @param string $hook Current admin page hook.
 	 */
-	public function enqueue_scripts( string $hook ): void {
+	public function enqueue_scripts(): void {
 		$current_screen = get_current_screen();
 
 		if ( ! $current_screen instanceof \WP_Screen ) {
@@ -51,6 +50,7 @@ class Admin implements Registrable {
 			Assets::get_localized_data(),
 		);
 
+		// Required scripts for showing sync filter in media library.
 		wp_enqueue_script( Assets::MEDIA_SYNC_FILTER_SCRIPT_HANDLE );
 
 		wp_localize_script(
@@ -59,6 +59,7 @@ class Admin implements Registrable {
 			Assets::get_localized_data(),
 		);
 
+		// Shows sync status in media library.
 		wp_enqueue_script( Assets::MEDIA_FRAME_SCRIPT_HANDLE );
 	}
 
@@ -151,9 +152,9 @@ class Admin implements Registrable {
 			if ( 'true' === $onemedia_sync_media_filter ) {
 				$query['tax_query'] = [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
 					[
-						'taxonomy' => ONEMEDIA_PLUGIN_TAXONOMY,
+						'taxonomy' => Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY,
 						'field'    => 'slug',
-						'terms'    => ONEMEDIA_PLUGIN_TAXONOMY_TERM,
+						'terms'    => Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY_TERM,
 					],
 				];
 			}
@@ -162,9 +163,9 @@ class Admin implements Registrable {
 			if ( 'false' === $onemedia_sync_media_filter ) {
 				$query['tax_query'] = [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
 					[
-						'taxonomy' => ONEMEDIA_PLUGIN_TAXONOMY,
+						'taxonomy' => Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY,
 						'field'    => 'slug',
-						'terms'    => ONEMEDIA_PLUGIN_TAXONOMY_TERM,
+						'terms'    => Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY_TERM,
 						'operator' => 'NOT IN',
 					],
 				];

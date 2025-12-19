@@ -63,7 +63,7 @@ final class Settings implements Registrable {
 				'type'              => 'string',
 				'label'             => __( 'Site Type', 'onemedia' ),
 				'description'       => __( 'Defines whether this site is a governing or a brand site.', 'onemedia' ),
-				'sanitize_callback' => static function ( $value ) {
+				'sanitize_callback' => static function ( $value ): string {
 					$valid_values = [
 						self::SITE_TYPE_CONSUMER  => true,
 						self::SITE_TYPE_GOVERNING => true,
@@ -232,15 +232,20 @@ final class Settings implements Registrable {
 
 		$brands_to_return = [];
 		foreach ( $brands as $brand ) {
-			if ( ! is_array( $brand ) ) {
+			if ( empty( $brand['url'] ) ) {
 				continue;
 			}
 
-			$brands_to_return[ $brand['url'] ] = [
-				'api_key' => $brand['api_key'] ?? '',
+			$decrypted_api_key = ! empty( $brand['api_key'] ) ? Encryptor::decrypt( $brand['api_key'] ) : '';
+
+			// Always use a trailing-slash URL.
+			$url = trailingslashit( $brand['url'] );
+
+			$brands_to_return[ $url ] = [
+				'api_key' => $decrypted_api_key ?: '',
 				'id'      => $brand['id'] ?? '',
 				'name'    => $brand['name'] ?? '',
-				'url'     => $brand['url'] ?? '',
+				'url'     => $url,
 			];
 		}
 
@@ -281,6 +286,24 @@ final class Settings implements Registrable {
 	 * }> $sites The sites to set.
 	 */
 	public static function set_shared_sites( array $sites ): bool {
+		foreach ( $sites as &$site ) {
+			if ( empty( $site['api_key'] ) || empty( $site['url'] ) ) {
+				continue;
+			}
+			// Ensure URLs are trailing-slashed.
+			$site['url'] = trailingslashit( $site['url'] );
+
+			// Encrypt API keys before saving.
+			$encrypted_key = Encryptor::encrypt( $site['api_key'] );
+
+			// Bail if encryption fails.
+			if ( false === $encrypted_key ) {
+				return false;
+			}
+
+			$site['api_key'] = $encrypted_key;
+		}
+
 		return update_option( self::OPTION_GOVERNING_SHARED_SITES, array_values( $sites ), false );
 	}
 
@@ -309,21 +332,32 @@ final class Settings implements Registrable {
 
 	/**
 	 * Gets the API key, generating a new one if it doesn't exist.
+	 *
+	 * Returns an empty string on failure.
 	 */
 	public static function get_api_key(): string {
 		$api_key = get_option( self::OPTION_CONSUMER_API_KEY, '' );
 
 		$api_key = ! empty( $api_key ) ? Encryptor::decrypt( $api_key ) : self::regenerate_api_key();
 
-		return $api_key;
+		return $api_key ?: '';
 	}
 
 	/**
 	 * Regenerates the API key.
+	 *
+	 * @return string The new (unencrypted) API key.
 	 */
 	public static function regenerate_api_key(): string {
 		$api_key = self::generate_api_key();
-		update_option( self::OPTION_CONSUMER_API_KEY, Encryptor::encrypt( $api_key ) );
+
+		$encrypted_key = Encryptor::encrypt( $api_key );
+
+		if ( ! $encrypted_key ) {
+			return '';
+		}
+
+		update_option( self::OPTION_CONSUMER_API_KEY, $encrypted_key, false );
 
 		return $api_key;
 	}

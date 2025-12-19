@@ -13,7 +13,7 @@
  * Version:             1.0.0
  * Requires PHP:        8.0
  * Requires at least:   6.8
- * Tested up to:        6.8.2
+ * Tested up to:        6.9
  *
  * @package OneMedia
  */
@@ -48,20 +48,6 @@ function constants(): void {
 	 * Plugin basename.
 	 */
 	define( 'ONEMEDIA_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
-
-	/**
-	 * Other constants.
-	 */
-	define( 'ONEMEDIA_PLUGIN_BUILD_PATH', ONEMEDIA_DIR . '/assets/build' );
-	define( 'ONEMEDIA_PLUGIN_SRC_PATH', ONEMEDIA_DIR . '/assets/src' );
-	define( 'ONEMEDIA_PLUGIN_TEMPLATES_PATH', ONEMEDIA_DIR . '/inc/Modules/MediaSharing/templates' );
-	define( 'ONEMEDIA_PLUGIN_BUILD_URI', ONEMEDIA_URL . '/assets/build' );
-	define( 'ONEMEDIA_PLUGIN_SLUG', 'onemedia' );
-	define( 'ONEMEDIA_PLUGIN_GOVERNING_SITE', 'governing-site' );
-	define( 'ONEMEDIA_PLUGIN_BRAND_SITE', 'brand-site' );
-	define( 'ONEMEDIA_PLUGIN_TAXONOMY', 'onemedia_media_type' );
-	define( 'ONEMEDIA_PLUGIN_TAXONOMY_TERM', 'onemedia' );
-	define( 'ONEMEDIA_PLUGIN_TERM_NAME', 'OneMedia' );
 }
 
 constants();

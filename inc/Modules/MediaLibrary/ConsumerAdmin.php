@@ -14,6 +14,7 @@ use OneMedia\Modules\MediaSharing\Admin as MediaSharingAdmin;
 use OneMedia\Modules\MediaSharing\UserInterface;
 use OneMedia\Modules\Rest\Media_Sharing_Controller;
 use OneMedia\Modules\Settings\Settings;
+use OneMedia\Modules\Taxonomies\Term_Restriction;
 
 /**
  * Class Admin
@@ -358,7 +359,7 @@ class ConsumerAdmin implements Registrable {
 		$onemedia_sync_status = self::get_sync_status_postmeta( $post_id );
 
 		// Add governing_site_url link to the output.
-		if ( ! empty( $terms ) && isset( array_flip( $terms )[ ONEMEDIA_PLUGIN_TAXONOMY_TERM ] ) && ! empty( $onemedia_sync_status ) && $onemedia_sync_status ) {
+		if ( ! empty( $terms ) && isset( array_flip( $terms )[ Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY_TERM ] ) && ! empty( $onemedia_sync_status ) && $onemedia_sync_status ) {
 			$saved_governing_site_url = Settings::get_parent_site_url();
 			if ( $saved_governing_site_url ) {
 				printf(

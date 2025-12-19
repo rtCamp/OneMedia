@@ -8,6 +8,8 @@
 namespace OneMedia\Modules\MediaSharing;
 
 use OneMedia\Contracts\Interfaces\Registrable;
+use OneMedia\Modules\Taxonomies\Media;
+use OneMedia\Modules\Taxonomies\Term_Restriction;
 
 /**
  * Class CPT_Restriction
@@ -56,8 +58,8 @@ class UserInterface implements Registrable {
 		} else {
 			$labels = [];
 			foreach ( $terms as $term ) {
-				if ( ONEMEDIA_PLUGIN_TAXONOMY_TERM === $term ) {
-					$labels[] = ONEMEDIA_PLUGIN_TERM_NAME;
+				if ( Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY_TERM === $term ) {
+					$labels[] = Media::ONEMEDIA_PLUGIN_TERM_NAME;
 				} else {
 					$labels[] = esc_html( $term );
 				}
@@ -86,7 +88,7 @@ class UserInterface implements Registrable {
 	public function filter_media_row_actions( array $actions, \WP_Post $post ): array {
 		if ( 'attachment' === $post->post_type ) {
 			$terms = self::get_onemedia_attachment_post_terms( $post->ID, [ 'fields' => 'slugs' ] );
-			if ( ! is_wp_error( $terms ) && ! empty( $terms ) && isset( array_flip( $terms )[ ONEMEDIA_PLUGIN_TAXONOMY_TERM ] ) ) {
+			if ( ! is_wp_error( $terms ) && ! empty( $terms ) && isset( array_flip( $terms )[ Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY_TERM ] ) ) {
 				if ( isset( $actions['delete'] ) ) {
 					unset( $actions['delete'] );
 				}
@@ -108,7 +110,7 @@ class UserInterface implements Registrable {
 			return [];
 		}
 
-		$terms = wp_get_post_terms( $attachment_id, ONEMEDIA_PLUGIN_TAXONOMY, $args );
+		$terms = wp_get_post_terms( $attachment_id, Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY, $args );
 		if ( is_wp_error( $terms ) || empty( $terms ) ) {
 			return [];
 		}

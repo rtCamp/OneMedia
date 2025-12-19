@@ -9,6 +9,7 @@ namespace OneMedia\Modules\MediaSharing;
 
 use OneMedia\Contracts\Interfaces\Registrable;
 use OneMedia\Modules\Rest\Media_Sharing_Controller;
+use OneMedia\Modules\Taxonomies\Term_Restriction;
 
 /**
  * Class CPT_Restriction
@@ -33,12 +34,12 @@ class MediaProtection implements Registrable {
 	 */
 	public function add_onemedia_term_to_attachment( int $attachment_id ): void {
 		$is_onemedia_attachment = metadata_exists( 'post', $attachment_id, Media_Sharing_Controller::IS_ONEMEDIA_SYNC_POSTMETA_KEY );
-		if ( ! $attachment_id || ! taxonomy_exists( ONEMEDIA_PLUGIN_TAXONOMY ) || ! $is_onemedia_attachment ) {
+		if ( ! $attachment_id || ! taxonomy_exists( Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY ) || ! $is_onemedia_attachment ) {
 			return;
 		}
 
 		// Assign the 'onemedia' term to the attachment.
-		$success = wp_set_object_terms( $attachment_id, ONEMEDIA_PLUGIN_TAXONOMY_TERM, ONEMEDIA_PLUGIN_TAXONOMY, true );
+		$success = wp_set_object_terms( $attachment_id, Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY_TERM, Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY, true );
 
 		if ( ! is_wp_error( $success ) ) {
 			return;
@@ -59,7 +60,7 @@ class MediaProtection implements Registrable {
 	 */
 	public function maybe_block_media_delete( int $attachment_id ): int|\WP_Error {
 		$terms = UserInterface::get_onemedia_attachment_post_terms( $attachment_id, [ 'fields' => 'slugs' ] );
-		if ( ! is_wp_error( $terms ) && ! empty( $terms ) && isset( array_flip( $terms )[ ONEMEDIA_PLUGIN_TAXONOMY_TERM ] ) ) {
+		if ( ! is_wp_error( $terms ) && ! empty( $terms ) && isset( array_flip( $terms )[ Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY_TERM ] ) ) {
 			// Set a transient to show a notice on the next admin page load.
 			set_transient( 'onemedia_delete_notice', true, 30 );
 			// Redirect back to prevent deletion.

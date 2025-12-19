@@ -17,6 +17,8 @@ use OneMedia\Modules\Settings\Settings;
  */
 class Admin implements Registrable {
 
+	public const ONEMEDIA_PLUGIN_TEMPLATES_PATH = ONEMEDIA_DIR . '/inc/Modules/MediaSharing/templates';
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -38,7 +40,7 @@ class Admin implements Registrable {
 		add_submenu_page(
 			Settings_Admin::MENU_SLUG,
 			__( 'Media Sharing', 'onemedia' ),
-			'<span class="onemedia-media-sharing-page">' . __( 'Media Sharing', 'onemedia' ) . '</span>',
+			__( 'Media Sharing', 'onemedia' ),
 			'manage_options',
 			Settings_Admin::MENU_SLUG,
 			[ $this, 'screen_callback' ],
@@ -76,11 +78,14 @@ class Admin implements Registrable {
 			Assets::get_localized_data(),
 		);
 
+		// Required for showing replace media button and other media frame functionalities.
 		wp_enqueue_script( Assets::MEDIA_FRAME_SCRIPT_HANDLE );
 
+		// Required for main media sharing.
 		wp_enqueue_script( Assets::MEDIA_SHARING_SCRIPT_HANDLE );
+
+		// Media sharing styles. // @todo Rename this to media sharing styles, if not used elsewhere.
 		wp_enqueue_style( Assets::MAIN_STYLE_HANDLE );
-		wp_enqueue_style( Assets::HIDE_DELETE_BUTTON_STYLE_HANDLE );
 	}
 
 	/**
@@ -163,8 +168,8 @@ class Admin implements Registrable {
 		$template = sprintf( '%s.php', $slug );
 
 		$located_template = '';
-		if ( file_exists( ONEMEDIA_PLUGIN_TEMPLATES_PATH . '/' . $template ) ) {
-			$located_template = ONEMEDIA_PLUGIN_TEMPLATES_PATH . '/' . $template;
+		if ( file_exists( self::ONEMEDIA_PLUGIN_TEMPLATES_PATH . '/' . $template ) ) {
+			$located_template = self::ONEMEDIA_PLUGIN_TEMPLATES_PATH . '/' . $template;
 		}
 
 		if ( '' === $located_template ) {

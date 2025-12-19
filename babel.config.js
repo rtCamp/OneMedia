@@ -1,7 +1,6 @@
 /**
  * WordPress dependencies
  */
-// @ts-ignore
 const defaultConfig = require( '@wordpress/babel-preset-default' );
 
 /**

@@ -10,6 +10,7 @@ namespace OneMedia\Modules\Rest;
 use OneMedia\Modules\MediaSharing\MediaActions;
 use OneMedia\Modules\MediaSharing\MediaReplacement;
 use OneMedia\Modules\Settings\Settings;
+use OneMedia\Modules\Taxonomies\Term_Restriction;
 use WP_REST_Server;
 
 /**
@@ -605,11 +606,11 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 		// Validate search term param.
 		$image_type = isset( $image_type ) && is_string( $image_type ) ? sanitize_text_field( $image_type ) : '';
 
-		if ( ! empty( $image_type ) && ONEMEDIA_PLUGIN_TAXONOMY_TERM !== $image_type ) {
+		if ( ! empty( $image_type ) && Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY_TERM !== $image_type ) {
 			$term_exists_fn = function_exists( 'wpcom_vip_term_exists' ) ? 'wpcom_vip_term_exists' : 'term_exists';
 
 			// Check if the term exists in onemedia_media_type taxonomy.
-			if ( is_callable( $term_exists_fn ) && ! $term_exists_fn( $image_type, ONEMEDIA_PLUGIN_TAXONOMY ) ) {
+			if ( is_callable( $term_exists_fn ) && ! $term_exists_fn( $image_type, Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY ) ) {
 				return new \WP_Error(
 					'invalid_image_type',
 					__( 'Invalid image type provided.', 'onemedia' ),
@@ -645,7 +646,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
          	// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
 			$args['tax_query'] = [
 				[
-					'taxonomy' => ONEMEDIA_PLUGIN_TAXONOMY,
+					'taxonomy' => Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY,
 					'field'    => 'slug',
 					'terms'    => $image_type,
 					'operator' => 'IN',
@@ -656,9 +657,9 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
          	// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
 			$args['tax_query'] = [
 				[
-					'taxonomy' => ONEMEDIA_PLUGIN_TAXONOMY,
+					'taxonomy' => Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY,
 					'field'    => 'slug',
-					'terms'    => [ ONEMEDIA_PLUGIN_TAXONOMY_TERM ], // Exclude 'onemedia' term.
+					'terms'    => [ Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY_TERM ], // Exclude 'onemedia' term.
 					'operator' => 'NOT IN',
 				],
 			];
@@ -1191,7 +1192,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 				}
 
 				// Get all terms of onemedia_media_type taxonomy from current media file.
-				$terms = [ ONEMEDIA_PLUGIN_TAXONOMY_TERM ];
+				$terms = [ Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY_TERM ];
 
 				// Add the source attachment metadata to the media file.
 				$file_details['attachment_metadata'] = $attachment_metadata;
@@ -1360,8 +1361,8 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 
 		if ( 'sync' === $sync_option ) {
 			// Assign the term to the attachment.
-			if ( taxonomy_exists( ONEMEDIA_PLUGIN_TAXONOMY ) ) {
-				$success = wp_set_object_terms( $attachment_id, ONEMEDIA_PLUGIN_TAXONOMY_TERM, ONEMEDIA_PLUGIN_TAXONOMY, true );
+			if ( taxonomy_exists( Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY ) ) {
+				$success = wp_set_object_terms( $attachment_id, Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY_TERM, Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY, true );
 
 				if ( is_wp_error( $success ) ) {
 					return new \WP_Error(
@@ -1917,12 +1918,12 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 		$this->add_source_metadata_to_file( $attachment_id, $source_metadata );
 
 		// Delete all onemedia_media_type terms for this attachment.
-		wp_set_object_terms( $attachment_id, [], ONEMEDIA_PLUGIN_TAXONOMY, false );
+		wp_set_object_terms( $attachment_id, [], Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY, false );
 
 		// Set the attachment terms if provided.
 		if ( is_array( $terms ) ) {
 			foreach ( $terms as $term ) {
-				wp_set_object_terms( $attachment_id, $term, ONEMEDIA_PLUGIN_TAXONOMY, false );
+				wp_set_object_terms( $attachment_id, $term, Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY, false );
 			}
 		}
 
@@ -2090,7 +2091,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 			return [];
 		}
 
-		$terms = get_the_terms( $attachment_id, ONEMEDIA_PLUGIN_TAXONOMY );
+		$terms = get_the_terms( $attachment_id, Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY );
 		if ( is_wp_error( $terms ) || ! $terms ) {
 			return [];
 		}

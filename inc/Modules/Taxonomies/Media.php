@@ -7,10 +7,14 @@
 
 namespace OneMedia\Modules\Taxonomies;
 
+use OneMedia\Modules\Taxonomies\Term_Restriction;
+
 /**
  * Class Template
  */
 class Media extends Abstract_Taxonomy {
+
+	public const ONEMEDIA_PLUGIN_TERM_NAME = 'OneMedia';
 
 	/**
 	 * {@inheritDoc}
@@ -75,6 +79,6 @@ class Media extends Abstract_Taxonomy {
 	 * @return void
 	 */
 	public function add_media_taxonomy_to_post_type(): void {
-		register_taxonomy_for_object_type( ONEMEDIA_PLUGIN_TAXONOMY, 'attachment' );
+		register_taxonomy_for_object_type( Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY, 'attachment' );
 	}
 }
