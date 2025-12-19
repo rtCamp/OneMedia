@@ -17,7 +17,7 @@ use OneMedia\Modules\Settings\Settings;
  */
 class Admin implements Registrable {
 
-	public const ONEMEDIA_PLUGIN_TEMPLATES_PATH = ONEMEDIA_DIR . '/inc/Modules/MediaSharing/templates';
+	public const ONEMEDIA_PLUGIN_TEMPLATES_PATH = ONEMEDIA_DIR . '/templates';
 
 	/**
 	 * {@inheritDoc}
