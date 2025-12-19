@@ -59,14 +59,6 @@ if ( ! \OneMedia\Autoloader::autoload() ) {
 }
 
 // Load the plugin.
-if ( class_exists( 'OneMedia\Main' ) ) {
-	add_action(
-		'plugins_loaded',
-		static function (): void {
-			\OneMedia\Main::instance();
-
-			//phpcs:ignore PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound -- @todo remove before submitting to .org.
-			load_plugin_textdomain( 'onemedia', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
-		}
-	);
+if ( class_exists( '\OneMedia\Main' ) ) {
+	\OneMedia\Main::instance();
 }

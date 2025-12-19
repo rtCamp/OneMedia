@@ -7,8 +7,6 @@
 
 namespace OneMedia\Modules\Taxonomies;
 
-use OneMedia\Modules\Taxonomies\Term_Restriction;
-
 /**
  * Class Template
  */
