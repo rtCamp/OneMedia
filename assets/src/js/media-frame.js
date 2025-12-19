@@ -16,7 +16,7 @@ import domReady from '@wordpress/dom-ready';
 import { observeElement, getFrameTitle, getFrameProperty, getNoticeClass, showSnackbarNotice } from './utils';
 import BrowserUploaderButton from '../admin/media-sharing/components/browser-uploader';
 
-const isBrandSite = window.OneMediaMediaFrame.siteType;
+const isBrandSite = window.OneMediaMediaFrame.siteType === 'brand-site';
 
 /**
  * Get sync status from attachment model/element.

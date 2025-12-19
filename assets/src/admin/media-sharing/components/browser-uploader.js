@@ -11,7 +11,8 @@ import { useState, useRef } from '@wordpress/element';
 import { uploadMedia, updateExistingAttachment, checkIfAllSitesConnected, isSyncAttachment as isSyncAttachmentApi } from '../../../components/api';
 import { getFrameProperty, showSnackbarNotice } from '../../../js/utils';
 
-const UPLOAD_NONCE = window.OneMediaMediaSharing?.uploadNonce || '';
+//
+const UPLOAD_NONCE = window.OneMediaMediaFrame?.uploadNonce || '';
 const ALLOWED_MIME_TYPES = window.OneMediaMediaFrame?.allowedMimeTypes !== 'undefined'
 	? Object.values( window.OneMediaMediaFrame?.allowedMimeTypes )
 	: [];
@@ -109,6 +110,13 @@ const BrowserUploaderButton = ( {
 			library: {
 				type: ALLOWED_MIME_TYPES,
 			},
+		} );
+
+		frame.on( 'open', () => {
+			const frameEl = frame.el;
+			if ( frameEl ) {
+				frameEl.classList.add( 'onemedia-select-sync-media-frame' );
+			}
 		} );
 
 		frame.on( 'select', async () => {
