@@ -9,8 +9,7 @@ namespace OneMedia\Modules\MediaSharing;
 
 use OneMedia\Contracts\Interfaces\Registrable;
 use OneMedia\Modules\Rest\Abstract_REST_Controller;
-use OneMedia\Modules\Rest\Basic_Options_Controller;
-use OneMedia\Modules\Rest\Media_Sharing_Controller;
+use OneMedia\Modules\Rest\Utils as Rest_Utils;
 use OneMedia\Modules\Settings\Settings;
 use OneMedia\Modules\Taxonomies\Term_Restriction;
 
@@ -133,16 +132,16 @@ class MediaActions implements Registrable {
 		// On Governing Site.
 
 		// Check post is_onemedia_sync is set to be true.
-		$synced_brand_site_media = Media_Sharing_Controller::fetch_brand_sites_synced_media();
+		$synced_brand_site_media = Rest_Utils::fetch_brand_sites_synced_media();
 		if ( ! $synced_brand_site_media || ! isset( $synced_brand_site_media[ $attachment_id ] ) ) {
 			return;
 		}
 
 		// Delete onemedia_sync_sites meta.
-		delete_post_meta( $attachment_id, Media_Sharing_Controller::ONEMEDIA_SYNC_SITES_POSTMETA_KEY );
+		delete_post_meta( $attachment_id, Rest_Utils::ONEMEDIA_SYNC_SITES_POSTMETA_KEY );
 
 		// Delete is_onemedia_sync meta.
-		delete_post_meta( $attachment_id, Media_Sharing_Controller::IS_ONEMEDIA_SYNC_POSTMETA_KEY );
+		delete_post_meta( $attachment_id, Rest_Utils::IS_ONEMEDIA_SYNC_POSTMETA_KEY );
 
 		// Delete onemedia_sync_status from remote sites.
 		$synced_sites = $synced_brand_site_media[ $attachment_id ] ?? [];
@@ -156,7 +155,7 @@ class MediaActions implements Registrable {
 			}
 
 			// Get site api key from options.
-			$site_api_key = Basic_Options_Controller::get_brand_site_api_key( $site_url );
+			$site_api_key = Settings::get_brand_site_api_key( $site_url );
 
 			// Check if site api key is empty.
 			if ( empty( $site_api_key ) ) {
@@ -212,7 +211,7 @@ class MediaActions implements Registrable {
 		}
 
 		unset( $synced_brand_site_media[ $attachment_id ] );
-		update_option( Media_Sharing_Controller::BRAND_SITES_SYNCED_MEDIA_OPTION, $synced_brand_site_media );
+		update_option( Rest_Utils::BRAND_SITES_SYNCED_MEDIA_OPTION, $synced_brand_site_media );
 	}
 
 	/**
@@ -236,7 +235,7 @@ class MediaActions implements Registrable {
 			return;
 		}
 
-		$health_check_connected_sites = Basic_Options_Controller::health_check_attachment_brand_sites( $post_id );
+		$health_check_connected_sites = Rest_Utils::health_check_attachment_brand_sites( $post_id );
 		$success                      = isset( $health_check_connected_sites['success'] ) ? $health_check_connected_sites['success'] : false;
 
 		// If any of the connected brand sites are not reachable, prevent updating the attachment.
@@ -289,7 +288,7 @@ class MediaActions implements Registrable {
 			return;
 		}
 
-		$health_check_connected_sites = Basic_Options_Controller::health_check_attachment_brand_sites( $attachment_id );
+		$health_check_connected_sites = Rest_Utils::health_check_attachment_brand_sites( $attachment_id );
 		$success                      = isset( $health_check_connected_sites['success'] ) ? $health_check_connected_sites['success'] : false;
 
 		// If any of the connected brand sites are not reachable, prevent updating the attachment.
@@ -326,7 +325,7 @@ class MediaActions implements Registrable {
 		}
 
 		// Get the brand sites this media is synced to.
-		$onemedia_sync_sites = Basic_Options_Controller::get_sync_sites_postmeta( $attachment_id );
+		$onemedia_sync_sites = Rest_Utils::health_check_attachment_brand_sites( $attachment_id );
 		if ( ! is_array( $onemedia_sync_sites ) ) {
 			return;
 		}
@@ -346,7 +345,7 @@ class MediaActions implements Registrable {
 			}
 
 			// Get site api key from options.
-			$site_api_key = Basic_Options_Controller::get_brand_site_api_key( $site_url );
+			$site_api_key = Settings::get_brand_site_api_key( $site_url );
 
 			// Check if site api key is empty.
 			if ( empty( $site_api_key ) ) {
@@ -369,7 +368,7 @@ class MediaActions implements Registrable {
 			$attachment_description = get_post_field( 'post_content', $attachment_id );
 
 			// Get attachment terms.
-			$attachment_terms = Media_Sharing_Controller::get_onemedia_attachment_terms( $attachment_id ) ?? [];
+			$attachment_terms = Rest_Utils::get_onemedia_attachment_terms( $attachment_id ) ?? [];
 			$attachment_terms = is_array( $attachment_terms ) ? wp_list_pluck( $attachment_terms, 'slug' ) : [];
 
 			// Set attachment data.
@@ -423,10 +422,10 @@ class MediaActions implements Registrable {
 		];
 
 		// Decode filename to handle special characters.
-		$file['name'] = Media_Sharing_Controller::decode_filename( $file['name'] );
+		$file['name'] = Rest_Utils::decode_filename( $file['name'] );
 
 		// Validate file type.
-		if ( ! in_array( $file['type'], Media_Sharing_Controller::get_supported_mime_types(), true ) ) {
+		if ( ! in_array( $file['type'], Rest_Utils::get_supported_mime_types(), true ) ) {
 			wp_send_json_error( [ 'message' => __( 'Invalid file type. Only JPG, PNG, WEBP, BMP, SVG and GIF files are allowed.', 'onemedia' ) ], 400 );
 		}
 
@@ -613,10 +612,10 @@ class MediaActions implements Registrable {
 		}
 
 		// Decode filename.
-		$file['name'] = Media_Sharing_Controller::decode_filename( $file['name'] );
+		$file['name'] = Rest_Utils::decode_filename( $file['name'] );
 
 		// Validate mime type.
-		if ( ! in_array( $file['type'], Media_Sharing_Controller::get_supported_mime_types(), true ) ) {
+		if ( ! in_array( $file['type'], Rest_Utils::get_supported_mime_types(), true ) ) {
 			return new \WP_Error(
 				'invalid_file_type',
 				__( 'Invalid file type. Only JPG, PNG, WEBP, BMP, SVG and GIF files are allowed.', 'onemedia' )
@@ -933,12 +932,12 @@ class MediaActions implements Registrable {
 		$meta_value = '';
 		$is_sync    = false;
 		if ( Settings::is_consumer_site() ) { // totally not sure why same meta is not used on both sites & why string instead of boolean.
-			$meta_value = get_post_meta( $attachment_id, Media_Sharing_Controller::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY, true );
+			$meta_value = get_post_meta( $attachment_id, Rest_Utils::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY, true );
 			if ( 'sync' === $meta_value ) {
 				$is_sync = true;
 			}
 		} elseif ( Settings::is_governing_site() ) {
-			$meta_value = get_post_meta( $attachment_id, Media_Sharing_Controller::IS_ONEMEDIA_SYNC_POSTMETA_KEY, true );
+			$meta_value = get_post_meta( $attachment_id, Rest_Utils::IS_ONEMEDIA_SYNC_POSTMETA_KEY, true );
 			$is_sync    = '1' === $meta_value || 1 === $meta_value || true === $meta_value;
 		}
 

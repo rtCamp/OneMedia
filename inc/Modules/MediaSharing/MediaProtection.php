@@ -8,7 +8,7 @@
 namespace OneMedia\Modules\MediaSharing;
 
 use OneMedia\Contracts\Interfaces\Registrable;
-use OneMedia\Modules\Rest\Media_Sharing_Controller;
+use OneMedia\Modules\Rest\Utils as Rest_Utils;
 use OneMedia\Modules\Taxonomies\Term_Restriction;
 
 /**
@@ -33,7 +33,7 @@ class MediaProtection implements Registrable {
 	 * @return void
 	 */
 	public function add_onemedia_term_to_attachment( int $attachment_id ): void {
-		$is_onemedia_attachment = metadata_exists( 'post', $attachment_id, Media_Sharing_Controller::IS_ONEMEDIA_SYNC_POSTMETA_KEY );
+		$is_onemedia_attachment = metadata_exists( 'post', $attachment_id, Rest_Utils::IS_ONEMEDIA_SYNC_POSTMETA_KEY );
 		if ( ! $attachment_id || ! taxonomy_exists( Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY ) || ! $is_onemedia_attachment ) {
 			return;
 		}

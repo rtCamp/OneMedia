@@ -380,6 +380,57 @@ final class Settings implements Registrable {
 	}
 
 	/**
+	 * Get saved API key for a given connected brand site URL on governing site.
+	 *
+	 * @param string $site_url The brand site URL.
+	 *
+	 * @return string The saved API key if found, empty string otherwise.
+	 */
+	public static function get_brand_site_api_key( string $site_url ): string {
+		if ( ! self::is_governing_site() || empty( $site_url ) ) {
+			return '';
+		}
+
+		$brand_sites = self::get_shared_sites();
+		foreach ( $brand_sites as $site ) {
+			if ( rtrim( $site['url'], '/' ) === rtrim( $site_url, '/' ) ) {
+				return $site['api_key'];
+			}
+		}
+		return '';
+	}
+
+	/**
+	 * Get site name by URL.
+	 *
+	 * @param string $site_url The site URL.
+	 *
+	 * @return string The site name if found, empty string otherwise.
+	 */
+	public static function get_sitename_by_url( string $site_url ): string {
+		// If governing site return from option.
+		if ( self::is_governing_site() ) {
+			$sites = self::get_shared_sites();
+			foreach ( $sites as $site ) {
+				if ( hash_equals( rtrim( $site['url'], '/' ), rtrim( $site_url, '/' ) ) ) {
+					return $site['name'];
+				}
+			}
+		} else {
+			// If brand site create from site_url.
+			$parsed_url = wp_parse_url( $site_url );
+			if ( isset( $parsed_url['host'] ) ) {
+				$host_parts = explode( '.', $parsed_url['host'] );
+				$host_name  = $host_parts[0];
+				$host_name  = str_replace( [ '-', '_' ], ' ', $host_name );
+				$host_name  = ucwords( $host_name );
+				return $host_name;
+			}
+		}
+		return '';
+	}
+
+	/**
 	 * Generate a random API key.
 	 */
 	private static function generate_api_key(): string {

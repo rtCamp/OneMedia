@@ -12,7 +12,7 @@ namespace OneMedia\Modules\MediaLibrary;
 use OneMedia\Contracts\Interfaces\Registrable;
 use OneMedia\Modules\MediaSharing\Admin as MediaSharingAdmin;
 use OneMedia\Modules\MediaSharing\UserInterface;
-use OneMedia\Modules\Rest\Media_Sharing_Controller;
+use OneMedia\Modules\Rest\Utils as Rest_Utils;
 use OneMedia\Modules\Settings\Settings;
 use OneMedia\Modules\Taxonomies\Term_Restriction;
 
@@ -77,8 +77,8 @@ class ConsumerAdmin implements Registrable {
 			echo MediaSharingAdmin::get_template_content( 'brand-site/sync-status' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		} elseif ( $nonce && wp_verify_nonce( $nonce, 'onemedia_sync_filter' ) ) {
 			// This means the form has been submitted, so we have a nonce to verify.
-			$sync_status = isset( $_GET[ Media_Sharing_Controller::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY ] )
-				? sanitize_text_field( wp_unslash( $_GET[ Media_Sharing_Controller::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY ] ) )
+			$sync_status = isset( $_GET[ Rest_Utils::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY ] )
+				? sanitize_text_field( wp_unslash( $_GET[ Rest_Utils::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY ] ) )
 				: '';
 
 			// Escaping handled in the template file.
@@ -95,7 +95,7 @@ class ConsumerAdmin implements Registrable {
 	 */
 	public function filter_sync_attachments( \WP_Query $query ): \WP_Query {
 		global $pagenow;
-		$onemedia_sync_status = filter_input( INPUT_GET, Media_Sharing_Controller::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY, FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+		$onemedia_sync_status = filter_input( INPUT_GET, Rest_Utils::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY, FILTER_SANITIZE_FULL_SPECIAL_CHARS );
 
 		if ( 'upload.php' === $pagenow && isset( $onemedia_sync_status ) && ! empty( $onemedia_sync_status ) ) {
 			// Nonce verification for filter query.
@@ -106,7 +106,7 @@ class ConsumerAdmin implements Registrable {
 				return $query;
 			}
 
-			$sync_status = filter_input( INPUT_GET, Media_Sharing_Controller::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY, FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+			$sync_status = filter_input( INPUT_GET, Rest_Utils::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY, FILTER_SANITIZE_FULL_SPECIAL_CHARS );
 			$sync_status = isset( $sync_status ) ? sanitize_text_field( wp_unslash( $sync_status ) ) : '';
 
 			if ( 'sync' === $sync_status ) {
@@ -114,7 +114,7 @@ class ConsumerAdmin implements Registrable {
 					'meta_query',
 					[
 						[
-							'key'     => Media_Sharing_Controller::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY,
+							'key'     => Rest_Utils::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY,
 							'value'   => 'sync',
 							'compare' => '=',
 						],
@@ -126,12 +126,12 @@ class ConsumerAdmin implements Registrable {
 					[
 						'relation' => 'OR',
 						[
-							'key'     => Media_Sharing_Controller::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY,
+							'key'     => Rest_Utils::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY,
 							'value'   => 'no_sync',
 							'compare' => '=',
 						],
 						[
-							'key'     => Media_Sharing_Controller::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY,
+							'key'     => Rest_Utils::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY,
 							'compare' => 'NOT EXISTS',
 						],
 					]
@@ -391,6 +391,6 @@ class ConsumerAdmin implements Registrable {
 		if ( ! Settings::is_consumer_site() || ! $attachment_id ) {
 			return '';
 		}
-		return get_post_meta( $attachment_id, Media_Sharing_Controller::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY, true );
+		return get_post_meta( $attachment_id, Rest_Utils::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY, true );
 	}
 }
