@@ -345,7 +345,7 @@ class MediaActions implements Registrable {
 			$attachment_description = get_post_field( 'post_content', $attachment_id );
 
 			// Get attachment terms.
-			$attachment_terms = Rest_Utils::get_onemedia_attachment_terms( $attachment_id );
+			$attachment_terms = Rest_Utils::get_attachment_terms( $attachment_id );
 			$attachment_terms = wp_list_pluck( $attachment_terms, 'slug' );
 
 			// Set attachment data.

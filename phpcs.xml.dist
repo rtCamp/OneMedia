@@ -8,6 +8,7 @@
 
 	<!-- What to scan: include any root-level PHP files, and the /inc folder -->
 	<file>./inc/</file>
+	<file>./templates/</file>
 	<file>./onemedia.php</file>
 	<file>./uninstall.php</file>
 

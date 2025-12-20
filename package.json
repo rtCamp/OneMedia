@@ -12,8 +12,9 @@
 	"files": [
 		"build/",
 		"inc/",
-		"vendor/",
 		"languages/",
+		"templates/",
+		"vendor/",
 		"readme.txt",
 		"onemedia.php",
 		"uninstall.php"

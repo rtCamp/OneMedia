@@ -229,7 +229,7 @@ class Utils {
 	 *
 	 * @return array Array of terms.
 	 */
-	public static function get_onemedia_attachment_terms( int|\WP_Post $attachment_id ): array {
+	public static function get_attachment_terms( int|\WP_Post $attachment_id ): array {
 		if ( ! $attachment_id ) {
 			return [];
 		}

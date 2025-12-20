@@ -19,6 +19,24 @@ class Term_Restriction implements Registrable {
 	public const ONEMEDIA_PLUGIN_TAXONOMY      = 'onemedia_media_type';
 
 	/**
+	 * Get OneMedia attachment terms with args.
+	 *
+	 * @param int                 $attachment_id The attachment ID.
+	 * @param array<string,mixed> $args          Arguments to pass to wp_get_post_terms function.
+	 *
+	 * @return array Array of terms.
+	 */
+	public static function get_attachment_post_terms( int $attachment_id, array $args = [] ): array {
+		$terms = wp_get_post_terms( $attachment_id, self::ONEMEDIA_PLUGIN_TAXONOMY, $args );
+
+		if ( ! is_array( $terms ) ) {
+			return [];
+		}
+
+		return $terms;
+	}
+
+	/**
 	 * {@inheritDoc}
 	 */
 	public function register_hooks(): void {
@@ -92,7 +110,7 @@ class Term_Restriction implements Registrable {
 	 * @return void
 	 */
 	public function on_term_change( int $term_id, int $tt_id, string $taxonomy ): void {
-		$this->show_onemedia_term_change_message( $term_id, $taxonomy, __( 'modify', 'onemedia' ) );
+		$this->show_term_change_message( $term_id, $taxonomy, __( 'modify', 'onemedia' ) );
 	}
 
 	/**
@@ -157,7 +175,7 @@ class Term_Restriction implements Registrable {
 	 * @return void
 	 */
 	public function maybe_block_term_delete( int $term_id, string $taxonomy ): void {
-		$this->show_onemedia_term_change_message( $term_id, $taxonomy, __( 'delete', 'onemedia' ) );
+		$this->show_term_change_message( $term_id, $taxonomy, __( 'delete', 'onemedia' ) );
 	}
 
 	/**
@@ -172,7 +190,7 @@ class Term_Restriction implements Registrable {
 	 * @return void
 	 */
 	public function maybe_block_term_edit( int $term_id, string $taxonomy ): void {
-		$this->show_onemedia_term_change_message( $term_id, $taxonomy, __( 'edit', 'onemedia' ) );
+		$this->show_term_change_message( $term_id, $taxonomy, __( 'edit', 'onemedia' ) );
 	}
 
 	/**
@@ -185,7 +203,7 @@ class Term_Restriction implements Registrable {
 	 *
 	 * @return void
 	 */
-	public function show_onemedia_term_change_message( int $term_id, string $taxonomy, string $action ): void {
+	public function show_term_change_message( int $term_id, string $taxonomy, string $action ): void {
 		if ( self::ONEMEDIA_PLUGIN_TAXONOMY !== $taxonomy ) {
 			return;
 		}

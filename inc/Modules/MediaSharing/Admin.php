@@ -11,21 +11,22 @@ use OneMedia\Contracts\Interfaces\Registrable;
 use OneMedia\Modules\Core\Assets;
 use OneMedia\Modules\Settings\Admin as Settings_Admin;
 use OneMedia\Modules\Settings\Settings;
+use OneMedia\Utils;
 
 /**
  * Class Admin
  */
 class Admin implements Registrable {
 
-	public const ONEMEDIA_PLUGIN_TEMPLATES_PATH = ONEMEDIA_DIR . '/templates';
-
 	/**
 	 * {@inheritDoc}
 	 */
 	public function register_hooks(): void {
-		add_action( 'admin_menu', [ $this, 'add_submenu' ], 20 ); // 20 priority to make sure settings page respect its position.
+		// 20 priority to make sure settings page respect its position.
+		add_action( 'admin_menu', [ $this, 'add_submenu' ], 20 );
+		// Run after Core/Admin hooks so screen context and dependencies are fully available.
+		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_scripts' ], 20, 1 );
 		add_action( 'current_screen', [ $this, 'add_help_tabs' ] );
-		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_scripts' ], 20, 1 ); // Run after Core/Admin hooks so screen context and dependencies are fully available.
 	}
 
 	/**
@@ -112,10 +113,10 @@ class Admin implements Registrable {
 			return;
 		}
 
-		$help_overview_content       = self::get_template_content( 'help/overview' );
-		$help_how_to_share_content   = self::get_template_content( 'help/how-to-share' );
-		$help_sharing_modes_content  = self::get_template_content( 'help/sharing-modes' );
-		$help_best_practices_content = self::get_template_content( 'help/best-practices' );
+		$help_overview_content       = Utils::get_template_content( 'help/overview' );
+		$help_how_to_share_content   = Utils::get_template_content( 'help/how-to-share' );
+		$help_sharing_modes_content  = Utils::get_template_content( 'help/sharing-modes' );
+		$help_best_practices_content = Utils::get_template_content( 'help/best-practices' );
 
 		// Overview tab.
 		$screen->add_help_tab(
@@ -152,32 +153,5 @@ class Admin implements Registrable {
 				'content' => $help_best_practices_content,
 			]
 		);
-	}
-
-	/**
-	 * Return onemedia template content.
-	 *
-	 * @param string $slug Template path.
-	 * @param array  $vars Template variables.
-	 *
-	 * @return string Template markup.
-	 */
-	public static function get_template_content( string $slug, array $vars = [] ): string {
-		ob_start();
-
-		$template = sprintf( '%s.php', $slug );
-
-		$located_template = '';
-		if ( file_exists( self::ONEMEDIA_PLUGIN_TEMPLATES_PATH . '/' . $template ) ) {
-			$located_template = self::ONEMEDIA_PLUGIN_TEMPLATES_PATH . '/' . $template;
-		}
-
-		if ( '' === $located_template ) {
-			return '';
-		}
-
-		include $located_template; // phpcs:ignore WordPressVIPMinimum.Files.IncludingFile.UsingVariable
-
-		return ob_get_clean() ?: '';
 	}
 }

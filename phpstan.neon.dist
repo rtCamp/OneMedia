@@ -23,6 +23,7 @@ parameters:
 				- onemedia.php
 				- uninstall.php
 				- inc/
+				- templates/
 		excludePaths:
 			analyse:
 				- tests/

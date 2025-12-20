@@ -50,11 +50,13 @@ class UserInterface implements Registrable {
 			return;
 		}
 
-		$terms    = self::get_onemedia_attachment_post_terms( $attachment_id, [ 'fields' => 'names' ] );
-		$is_empty = empty( $terms );
+		$terms   = Term_Restriction::get_attachment_post_terms( $attachment_id, [ 'fields' => 'names' ] );
+		$classes = 'onemedia-media-term-label';
 
-		if ( $is_empty ) {
-			$label = __( 'Not assigned', 'onemedia' );
+		// Build the labels and css classes.
+		if ( empty( $terms ) ) {
+			$label    = __( 'Not assigned', 'onemedia' );
+			$classes .= ' empty';
 		} else {
 			$labels = [];
 			foreach ( $terms as $term ) {
@@ -66,8 +68,6 @@ class UserInterface implements Registrable {
 			}
 			$label = implode( ', ', $labels );
 		}
-
-		$classes = 'onemedia-media-term-label' . ( $is_empty ? ' empty' : '' );
 
 		printf(
 		/* translators: %1$s is the class attribute, %2$s is the label text. */
@@ -86,34 +86,17 @@ class UserInterface implements Registrable {
 	 * @return array Modified actions.
 	 */
 	public function filter_media_row_actions( array $actions, \WP_Post $post ): array {
-		if ( 'attachment' === $post->post_type ) {
-			$terms = self::get_onemedia_attachment_post_terms( $post->ID, [ 'fields' => 'slugs' ] );
-			if ( ! empty( $terms ) && isset( array_flip( $terms )[ Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY_TERM ] ) ) {
-				if ( isset( $actions['delete'] ) ) {
-					unset( $actions['delete'] );
-				}
+		if ( 'attachment' !== $post->post_type ) {
+			return $actions;
+		}
+
+		$terms = Term_Restriction::get_attachment_post_terms( $post->ID, [ 'fields' => 'slugs' ] );
+		if ( ! empty( $terms ) && isset( array_flip( $terms )[ Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY_TERM ] ) ) {
+			if ( isset( $actions['delete'] ) ) {
+				unset( $actions['delete'] );
 			}
 		}
+
 		return $actions;
-	}
-
-	/**
-	 * Get OneMedia attachment terms with args.
-	 *
-	 * @param int|\WP_Post $attachment_id The attachment ID.
-	 * @param array        $args          Arguments to pass to wp_get_post_terms function.
-	 *
-	 * @return array Array of terms.
-	 */
-	public static function get_onemedia_attachment_post_terms( int|\WP_Post $attachment_id, array $args = [] ): array {
-		if ( ! $attachment_id ) {
-			return [];
-		}
-
-		$terms = wp_get_post_terms( $attachment_id, Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY, $args );
-		if ( is_wp_error( $terms ) || empty( $terms ) ) {
-			return [];
-		}
-		return $terms;
 	}
 }

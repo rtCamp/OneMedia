@@ -12,6 +12,7 @@ use OneMedia\Modules\MediaSharing\MediaReplacement;
 use OneMedia\Modules\Rest\Utils as Rest_Utils;
 use OneMedia\Modules\Settings\Settings;
 use OneMedia\Modules\Taxonomies\Term_Restriction;
+use OneMedia\Utils;
 use WP_REST_Server;
 
 /**
@@ -554,20 +555,16 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 		// Validate search term param.
 		$image_type = isset( $image_type ) && is_string( $image_type ) ? sanitize_text_field( $image_type ) : '';
 
-		if ( ! empty( $image_type ) && Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY_TERM !== $image_type ) {
-			$term_exists_fn = function_exists( 'wpcom_vip_term_exists' ) ? 'wpcom_vip_term_exists' : 'term_exists';
-
-			// Check if the term exists in onemedia_media_type taxonomy.
-			if ( is_callable( $term_exists_fn ) && ! $term_exists_fn( $image_type, Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY ) ) {
-				return new \WP_Error(
-					'invalid_image_type',
-					__( 'Invalid image type provided.', 'onemedia' ),
-					[
-						'status'  => 400,
-						'success' => false,
-					]
-				);
-			}
+		// Check if the term exists in onemedia_media_type taxonomy.
+		if ( ! empty( $image_type ) && Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY_TERM !== $image_type && ! Utils::term_exists( $image_type, Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY ) ) {
+			return new \WP_Error(
+				'invalid_image_type',
+				__( 'Invalid image type provided.', 'onemedia' ),
+				[
+					'status'  => 400,
+					'success' => false,
+				]
+			);
 		}
 
 		// Validate search term param.
@@ -582,6 +579,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 			'order'          => 'DESC',
 			'menu_order'     => 'ASC',
 			'post_mime_type' => Rest_Utils::get_supported_mime_types(),
+			'fields'         => 'ids',
 		];
 
 		// Add search functionality.
@@ -591,8 +589,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 
 		// If image_type is provided, filter by onemedia_media_type taxonomy.
 		if ( ! empty( $image_type ) ) {
-         	// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
-			$args['tax_query'] = [
+			$args['tax_query'] = [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
 				[
 					'taxonomy' => Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY,
 					'field'    => 'slug',
@@ -602,8 +599,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 			];
 		} else {
 			// Exclude onemedia_media_type taxonomy.
-         	// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
-			$args['tax_query'] = [
+			$args['tax_query'] = [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
 				[
 					'taxonomy' => Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY,
 					'field'    => 'slug',
@@ -615,20 +611,16 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 		$query       = new \WP_Query( $args );
 		$media_files = [];
 
-		if ( $query->have_posts() ) {
-			while ( $query->have_posts() ) {
-				$query->the_post();
-				$post_id       = (int) get_the_ID();
-				$title         = Rest_Utils::decode_filename( get_the_title( $post_id ) );
-				$media_files[] = [
-					'id'        => $post_id,
-					'url'       => wp_get_attachment_url( $post_id ),
-					'title'     => $title,
-					'mime_type' => get_post_mime_type( $post_id ),
-					'revision'  => get_post_meta( $post_id, MediaActions::ONEMEDIA_SYNC_VERSIONS_POSTMETA_KEY, true ),
-				];
-			}
-			wp_reset_postdata();
+		$posts = $query->get_posts();
+
+		foreach ( $posts as $post_id ) {
+			$media_files[] = [
+				'id'        => $post_id,
+				'url'       => wp_get_attachment_url( $post_id ),
+				'title'     => Rest_Utils::decode_filename( get_the_title( $post_id ) ),
+				'mime_type' => get_post_mime_type( $post_id ),
+				'revision'  => get_post_meta( $post_id, MediaActions::ONEMEDIA_SYNC_VERSIONS_POSTMETA_KEY, true ),
+			];
 		}
 
 		$response = [
@@ -1071,7 +1063,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 						'url'          => wp_get_attachment_url( $saved_attachment_id ),
 						'title'        => $media_title,
 						'parent_id'    => $parent_media_id,
-						'parent_terms' => Rest_Utils::get_onemedia_attachment_terms( $saved_attachment_id ),
+						'parent_terms' => Rest_Utils::get_attachment_terms( $saved_attachment_id ),
 					];
 				} else {
 					// Media already shared but in different configuration. Convert media from non-sync to sync.
@@ -1106,7 +1098,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 						'url'          => wp_get_attachment_url( $attachment_id ),
 						'title'        => $media_title,
 						'parent_id'    => $parent_media_id,
-						'parent_terms' => Rest_Utils::get_onemedia_attachment_terms( $attachment_id ),
+						'parent_terms' => Rest_Utils::get_attachment_terms( $attachment_id ),
 					];
 				}
 			} else { // New media file, not shared previously.
@@ -1192,7 +1184,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 					'url'          => wp_get_attachment_url( $attachment_id ),
 					'title'        => $media_title,
 					'parent_id'    => $parent_media_id,
-					'parent_terms' => Rest_Utils::get_onemedia_attachment_terms( $attachment_id ),
+					'parent_terms' => Rest_Utils::get_attachment_terms( $attachment_id ),
 				];
 			}
 		}

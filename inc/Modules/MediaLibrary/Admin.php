@@ -21,7 +21,9 @@ class Admin implements Registrable {
 	 * {@inheritDoc}
 	 */
 	public function register_hooks(): void {
-		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_scripts' ], 20 ); // Run after Core/Admin hooks so screen context and dependencies are fully available.
+		// Run after Core/Admin hooks so screen context and dependencies are fully available.
+		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_scripts' ], 20 );
+
 		add_filter( 'ajax_query_attachments_args', [ $this,'filter_ajax_query_attachments_args' ] );
 		add_filter( 'ajax_query_attachments_args', [ $this,'filter_ajax_query_attachments' ] );
 	}
