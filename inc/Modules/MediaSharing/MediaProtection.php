@@ -60,7 +60,7 @@ class MediaProtection implements Registrable {
 	 */
 	public function maybe_block_media_delete( int $attachment_id ): int|\WP_Error {
 		$terms = UserInterface::get_onemedia_attachment_post_terms( $attachment_id, [ 'fields' => 'slugs' ] );
-		if ( ! is_wp_error( $terms ) && ! empty( $terms ) && isset( array_flip( $terms )[ Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY_TERM ] ) ) {
+		if ( ! empty( $terms ) && isset( array_flip( $terms )[ Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY_TERM ] ) ) {
 			// Set a transient to show a notice on the next admin page load.
 			set_transient( 'onemedia_delete_notice', true, 30 );
 			// Redirect back to prevent deletion.

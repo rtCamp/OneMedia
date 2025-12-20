@@ -86,8 +86,8 @@ class Admin implements Registrable {
 		}
 
 		// Handle direct URL parameter for grid mode.
-		$request_query = array_map( 'sanitize_text_field', isset( $_REQUEST['query'] ) ? $_REQUEST['query'] : [] );
-		if ( isset( $request_query ) && ! empty( $request_query ) && isset( $request_query['onemedia_sync_status'] ) && ! empty( $request_query['onemedia_sync_status'] ) ) {
+		$request_query = isset( $_REQUEST['query'] ) && is_array( $_REQUEST['query'] ) ? array_map( 'sanitize_text_field', $_REQUEST['query'] ) : [];
+		if ( ! empty( $request_query['onemedia_sync_status'] ) ) {
 			$sync_status = sanitize_text_field( wp_unslash( $request_query['onemedia_sync_status'] ) );
 
 			if ( 'sync' === $sync_status ) {
@@ -144,8 +144,8 @@ class Admin implements Registrable {
 			return $query;
 		}
 
-		$post_query = array_map( 'sanitize_text_field', isset( $_POST['query'] ) ? $_POST['query'] : [] );
-		if ( ! isset( $post_query ) || empty( $post_query ) || ! isset( $post_query['onemedia_sync_media_filter'] ) || empty( $post_query['onemedia_sync_media_filter'] ) ) {
+		$post_query = isset( $_POST['query'] ) && is_array( $_POST['query'] ) ? array_map( 'sanitize_text_field', $_POST['query'] ) : [];
+		if ( empty( $post_query['onemedia_sync_media_filter'] ) ) {
 			return $query;
 		}
 

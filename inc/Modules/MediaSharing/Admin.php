@@ -176,13 +176,8 @@ class Admin implements Registrable {
 			return '';
 		}
 
-		// Ensure vars is an array.
-		if ( ! is_array( $vars ) ) {
-			$vars = []; // phpcs:ignore SlevomatCodingStandard.Variables.UnusedVariable.UnusedVariable -- Variable is used within the template.
-		}
-
 		include $located_template; // phpcs:ignore WordPressVIPMinimum.Files.IncludingFile.UsingVariable
 
-		return ob_get_clean();
+		return ob_get_clean() ?: '';
 	}
 }

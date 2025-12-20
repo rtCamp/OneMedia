@@ -305,15 +305,8 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 		// Get the sync option data.
 		$brand_sites_synced_media = Rest_Utils::fetch_brand_sites_synced_media();
 
-		if ( ! is_array( $brand_sites_synced_media ) ) {
-			$brand_sites_synced_media = [];
-		}
-
 		// Get all registered brand sites.
 		$all_brand_sites = Settings::get_shared_sites();
-		if ( ! is_array( $all_brand_sites ) ) {
-			$all_brand_sites = [];
-		}
 
 		// Create URL to site name mapping first.
 		$url_to_name_mapping = [];
@@ -351,9 +344,9 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 	 * @return \WP_Error|\WP_REST_Response The response after deleting media metadata.
 	 */
 	public function delete_media_metadata( \WP_REST_Request $request ): \WP_Error|\WP_REST_Response {
-		$attachment_id = $request->get_param( 'attachment_id' );
+		$attachment_id = (int) $request->get_param( 'attachment_id' );
 
-		if ( empty( $attachment_id ) || ! is_numeric( $attachment_id ) || 'attachment' !== get_post_type( $attachment_id ) ) {
+		if ( empty( $attachment_id ) || 'attachment' !== get_post_type( $attachment_id ) ) {
 			return new \WP_Error(
 				'invalid_data',
 				__( 'Invalid data provided.', 'onemedia' ),
@@ -386,12 +379,12 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 	 * @return \WP_Error|\WP_REST_Response The response after updating media files.
 	 */
 	public function update_media_files( \WP_REST_Request $request ): \WP_Error|\WP_REST_Response {
-		$attachment_id   = $request->get_param( 'attachment_id' );
+		$attachment_id   = (int) $request->get_param( 'attachment_id' );
 		$attachment_url  = $request->get_param( 'attachment_url' );
 		$attachment_data = $request->get_param( 'attachment_data' );
 
 		// Validate attachment id.
-		if ( empty( $attachment_id ) || ! is_numeric( $attachment_id ) || 'attachment' !== get_post_type( $attachment_id ) ) {
+		if ( empty( $attachment_id ) || 'attachment' !== get_post_type( $attachment_id ) ) {
 			return new \WP_Error(
 				'invalid_data',
 				__( 'Invalid data provided.', 'onemedia' ),
@@ -526,7 +519,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 			$attachment_id,
 			$attachment_permalink,
 			$alt_text,
-			$caption
+			$caption ?: '',
 		);
 
 		return rest_ensure_response(
@@ -625,7 +618,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 		if ( $query->have_posts() ) {
 			while ( $query->have_posts() ) {
 				$query->the_post();
-				$post_id       = get_the_ID();
+				$post_id       = (int) get_the_ID();
 				$title         = Rest_Utils::decode_filename( get_the_title( $post_id ) );
 				$media_files[] = [
 					'id'        => $post_id,
@@ -729,7 +722,6 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 			if (
 				! is_array( $media ) ||
 				empty( $media['id'] ) ||
-				! is_numeric( $media['id'] ) ||
 				empty( $media['url'] ) ||
 				( ! self::is_valid_url( $media['url'] ) ) ||
 				empty( $media['title'] ) ||
@@ -883,10 +875,6 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 				$parent_id           = $media['parent_id'];
 				$onemedia_sync_sites = Rest_Utils::health_check_attachment_brand_sites( $parent_id );
 
-				if ( ! is_array( $onemedia_sync_sites ) ) {
-					$onemedia_sync_sites = [];
-				}
-
 				// Add brand site with its id so that it can be used to sync media files.
 				$onemedia_sync_sites[] = [
 					'site' => $site,
@@ -902,10 +890,6 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 				}
 
 				$brand_sites_synced_media = Rest_Utils::fetch_brand_sites_synced_media();
-
-				if ( ! is_array( $brand_sites_synced_media ) ) {
-					$brand_sites_synced_media = [];
-				}
 
 				// Add brand site media id to the option.
 				$parent_sync_media_mapping = [
@@ -1025,7 +1009,6 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 			if (
 				! is_array( $media_file ) ||
 				empty( $parent_media_id ) ||
-				! is_numeric( $parent_media_id ) ||
 				empty( $media_url ) ||
 				! self::is_valid_url( $media_url ) ||
 				empty( $media_title ) ||
@@ -1064,7 +1047,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 			// If this media file was shared previously.
 			if ( array_key_exists( $parent_media_id, $attachment_key_map ) ) {
 				$attachment_id       = isset( $media_file['child_id'] ) ? intval( $media_file['child_id'] ) : null;
-				$saved_attachment_id = intval( $attachment_key_map[ $parent_media_id ] ) ?? 0;
+				$saved_attachment_id = (int) $attachment_key_map[ $parent_media_id ];
 
 				// TODO: Update this to a more robust check.
 				// If $media_file['child_id'] is not provided, it means media was shared in the same configuration.
@@ -1078,7 +1061,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 						}
 
 						// Update the existing attachment with new metadata if any changes are present.
-						if ( $saved_attachment_id && is_numeric( $saved_attachment_id ) && 'attachment' === get_post_type( $saved_attachment_id ) ) {
+						if ( 'attachment' === get_post_type( $saved_attachment_id ) ) {
 							$this->add_source_metadata_to_file( $saved_attachment_id, $attachment_metadata );
 						}
 					}
@@ -1088,11 +1071,11 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 						'url'          => wp_get_attachment_url( $saved_attachment_id ),
 						'title'        => $media_title,
 						'parent_id'    => $parent_media_id,
-						'parent_terms' => Rest_Utils::get_onemedia_attachment_terms( $saved_attachment_id ) ?? [],
+						'parent_terms' => Rest_Utils::get_onemedia_attachment_terms( $saved_attachment_id ),
 					];
 				} else {
 					// Media already shared but in different configuration. Convert media from non-sync to sync.
-					if ( ! is_numeric( $attachment_id ) || 'attachment' !== get_post_type( $attachment_id ) ) {
+					if ( 'attachment' !== get_post_type( $attachment_id ) ) {
 						$errors[] = [
 							'url'   => $media_url,
 							'title' => $media_title,
@@ -1123,7 +1106,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 						'url'          => wp_get_attachment_url( $attachment_id ),
 						'title'        => $media_title,
 						'parent_id'    => $parent_media_id,
-						'parent_terms' => Rest_Utils::get_onemedia_attachment_terms( $attachment_id ) ?? [],
+						'parent_terms' => Rest_Utils::get_onemedia_attachment_terms( $attachment_id ),
 					];
 				}
 			} else { // New media file, not shared previously.
@@ -1209,7 +1192,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 					'url'          => wp_get_attachment_url( $attachment_id ),
 					'title'        => $media_title,
 					'parent_id'    => $parent_media_id,
-					'parent_terms' => Rest_Utils::get_onemedia_attachment_terms( $attachment_id ) ?? [],
+					'parent_terms' => Rest_Utils::get_onemedia_attachment_terms( $attachment_id ),
 				];
 			}
 		}
@@ -1274,10 +1257,10 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 	 * @return \WP_Error|\WP_REST_Response The response after updating attachment metadata.
 	 */
 	public function update_existing_attachment( \WP_REST_Request $request ): \WP_Error|\WP_REST_Response {
-		$attachment_id = $request->get_param( 'attachment_id' );
+		$attachment_id = (int) $request->get_param( 'attachment_id' );
 		$sync_option   = $request->get_param( 'sync_option' );
 
-		if ( empty( $attachment_id ) || ! is_numeric( $attachment_id ) || 'attachment' !== get_post_type( $attachment_id ) ) {
+		if ( empty( $attachment_id ) || 'attachment' !== get_post_type( $attachment_id ) ) {
 			return new \WP_Error(
 				'invalid_data',
 				__( 'Invalid data provided.', 'onemedia' ),
@@ -1490,9 +1473,6 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 
 						// Create option to store siteurl, parent media id and brand site media id.
 						$brand_sites_synced_media = Rest_Utils::fetch_brand_sites_synced_media();
-						if ( ! is_array( $brand_sites_synced_media ) ) {
-							$brand_sites_synced_media = [];
-						}
 
 						// Add brand site media id to the option.
 						$parent_sync_media_mapping = [
@@ -1578,10 +1558,10 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 	 * @return \WP_Error|\WP_REST_Response The response indicating if the attachment is a sync attachment.
 	 */
 	public function is_sync_attachment( \WP_REST_Request $request ): \WP_Error|\WP_REST_Response {
-		$attachment_id = $request->get_param( 'attachment_id' );
+		$attachment_id = (int) $request->get_param( 'attachment_id' );
 
 		// Validate attachment ID.
-		if ( empty( $attachment_id ) || ! is_numeric( $attachment_id ) || 'attachment' !== get_post_type( $attachment_id ) ) {
+		if ( empty( $attachment_id ) || 'attachment' !== get_post_type( $attachment_id ) ) {
 			return new \WP_Error(
 				'invalid_attachment_id',
 				__( 'Invalid attachment ID provided.', 'onemedia' ),
@@ -1612,10 +1592,10 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 	 * @return \WP_Error|\WP_REST_Response The response containing sync versions of the attachment.
 	 */
 	public function sync_attachment_versions( \WP_REST_Request $request ): \WP_Error|\WP_REST_Response {
-		$attachment_id = $request->get_param( 'attachment_id' );
+		$attachment_id = (int) $request->get_param( 'attachment_id' );
 
 		// Validate attachment ID.
-		if ( empty( $attachment_id ) || ! is_numeric( $attachment_id ) || 'attachment' !== get_post_type( $attachment_id ) ) {
+		if ( empty( $attachment_id ) || 'attachment' !== get_post_type( $attachment_id ) ) {
 			return new \WP_Error(
 				'invalid_attachment_id',
 				__( 'Invalid attachment ID provided.', 'onemedia' ),
@@ -1856,7 +1836,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 		// Generate and update attachment metadata.
 		$attachment_data = wp_generate_attachment_metadata( $attachment_id, $new_file );
 
-		if ( ! $attachment_data || empty( $attachment_data ) ) {
+		if ( empty( $attachment_data ) ) {
 			$errors[] = [
 				'error' => __( 'Failed to generate attachment metadata.', 'onemedia' ),
 			];
@@ -1876,10 +1856,8 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 		wp_set_object_terms( $attachment_id, [], Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY, false );
 
 		// Set the attachment terms if provided.
-		if ( is_array( $terms ) ) {
-			foreach ( $terms as $term ) {
-				wp_set_object_terms( $attachment_id, $term, Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY, false );
-			}
+		foreach ( $terms as $term ) {
+			wp_set_object_terms( $attachment_id, $term, Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY, false );
 		}
 
 		if ( ! empty( $errors ) ) {
@@ -1907,7 +1885,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 	 * @return void
 	 */
 	private function add_source_metadata_to_file( int $attachment_id, array $source_metadata ): void {
-		if ( empty( $source_metadata ) || empty( $attachment_id ) || ! is_numeric( $attachment_id ) || 'attachment' !== get_post_type( $attachment_id ) ) {
+		if ( empty( $source_metadata ) || empty( $attachment_id ) || 'attachment' !== get_post_type( $attachment_id ) ) {
 			return;
 		}
 
@@ -1967,7 +1945,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 	 * @return string The formatted label.
 	 */
 	public static function get_file_type_label( string $mime_type ): string {
-		if ( empty( $mime_type ) || ! is_string( $mime_type ) ) {
+		if ( empty( $mime_type ) ) {
 			return '';
 		}
 		$parts = explode( '/', $mime_type );

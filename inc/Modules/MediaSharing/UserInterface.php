@@ -51,7 +51,7 @@ class UserInterface implements Registrable {
 		}
 
 		$terms    = self::get_onemedia_attachment_post_terms( $attachment_id, [ 'fields' => 'names' ] );
-		$is_empty = empty( $terms ) || is_wp_error( $terms );
+		$is_empty = empty( $terms );
 
 		if ( $is_empty ) {
 			$label = __( 'Not assigned', 'onemedia' );
@@ -88,7 +88,7 @@ class UserInterface implements Registrable {
 	public function filter_media_row_actions( array $actions, \WP_Post $post ): array {
 		if ( 'attachment' === $post->post_type ) {
 			$terms = self::get_onemedia_attachment_post_terms( $post->ID, [ 'fields' => 'slugs' ] );
-			if ( ! is_wp_error( $terms ) && ! empty( $terms ) && isset( array_flip( $terms )[ Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY_TERM ] ) ) {
+			if ( ! empty( $terms ) && isset( array_flip( $terms )[ Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY_TERM ] ) ) {
 				if ( isset( $actions['delete'] ) ) {
 					unset( $actions['delete'] );
 				}

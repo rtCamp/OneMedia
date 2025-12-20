@@ -153,18 +153,18 @@ class MediaReplacement {
 	 * @return string The processed HTML content.
 	 */
 	private static function replace_image_content( array $matches, string $attachment_permalink, string $alt_text, string $caption ): string {
-		$content = $matches[0];
+		$content = (string) $matches[0];
 
 		// Same replacement logic as above.
-		$content = preg_replace( '/src="[^"]+"/', 'src="' . esc_url( $attachment_permalink ) . '"', $content );
-		$content = preg_replace( '/\s+srcset="[^"]*"/', '', $content );
-		$content = preg_replace( '/\s+sizes="[^"]*"/', '', $content );
+		$content = preg_replace( '/src="[^"]+"/', 'src="' . esc_url( $attachment_permalink ) . '"', $content ) ?: '';
+		$content = preg_replace( '/\s+srcset="[^"]*"/', '', $content ) ?: '';
+		$content = preg_replace( '/\s+sizes="[^"]*"/', '', $content ) ?: '';
 
 		if ( ! empty( $alt_text ) ) {
 			if ( preg_match( '/alt="[^"]*"/', $content ) ) {
-				$content = preg_replace( '/alt="[^"]*"/', 'alt="' . esc_attr( $alt_text ) . '"', $content );
+				$content = preg_replace( '/alt="[^"]*"/', 'alt="' . esc_attr( $alt_text ) . '"', $content ) ?: '';
 			} else {
-				$content = preg_replace( '/(<img[^>]+)(\/?>)/', '$1 alt="' . esc_attr( $alt_text ) . '"$2', $content );
+				$content = preg_replace( '/(<img[^>]+)(\/?>)/', '$1 alt="' . esc_attr( $alt_text ) . '"$2', $content ) ?: '';
 			}
 		}
 
@@ -184,6 +184,6 @@ class MediaReplacement {
 			}
 		}
 
-		return $content;
+		return (string) $content;
 	}
 }

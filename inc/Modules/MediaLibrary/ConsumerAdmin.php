@@ -48,7 +48,7 @@ class ConsumerAdmin implements Registrable {
 		add_action( 'manage_media_custom_column', [ $this, 'render_sync_column' ], 10, 2 );
 
 		// Add column for source identification.
-		add_action( 'manage_media_columns', [ $this, 'add_source_column' ], 10, 2 );
+		add_filter( 'manage_media_columns', [ $this, 'add_source_column' ], 10 );
 		add_action( 'manage_media_custom_column', [ $this, 'render_source_column' ], 10, 2 );
 
 		// Create media filter for synced attachments.
@@ -75,7 +75,7 @@ class ConsumerAdmin implements Registrable {
 		if ( ! $nonce ) {
 			// This means this is the first load of the page, so we don't have onemedia_sync_filter nonce yet.
 			echo MediaSharingAdmin::get_template_content( 'brand-site/sync-status' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-		} elseif ( $nonce && wp_verify_nonce( $nonce, 'onemedia_sync_filter' ) ) {
+		} elseif ( wp_verify_nonce( $nonce, 'onemedia_sync_filter' ) ) {
 			// This means the form has been submitted, so we have a nonce to verify.
 			$sync_status = isset( $_GET[ Rest_Utils::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY ] )
 				? sanitize_text_field( wp_unslash( $_GET[ Rest_Utils::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY ] ) )
@@ -89,57 +89,55 @@ class ConsumerAdmin implements Registrable {
 	/**
 	 * Filter attachments based on sync status.
 	 *
-	 * @param \WP_Query $query Query object.
-	 *
-	 * @return \WP_Query Modified query object.
+	 * @param \WP_Query $query A reference of the current query object.
 	 */
-	public function filter_sync_attachments( \WP_Query $query ): \WP_Query {
+	public function filter_sync_attachments( \WP_Query $query ): void {
 		global $pagenow;
 		$onemedia_sync_status = filter_input( INPUT_GET, Rest_Utils::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY, FILTER_SANITIZE_FULL_SPECIAL_CHARS );
 
-		if ( 'upload.php' === $pagenow && isset( $onemedia_sync_status ) && ! empty( $onemedia_sync_status ) ) {
-			// Nonce verification for filter query.
-			$nonce = filter_input( INPUT_GET, 'onemedia_sync_nonce', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
-			$nonce = isset( $nonce ) ? sanitize_text_field( wp_unslash( $nonce ) ) : '';
-
-			if ( ! $nonce || ! wp_verify_nonce( $nonce, 'onemedia_sync_filter' ) ) {
-				return $query;
-			}
-
-			$sync_status = filter_input( INPUT_GET, Rest_Utils::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY, FILTER_SANITIZE_FULL_SPECIAL_CHARS );
-			$sync_status = isset( $sync_status ) ? sanitize_text_field( wp_unslash( $sync_status ) ) : '';
-
-			if ( 'sync' === $sync_status ) {
-				$query->set(
-					'meta_query',
-					[
-						[
-							'key'     => Rest_Utils::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY,
-							'value'   => 'sync',
-							'compare' => '=',
-						],
-					]
-				);
-			} elseif ( 'no_sync' === $sync_status ) {
-				$query->set(
-					'meta_query',
-					[
-						'relation' => 'OR',
-						[
-							'key'     => Rest_Utils::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY,
-							'value'   => 'no_sync',
-							'compare' => '=',
-						],
-						[
-							'key'     => Rest_Utils::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY,
-							'compare' => 'NOT EXISTS',
-						],
-					]
-				);
-			}
+		if ( 'upload.php' !== $pagenow || ! isset( $onemedia_sync_status ) || empty( $onemedia_sync_status ) ) {
+			return;
 		}
 
-		return $query;
+		// Nonce verification for filter query.
+		$nonce = filter_input( INPUT_GET, 'onemedia_sync_nonce', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+		$nonce = isset( $nonce ) ? sanitize_text_field( wp_unslash( $nonce ) ) : '';
+
+		if ( ! $nonce || ! wp_verify_nonce( $nonce, 'onemedia_sync_filter' ) ) {
+			return;
+		}
+
+		$sync_status = filter_input( INPUT_GET, Rest_Utils::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY, FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+		$sync_status = isset( $sync_status ) ? sanitize_text_field( wp_unslash( $sync_status ) ) : '';
+
+		if ( 'sync' === $sync_status ) {
+			$query->set(
+				'meta_query',
+				[
+					[
+						'key'     => Rest_Utils::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY,
+						'value'   => 'sync',
+						'compare' => '=',
+					],
+				]
+			);
+		} elseif ( 'no_sync' === $sync_status ) {
+			$query->set(
+				'meta_query',
+				[
+					'relation' => 'OR',
+					[
+						'key'     => Rest_Utils::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY,
+						'value'   => 'no_sync',
+						'compare' => '=',
+					],
+					[
+						'key'     => Rest_Utils::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY,
+						'compare' => 'NOT EXISTS',
+					],
+				]
+			);
+		}
 	}
 
 	/**
@@ -256,29 +254,30 @@ class ConsumerAdmin implements Registrable {
 		}
 
 		$onemedia_sync_status = self::get_sync_status_postmeta( $attachment_id );
-		if ( 'sync' === $onemedia_sync_status ) {
-			set_transient( 'onemedia_sync_edit_notice', true, 30 );
-			wp_send_json_error(
-				[
-					'message' => __( 'This file is synced from the Governing Site, please edit it over there.', 'onemedia' ),
-				],
-				500
-			);
-			exit;
+		if ( 'sync' !== $onemedia_sync_status ) {
+			return;
 		}
+
+		set_transient( 'onemedia_sync_edit_notice', true, 30 );
+		wp_send_json_error(
+			[
+				'message' => __( 'This file is synced from the Governing Site, please edit it over there.', 'onemedia' ),
+			],
+			500
+		);
 	}
 
 	/**
 	 * Remove edit and delete links for synced attachments.
 	 *
-	 * @param array|null    $actions Array of action links.
-	 * @param \WP_Post|null $post    Post object.
+	 * @param string[] $actions Array of action links.
+	 * @param \WP_Post $post    Post object.
 	 *
-	 * @return array Modified actions.
+	 * @return string[] Modified actions.
 	 */
-	public function remove_edit_delete_links( array|null $actions, \WP_Post|null $post ): array {
+	public function remove_edit_delete_links( $actions, $post ) {
 		// Only check for attachments.
-		if ( ! $post || ! $actions || 'attachment' !== $post->post_type ) {
+		if ( ! is_array( $actions ) || ! $post instanceof \WP_Post || 'attachment' !== $post->post_type ) {
 			return $actions;
 		}
 
@@ -359,7 +358,7 @@ class ConsumerAdmin implements Registrable {
 		$onemedia_sync_status = self::get_sync_status_postmeta( $post_id );
 
 		// Add governing_site_url link to the output.
-		if ( ! empty( $terms ) && isset( array_flip( $terms )[ Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY_TERM ] ) && ! empty( $onemedia_sync_status ) && $onemedia_sync_status ) {
+		if ( ! empty( $terms ) && isset( array_flip( $terms )[ Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY_TERM ] ) && ! empty( $onemedia_sync_status ) ) {
 			$saved_governing_site_url = Settings::get_parent_site_url();
 			if ( $saved_governing_site_url ) {
 				printf(

@@ -192,7 +192,7 @@ class Term_Restriction implements Registrable {
 
 		$term = get_term( $term_id, $taxonomy );
 
-		if ( is_wp_error( $term ) || ! $term || empty( $term ) || self::ONEMEDIA_PLUGIN_TAXONOMY_TERM !== $term->slug ) {
+		if ( ! $term instanceof \WP_Term || self::ONEMEDIA_PLUGIN_TAXONOMY_TERM !== $term->slug ) {
 			return;
 		}
 

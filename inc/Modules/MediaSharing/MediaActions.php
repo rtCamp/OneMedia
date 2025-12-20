@@ -54,18 +54,18 @@ class MediaActions implements Registrable {
 		add_action( 'delete_attachment', [ $this, 'remove_sync_meta' ], 10, 1 );
 
 		// Add replace media button to media library react view.
-		add_action( 'attachment_fields_to_edit', [ $this, 'add_replace_media_button' ], 10, 2 );
+		add_filter( 'attachment_fields_to_edit', [ $this, 'add_replace_media_button' ], 10, 2 );
 
 		add_action( 'wp_ajax_onemedia_sync_media_upload', [ $this, 'handle_sync_media_upload' ] );
 		add_action( 'wp_ajax_onemedia_replace_media', [ $this, 'handle_media_replace' ] );
 
 		// Add sync status to attachment data for JavaScript (Media Modal).
-		add_filter( 'wp_prepare_attachment_for_js', [ $this, 'add_sync_meta' ], 10, 3 );
+		add_filter( 'wp_prepare_attachment_for_js', [ $this, 'add_sync_meta' ], 10, 2 );
 
 		// Clear cache when attachment sync status changes.
-		add_action( 'updated_post_meta', [ $this, 'clear_sync_cache' ], 10, 4 );
-		add_action( 'added_post_meta', [ $this, 'clear_sync_cache' ], 10, 4 );
-		add_action( 'deleted_post_meta', [ $this, 'clear_sync_cache' ], 10, 4 );
+		add_action( 'updated_post_meta', [ $this, 'clear_sync_cache' ], 10, 3 );
+		add_action( 'added_post_meta', [ $this, 'clear_sync_cache' ], 10, 3 );
+		add_action( 'deleted_post_meta', [ $this, 'clear_sync_cache' ], 10, 3 );
 	}
 
 	/**
@@ -150,7 +150,7 @@ class MediaActions implements Registrable {
 						[
 							'attachment_id' => (int) $site_media_id,
 						]
-					),
+					) ?: '',
 					'timeout'   => self::SYNC_REQUEST_TIMEOUT, // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout
 					'headers'   => [
 						'X-OneMedia-Token' => $site_api_key,
@@ -294,7 +294,7 @@ class MediaActions implements Registrable {
 	 *
 	 * @param int $attachment_id Attachment ID.
 	 *
-	 * @return void.
+	 * @return void
 	 */
 	public function update_sync_attachments( int $attachment_id ): void {
 		// Check post is_onemedia_sync is set to be true.
@@ -306,9 +306,6 @@ class MediaActions implements Registrable {
 
 		// Get the brand sites this media is synced to.
 		$onemedia_sync_sites = Rest_Utils::health_check_attachment_brand_sites( $attachment_id );
-		if ( ! is_array( $onemedia_sync_sites ) ) {
-			return;
-		}
 
 		// POST request suffix.
 		$post_request_suffix = '/wp-json/' . Abstract_REST_Controller::NAMESPACE . '/update-attachment';
@@ -348,8 +345,8 @@ class MediaActions implements Registrable {
 			$attachment_description = get_post_field( 'post_content', $attachment_id );
 
 			// Get attachment terms.
-			$attachment_terms = Rest_Utils::get_onemedia_attachment_terms( $attachment_id ) ?? [];
-			$attachment_terms = is_array( $attachment_terms ) ? wp_list_pluck( $attachment_terms, 'slug' ) : [];
+			$attachment_terms = Rest_Utils::get_onemedia_attachment_terms( $attachment_id );
+			$attachment_terms = wp_list_pluck( $attachment_terms, 'slug' );
 
 			// Set attachment data.
 			$attachment_data['title']       = $attachment_title;
@@ -474,7 +471,7 @@ class MediaActions implements Registrable {
 
 		if ( ! $input_file && $is_version_restore ) {
 			$file_json = isset( $_POST['file'] ) ? wp_unslash( $_POST['file'] ) : null; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized later in sanitize_file_input().
-			if ( $file_json && ! empty( $file_json ) ) {
+			if ( ! empty( $file_json ) ) {
 				$decoded = json_decode( $file_json, true );
 				if ( is_array( $decoded ) ) {
 					$input_file = $decoded;
@@ -673,7 +670,7 @@ class MediaActions implements Registrable {
 			$attachment_id,
 			$new_url,
 			$alt_text,
-			$caption
+			$caption ?: '',
 		);
 
 		// Update attachment data.
@@ -723,8 +720,8 @@ class MediaActions implements Registrable {
 	public function restore_attachment_version( int $attachment_id, array $version_file ): array|\WP_Error {
 		// Get existing versions.
 		$existing_versions = self::get_sync_attachment_versions( $attachment_id );
-		$is_new_meta       = ! is_array( $existing_versions ) || empty( $existing_versions );
-		$existing_versions = is_array( $existing_versions ) ? array_values( $existing_versions ) : [];
+		$is_new_meta       = empty( $existing_versions );
+		$existing_versions = array_values( $existing_versions );
 
 		// Find the index of the version being restored.
 		$restore_index = null;
@@ -754,7 +751,7 @@ class MediaActions implements Registrable {
 		$timestamp = time();
 
 		// Update the versions list.
-		if ( is_array( $existing_versions ) && ! empty( $existing_versions ) ) {
+		if ( ! empty( $existing_versions ) ) {
 			// Remove the restored version from its current position.
 			if ( isset( $existing_versions[ $restore_index ] ) ) {
 				unset( $existing_versions[ $restore_index ] );
@@ -789,8 +786,8 @@ class MediaActions implements Registrable {
 	public function update_attachment_versions( int $attachment_id, array $file, array $update_result, array $original_data ): void {
 		// Get existing versions.
 		$existing_versions = self::get_sync_attachment_versions( $attachment_id );
-		$is_new_meta       = ! is_array( $existing_versions ) || empty( $existing_versions );
-		$existing_versions = is_array( $existing_versions ) ? array_values( $existing_versions ) : [];
+		$is_new_meta       = empty( $existing_versions );
+		$existing_versions = array_values( $existing_versions );
 
 		// Original file information.
 		$attachment   = $original_data['attachment'];
@@ -810,7 +807,7 @@ class MediaActions implements Registrable {
 				'attachment_id' => $attachment_id,
 				'path'          => $current_file,
 				'url'           => $old_url,
-				'guid'          => is_object( $attachment ) ? $attachment->guid : $old_url,
+				'guid'          => is_object( $attachment ) && property_exists( $attachment, 'guid' ) ? $attachment->guid : $old_url,
 				'name'          => wp_basename( $current_file ),
 				'type'          => get_post_mime_type( $attachment_id ),
 				'alt'           => $alt_text,
@@ -874,9 +871,9 @@ class MediaActions implements Registrable {
 	 *
 	 * @return array Modified attachment data with sync status.
 	 */
-	public function add_sync_meta( array $response, \WP_Post $attachment ): array {
+	public function add_sync_meta( $response, $attachment ) {
 		// If attachment ID is not set, return original response.
-		if ( ! isset( $attachment->ID ) ) {
+		if ( empty( $attachment->ID ) ) {
 			return $response;
 		}
 
@@ -957,7 +954,7 @@ class MediaActions implements Registrable {
 			return false;
 		}
 
-		return update_post_meta( $attachment_id, self::ONEMEDIA_SYNC_VERSIONS_POSTMETA_KEY, $versions );
+		return (bool) update_post_meta( $attachment_id, self::ONEMEDIA_SYNC_VERSIONS_POSTMETA_KEY, $versions );
 	}
 
 	/**
