@@ -46,7 +46,7 @@ class Utils {
 	/**
 	 * Health check request timeout.
 	 *
-	 * @var \OneMedia\Modules\Rest\number
+	 * @var int
 	 */
 	private const HEALTH_CHECK_REQUEST_TIMEOUT = 15;
 
