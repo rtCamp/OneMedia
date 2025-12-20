@@ -8,6 +8,7 @@
 namespace OneMedia\Modules\Taxonomies;
 
 use OneMedia\Contracts\Interfaces\Registrable;
+use OneMedia\Modules\Settings\Settings;
 
 /**
  * Class CPT_Restriction
@@ -22,6 +23,7 @@ class Term_Restriction implements Registrable {
 	 */
 	public function register_hooks(): void {
 		add_action( 'init', [ $this, 'add_default_terms' ] );
+		add_action( 'init', [ $this,'hide_term_on_brand_site' ], 10 );
 		add_action( 'edited_term', [ $this, 'on_term_change' ], 10, 3 );
 		add_action( 'delete_term', [ $this, 'on_term_delete' ], 10, 4 );
 		add_filter( 'pre_insert_term', [ $this, 'maybe_block_term_insert' ], 10, 2 );
@@ -120,7 +122,7 @@ class Term_Restriction implements Registrable {
 	 * except for the 'onemedia' term.
 	 *
 	 * @param string|array|\WP_Error $term     The term being inserted.
-	 * @param string                                             $taxonomy The taxonomy slug.
+	 * @param string                 $taxonomy The taxonomy slug.
 	 *
 	 * @return string|array|\WP_Error The term if valid, or a WP_Error if blocked.
 	 */
@@ -221,5 +223,25 @@ class Term_Restriction implements Registrable {
 			),
 			[ 'response' => 403 ]
 		);
+	}
+
+	/**
+	 * Make onemedia_media_type taxonomy hidden on brand sites.
+	 *
+	 * @return void
+	 */
+	private function hide_term_on_brand_site(): void {
+		if ( ! Settings::is_consumer_site() ) {
+			return;
+		}
+
+		// Get onemedia_media_type.
+		$taxonomy = get_taxonomy( self::ONEMEDIA_PLUGIN_TAXONOMY );
+		if ( ! $taxonomy || ! $taxonomy->show_ui ) {
+			return;
+		}
+
+		// Set onemedia_media_type to private.
+		$taxonomy->show_ui = false;
 	}
 }

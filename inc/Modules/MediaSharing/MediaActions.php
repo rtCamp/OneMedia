@@ -53,26 +53,6 @@ class MediaActions implements Registrable {
 		// Remove sync option if attachment is deleted.
 		add_action( 'delete_attachment', [ $this, 'remove_sync_meta' ], 10, 1 );
 
-		// Make sure onemedia_media_type is private on brand sites.
-		add_action(
-			'init',
-			static function () {
-				if ( ! Settings::is_consumer_site() ) {
-					return;
-				}
-
-				// Get onemedia_media_type.
-				$taxonomy = get_taxonomy( Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY );
-				if ( ! $taxonomy || ! $taxonomy->show_ui ) {
-					return;
-				}
-
-				// Set onemedia_media_type to private.
-				$taxonomy->show_ui = false;
-			},
-			PHP_INT_MAX
-		);
-
 		// Add replace media button to media library react view.
 		add_action( 'attachment_fields_to_edit', [ $this, 'add_replace_media_button' ], 10, 2 );
 
