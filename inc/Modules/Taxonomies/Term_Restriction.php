@@ -119,7 +119,7 @@ class Term_Restriction implements Registrable {
 	 * This method prevents the addition of new terms to the ONEMEDIA_PLUGIN_TAXONOMY taxonomy,
 	 * except for the 'onemedia' term.
 	 *
-	 * @param string|array|\OneMedia\Modules\Taxonomies\WP_Error $term     The term being inserted.
+	 * @param string|array|\WP_Error $term     The term being inserted.
 	 * @param string                                             $taxonomy The taxonomy slug.
 	 *
 	 * @return string|array|\WP_Error The term if valid, or a WP_Error if blocked.

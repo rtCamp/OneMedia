@@ -28,7 +28,7 @@ class MediaActions implements Registrable {
 	/**
 	 * Sync request timeout.
 	 *
-	 * @var \OneMedia\Modules\MediaSharing\number
+	 * @var number
 	 */
 	public const SYNC_REQUEST_TIMEOUT = 25;
 
@@ -560,7 +560,7 @@ class MediaActions implements Registrable {
 	 *
 	 * @param array|null $input_file The raw input file data.
 	 *
-	 * @return array|\OneMedia\Modules\MediaSharing\WP_Error Sanitized file array or WP_Error on failure.
+	 * @return array|\WP_Error Sanitized file array or WP_Error on failure.
 	 */
 	public function sanitize_file_input( $input_file ): array|\WP_Error {
 		// Verify file input exists.
@@ -633,7 +633,7 @@ class MediaActions implements Registrable {
 	 * @param bool  $is_version_restore Whether this is a version restore operation.
 	 * @param array $version_data     Version data for restore operations.
 	 *
-	 * @return array|\OneMedia\Modules\MediaSharing\WP_Error Result data or WP_Error on failure.
+	 * @return array|\WP_Error Result data or WP_Error on failure.
 	 */
 	public function update_attachment( int $attachment_id, array $file, bool $is_version_restore = false, array $version_data = [] ): array|\WP_Error {
 		// Get existing attachment data.
@@ -738,7 +738,7 @@ class MediaActions implements Registrable {
 	 * @param int   $attachment_id The attachment ID.
 	 * @param array $version_file  The version file data to restore.
 	 *
-	 * @return array|\OneMedia\Modules\MediaSharing\WP_Error Result data or WP_Error on failure.
+	 * @return array|\WP_Error Result data or WP_Error on failure.
 	 */
 	public function restore_attachment_version( int $attachment_id, array $version_file ): array|\WP_Error {
 		// Get existing versions.
