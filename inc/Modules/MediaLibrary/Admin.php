@@ -125,7 +125,7 @@ class Admin implements Registrable {
 	 * @return array Modified query arguments.
 	 */
 	public function filter_ajax_query_attachments( array $query ): array {
-		// Return early if not an AJAX request
+		// Return early if not an AJAX request.
 		if ( ! wp_doing_ajax() ) {
 			return $query;
 		}
@@ -137,7 +137,7 @@ class Admin implements Registrable {
 			return $query;
 		}
 
-		// Check if this is an AJAX request for attachments
+		// Check if this is an AJAX request for attachments.
 		$post_action = filter_input( INPUT_POST, 'action', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
 
 		if ( ! isset( $post_action ) || empty( $post_action ) || 'query-attachments' !== $post_action ) {

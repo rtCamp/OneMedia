@@ -28,7 +28,7 @@ class MediaActions implements Registrable {
 	/**
 	 * Sync request timeout.
 	 *
-	 * @var number
+	 * @var \OneMedia\Modules\MediaSharing\number
 	 */
 	public const SYNC_REQUEST_TIMEOUT = 25;
 

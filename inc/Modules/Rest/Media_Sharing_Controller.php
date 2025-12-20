@@ -22,14 +22,14 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 	/**
 	 * Sync media request timeout.
 	 *
-	 * @var number
+	 * @var \OneMedia\Modules\Rest\number
 	 */
 	public const SYNC_MEDIA_REQUEST_TIMEOUT = 15;
 
 	/**
 	 * Fetch media request timeout.
 	 *
-	 * @var number
+	 * @var \OneMedia\Modules\Rest\number
 	 */
 	public const FETCH_MEDIA_REQUEST_TIMEOUT = 30;
 
