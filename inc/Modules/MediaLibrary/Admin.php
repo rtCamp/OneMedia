@@ -125,52 +125,54 @@ class Admin implements Registrable {
 	 * @return array Modified query arguments.
 	 */
 	public function filter_ajax_query_attachments( array $query ): array {
+		// Return early if not an AJAX request
+		if ( ! wp_doing_ajax() ) {
+			return $query;
+		}
+
 		// Nonce verification for AJAX requests.
-		if ( wp_doing_ajax() ) {
-			$nonce = filter_input( INPUT_POST, '_ajax_nonce', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
-			$nonce = sanitize_text_field( wp_unslash( $nonce ) );
-			if ( ! wp_verify_nonce( $nonce, 'onemedia_check_sync_status' ) ) {
-				return $query;
-			}
+		$nonce = filter_input( INPUT_POST, '_ajax_nonce', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+		$nonce = sanitize_text_field( wp_unslash( $nonce ) );
+		if ( ! wp_verify_nonce( $nonce, 'onemedia_check_sync_status' ) ) {
+			return $query;
 		}
 
-		// Check if this is an AJAX request for attachments and we're filtering for onemedia_sync.
-		if ( wp_doing_ajax() ) {
-			$post_action = filter_input( INPUT_POST, 'action', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+		// Check if this is an AJAX request for attachments
+		$post_action = filter_input( INPUT_POST, 'action', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
 
-			if ( ! isset( $post_action ) || empty( $post_action ) || 'query-attachments' !== $post_action ) {
-				return $query;
-			}
-
-			$post_query = array_map( 'sanitize_text_field', isset( $_POST['query'] ) ? $_POST['query'] : [] );
-			if ( ! isset( $post_query ) || empty( $post_query ) || ! isset( $post_query['onemedia_sync_media_filter'] ) || empty( $post_query['onemedia_sync_media_filter'] ) ) {
-				return $query;
-			}
-
-			$onemedia_sync_media_filter = sanitize_text_field( wp_unslash( $post_query['onemedia_sync_media_filter'] ) );
-
-			if ( 'true' === $onemedia_sync_media_filter ) {
-				$query['tax_query'] = [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
-					[
-						'taxonomy' => Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY,
-						'field'    => 'slug',
-						'terms'    => Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY_TERM,
-					],
-				];
-			}
-
-			// If onemedia_sync_media_filter: false then exclude onemedia.
-			if ( 'false' === $onemedia_sync_media_filter ) {
-				$query['tax_query'] = [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
-					[
-						'taxonomy' => Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY,
-						'field'    => 'slug',
-						'terms'    => Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY_TERM,
-						'operator' => 'NOT IN',
-					],
-				];
-			}
+		if ( ! isset( $post_action ) || empty( $post_action ) || 'query-attachments' !== $post_action ) {
+			return $query;
 		}
+
+		$post_query = array_map( 'sanitize_text_field', isset( $_POST['query'] ) ? $_POST['query'] : [] );
+		if ( ! isset( $post_query ) || empty( $post_query ) || ! isset( $post_query['onemedia_sync_media_filter'] ) || empty( $post_query['onemedia_sync_media_filter'] ) ) {
+			return $query;
+		}
+
+		$onemedia_sync_media_filter = sanitize_text_field( wp_unslash( $post_query['onemedia_sync_media_filter'] ) );
+
+		if ( 'true' === $onemedia_sync_media_filter ) {
+			$query['tax_query'] = [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
+				[
+					'taxonomy' => Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY,
+					'field'    => 'slug',
+					'terms'    => Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY_TERM,
+				],
+			];
+		}
+
+		// If onemedia_sync_media_filter: false then exclude onemedia.
+		if ( 'false' === $onemedia_sync_media_filter ) {
+			$query['tax_query'] = [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
+				[
+					'taxonomy' => Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY,
+					'field'    => 'slug',
+					'terms'    => Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY_TERM,
+					'operator' => 'NOT IN',
+				],
+			];
+		}
+
 		return $query;
 	}
 }
