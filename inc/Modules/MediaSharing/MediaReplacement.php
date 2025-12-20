@@ -67,61 +67,12 @@ class MediaReplacement {
 			foreach ( $patterns as $pattern ) {
 				$updated_content = preg_replace_callback(
 					$pattern,
-					static function ( $matches ) use ( $attachment_permalink, $alt_text, $caption ) {
-						$content = $matches[0];
-
-						// Replace src attribute.
-						$content = preg_replace(
-							'/src="[^"]+"/',
-							'src="' . esc_url( $attachment_permalink ) . '"',
-							$content
-						);
-
-						// Replace srcset attribute (remove it as it's no longer valid).
-						$content = preg_replace( '/\s+srcset="[^"]*"/', '', $content );
-
-						// Replace sizes attribute (remove it as it's no longer valid).
-						$content = preg_replace( '/\s+sizes="[^"]*"/', '', $content );
-
-						// Replace alt text.
-						if ( ! empty( $alt_text ) ) {
-							if ( preg_match( '/alt="[^"]*"/', $content ) ) {
-								$content = preg_replace(
-									'/alt="[^"]*"/',
-									'alt="' . esc_attr( $alt_text ) . '"',
-									$content
-								);
-							} else {
-								// Add alt if missing.
-								$content = preg_replace(
-									'/(<img[^>]+)(\/?>)/',
-									'$1 alt="' . esc_attr( $alt_text ) . '"$2',
-									$content
-								);
-							}
-						}
-
-						// Handle caption for figure elements.
-						if ( ! empty( $caption ) && false !== strpos( $content, '<figure' ) ) {
-							if ( preg_match( '/<figcaption[^>]*>.*?<\/figcaption>/s', $content ) ) {
-								// Replace existing caption.
-								$content = preg_replace(
-									'/<figcaption[^>]*>.*?<\/figcaption>/s',
-									'<figcaption class="wp-element-caption">' . wp_kses_post( $caption ) . '</figcaption>',
-									$content
-								);
-							} else {
-								// Add caption before closing </figure>.
-								$content = preg_replace(
-									'/<\/figure>/',
-									'<figcaption class="wp-element-caption">' . wp_kses_post( $caption ) . '</figcaption></figure>',
-									$content
-								);
-							}
-						}
-
-						return $content;
-					},
+					static fn ( $matches ) =>self::replace_image_content(
+						$matches,
+						$attachment_permalink,
+						$alt_text,
+						$caption
+					),
 					$updated_content
 				);
 			}
@@ -172,40 +123,12 @@ class MediaReplacement {
 			foreach ( $patterns as $pattern ) {
 				$updated_meta = preg_replace_callback(
 					$pattern,
-					static function ( $matches ) use ( $attachment_permalink, $alt_text, $caption ) {
-						$content = $matches[0];
-
-						// Same replacement logic as above.
-						$content = preg_replace( '/src="[^"]+"/', 'src="' . esc_url( $attachment_permalink ) . '"', $content );
-						$content = preg_replace( '/\s+srcset="[^"]*"/', '', $content );
-						$content = preg_replace( '/\s+sizes="[^"]*"/', '', $content );
-
-						if ( ! empty( $alt_text ) ) {
-							if ( preg_match( '/alt="[^"]*"/', $content ) ) {
-								$content = preg_replace( '/alt="[^"]*"/', 'alt="' . esc_attr( $alt_text ) . '"', $content );
-							} else {
-								$content = preg_replace( '/(<img[^>]+)(\/?>)/', '$1 alt="' . esc_attr( $alt_text ) . '"$2', $content );
-							}
-						}
-
-						if ( ! empty( $caption ) && false !== strpos( $content, '<figure' ) ) {
-							if ( preg_match( '/<figcaption[^>]*>.*?<\/figcaption>/s', $content ) ) {
-								$content = preg_replace(
-									'/<figcaption[^>]*>.*?<\/figcaption>/s',
-									'<figcaption class="wp-element-caption">' . wp_kses_post( $caption ) . '</figcaption>',
-									$content
-								);
-							} else {
-								$content = preg_replace(
-									'/<\/figure>/',
-									'<figcaption class="wp-element-caption">' . wp_kses_post( $caption ) . '</figcaption></figure>',
-									$content
-								);
-							}
-						}
-
-						return $content;
-					},
+					static fn ( $matches ) =>self::replace_image_content(
+						$matches,
+						$attachment_permalink,
+						$alt_text,
+						$caption
+					),
 					$updated_meta
 				);
 			}
@@ -217,5 +140,50 @@ class MediaReplacement {
 
 			update_post_meta( $meta->post_id, $meta->meta_key, $updated_meta );
 		}
+	}
+
+	/**
+	 * Replace image attributes in HTML content.
+	 *
+	 * @param array  $matches              The regex matches array.
+	 * @param string $attachment_permalink The new image source URL.
+	 * @param string $alt_text             The alt text for the image.
+	 * @param string $caption              The caption text for the image.
+	 *
+	 * @return string The processed HTML content.
+	 */
+	private static function replace_image_content( array $matches, string $attachment_permalink, string $alt_text, string $caption ): string {
+		$content = $matches[0];
+
+		// Same replacement logic as above.
+		$content = preg_replace( '/src="[^"]+"/', 'src="' . esc_url( $attachment_permalink ) . '"', $content );
+		$content = preg_replace( '/\s+srcset="[^"]*"/', '', $content );
+		$content = preg_replace( '/\s+sizes="[^"]*"/', '', $content );
+
+		if ( ! empty( $alt_text ) ) {
+			if ( preg_match( '/alt="[^"]*"/', $content ) ) {
+				$content = preg_replace( '/alt="[^"]*"/', 'alt="' . esc_attr( $alt_text ) . '"', $content );
+			} else {
+				$content = preg_replace( '/(<img[^>]+)(\/?>)/', '$1 alt="' . esc_attr( $alt_text ) . '"$2', $content );
+			}
+		}
+
+		if ( ! empty( $caption ) && false !== strpos( $content, '<figure' ) ) {
+			if ( preg_match( '/<figcaption[^>]*>.*?<\/figcaption>/s', $content ) ) {
+				$content = preg_replace(
+					'/<figcaption[^>]*>.*?<\/figcaption>/s',
+					'<figcaption class="wp-element-caption">' . wp_kses_post( $caption ) . '</figcaption>',
+					$content
+				);
+			} else {
+				$content = preg_replace(
+					'/<\/figure>/',
+					'<figcaption class="wp-element-caption">' . wp_kses_post( $caption ) . '</figcaption></figure>',
+					$content
+				);
+			}
+		}
+
+		return $content;
 	}
 }
