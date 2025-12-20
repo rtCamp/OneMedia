@@ -25,7 +25,7 @@ class Admin implements Registrable {
 	public function register_hooks(): void {
 		add_action( 'admin_menu', [ $this, 'add_submenu' ], 20 ); // 20 priority to make sure settings page respect its position.
 		add_action( 'current_screen', [ $this, 'add_help_tabs' ] );
-		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_scripts' ], 20, 1 );
+		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_scripts' ], 20, 1 ); // Run after Core/Admin hooks so screen context and dependencies are fully available.
 	}
 
 	/**
@@ -112,10 +112,10 @@ class Admin implements Registrable {
 			return;
 		}
 
-		$help_overview_content       = self::onemedia_get_template_content( 'help/overview' );
-		$help_how_to_share_content   = self::onemedia_get_template_content( 'help/how-to-share' );
-		$help_sharing_modes_content  = self::onemedia_get_template_content( 'help/sharing-modes' );
-		$help_best_practices_content = self::onemedia_get_template_content( 'help/best-practices' );
+		$help_overview_content       = self::get_template_content( 'help/overview' );
+		$help_how_to_share_content   = self::get_template_content( 'help/how-to-share' );
+		$help_sharing_modes_content  = self::get_template_content( 'help/sharing-modes' );
+		$help_best_practices_content = self::get_template_content( 'help/best-practices' );
 
 		// Overview tab.
 		$screen->add_help_tab(
@@ -162,7 +162,7 @@ class Admin implements Registrable {
 	 *
 	 * @return string Template markup.
 	 */
-	public static function onemedia_get_template_content( string $slug, array $vars = [] ): string {
+	public static function get_template_content( string $slug, array $vars = [] ): string {
 		ob_start();
 
 		$template = sprintf( '%s.php', $slug );

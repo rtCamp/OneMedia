@@ -690,7 +690,7 @@ class MediaActions implements Registrable {
 		}
 
 		// Update attachment URL across posts.
-		MediaReplacement::onemedia_replace_image_across_all_post_types(
+		MediaReplacement::replace_image_across_all_post_types(
 			$attachment_id,
 			$new_url,
 			$alt_text,

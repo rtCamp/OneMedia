@@ -25,7 +25,7 @@ class MediaReplacement {
 	 *
 	 * @return void
 	 */
-	public static function onemedia_replace_image_across_all_post_types( int $attachment_id, string $attachment_permalink, string $alt_text = '', string $caption = '' ): void {
+	public static function replace_image_across_all_post_types( int $attachment_id, string $attachment_permalink, string $alt_text = '', string $caption = '' ): void {
 		global $wpdb;
 
 		// First, get all posts that contain the wp-image-{id} class.

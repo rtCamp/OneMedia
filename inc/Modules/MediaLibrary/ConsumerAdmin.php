@@ -74,7 +74,7 @@ class ConsumerAdmin implements Registrable {
 
 		if ( ! $nonce ) {
 			// This means this is the first load of the page, so we don't have onemedia_sync_filter nonce yet.
-			echo MediaSharingAdmin::onemedia_get_template_content( 'brand-site/sync-status' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			echo MediaSharingAdmin::get_template_content( 'brand-site/sync-status' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		} elseif ( $nonce && wp_verify_nonce( $nonce, 'onemedia_sync_filter' ) ) {
 			// This means the form has been submitted, so we have a nonce to verify.
 			$sync_status = isset( $_GET[ Media_Sharing_Controller::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY ] )
@@ -82,7 +82,7 @@ class ConsumerAdmin implements Registrable {
 				: '';
 
 			// Escaping handled in the template file.
-			echo MediaSharingAdmin::onemedia_get_template_content( 'brand-site/sync-status', [ 'sync_status' => $sync_status ] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			echo MediaSharingAdmin::get_template_content( 'brand-site/sync-status', [ 'sync_status' => $sync_status ] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		}
 	}
 

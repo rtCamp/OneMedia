@@ -21,9 +21,9 @@ class Admin implements Registrable {
 	 * {@inheritDoc}
 	 */
 	public function register_hooks(): void {
-		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_scripts' ], 20 );
-		add_filter( 'ajax_query_attachments_args', [ $this,'onemedia_filter_ajax_query_attachments_args' ] );
-		add_filter( 'ajax_query_attachments_args', [ $this,'onemedia_filter_ajax_query_attachments' ] );
+		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_scripts' ], 20 ); // Run after Core/Admin hooks so screen context and dependencies are fully available.
+		add_filter( 'ajax_query_attachments_args', [ $this,'filter_ajax_query_attachments_args' ] );
+		add_filter( 'ajax_query_attachments_args', [ $this,'filter_ajax_query_attachments' ] );
 	}
 
 	/**
@@ -70,7 +70,7 @@ class Admin implements Registrable {
 	 *
 	 * @return array Modified query arguments.
 	 */
-	public function onemedia_filter_ajax_query_attachments_args( array $query ): array {
+	public function filter_ajax_query_attachments_args( array $query ): array {
 
 		// Handle the meta_query passed from our JavaScript.
 		if ( isset( $query['meta_query'] ) ) {
@@ -124,7 +124,7 @@ class Admin implements Registrable {
 	 *
 	 * @return array Modified query arguments.
 	 */
-	public function onemedia_filter_ajax_query_attachments( array $query ): array {
+	public function filter_ajax_query_attachments( array $query ): array {
 		// Nonce verification for AJAX requests.
 		if ( wp_doing_ajax() ) {
 			$nonce = filter_input( INPUT_POST, '_ajax_nonce', FILTER_SANITIZE_FULL_SPECIAL_CHARS );

@@ -567,7 +567,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 		$alt_text             = get_post_meta( $attachment_id, '_wp_attachment_image_alt', true );
 		$caption              = wp_get_attachment_caption( $attachment_id );
 
-		MediaReplacement::onemedia_replace_image_across_all_post_types(
+		MediaReplacement::replace_image_across_all_post_types(
 			$attachment_id,
 			$attachment_permalink,
 			$alt_text,
