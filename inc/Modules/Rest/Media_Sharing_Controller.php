@@ -40,7 +40,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 	 *
 	 * @var string
 	 */
-	public const ONEMEDIA_ATTACHMENT_KEY_MAP_OPTION = 'onemedia_attachment_key_map';
+	public const ATTACHMENT_KEY_MAP_OPTION = 'onemedia_attachment_key_map';
 
 	/**
 	 * Register REST API routes.
@@ -359,9 +359,9 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 		}
 
 		// Delete the metadata for the attachment.
-		delete_post_meta( $attachment_id, Rest_Utils::IS_ONEMEDIA_SYNC_POSTMETA_KEY );
-		delete_post_meta( $attachment_id, Rest_Utils::ONEMEDIA_SYNC_SITES_POSTMETA_KEY );
-		delete_post_meta( $attachment_id, Rest_Utils::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY );
+		delete_post_meta( $attachment_id, Rest_Utils::IS_SYNC_POSTMETA_KEY );
+		delete_post_meta( $attachment_id, Rest_Utils::SYNC_SITES_POSTMETA_KEY );
+		delete_post_meta( $attachment_id, Rest_Utils::SYNC_STATUS_POSTMETA_KEY );
 
 		return rest_ensure_response(
 			[
@@ -556,7 +556,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 		$image_type = isset( $image_type ) && is_string( $image_type ) ? sanitize_text_field( $image_type ) : '';
 
 		// Check if the term exists in onemedia_media_type taxonomy.
-		if ( ! empty( $image_type ) && Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY_TERM !== $image_type && ! Utils::term_exists( $image_type, Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY ) ) {
+		if ( ! empty( $image_type ) && Term_Restriction::TAXONOMY_TERM !== $image_type && ! Utils::term_exists( $image_type, Term_Restriction::TAXONOMY ) ) {
 			return new \WP_Error(
 				'invalid_image_type',
 				__( 'Invalid image type provided.', 'onemedia' ),
@@ -591,7 +591,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 		if ( ! empty( $image_type ) ) {
 			$args['tax_query'] = [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
 				[
-					'taxonomy' => Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY,
+					'taxonomy' => Term_Restriction::TAXONOMY,
 					'field'    => 'slug',
 					'terms'    => $image_type,
 					'operator' => 'IN',
@@ -601,9 +601,9 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 			// Exclude onemedia_media_type taxonomy.
 			$args['tax_query'] = [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
 				[
-					'taxonomy' => Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY,
+					'taxonomy' => Term_Restriction::TAXONOMY,
 					'field'    => 'slug',
-					'terms'    => [ Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY_TERM ], // Exclude 'onemedia' term.
+					'terms'    => [ Term_Restriction::TAXONOMY_TERM ], // Exclude 'onemedia' term.
 					'operator' => 'NOT IN',
 				],
 			];
@@ -619,7 +619,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 				'url'       => wp_get_attachment_url( $post_id ),
 				'title'     => Rest_Utils::decode_filename( get_the_title( $post_id ) ),
 				'mime_type' => get_post_mime_type( $post_id ),
-				'revision'  => get_post_meta( $post_id, MediaActions::ONEMEDIA_SYNC_VERSIONS_POSTMETA_KEY, true ),
+				'revision'  => get_post_meta( $post_id, MediaActions::SYNC_VERSIONS_POSTMETA_KEY, true ),
 			];
 		}
 
@@ -743,10 +743,10 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 
 			// For each media file its sync is checked then add meta data is_onemedia_sync to be true and onemedia_sync_sites meta to array of sites where it is synced.
 			if ( 'sync' === $sync_option ) {
-				update_post_meta( $media['id'], Rest_Utils::IS_ONEMEDIA_SYNC_POSTMETA_KEY, true );
+				update_post_meta( $media['id'], Rest_Utils::IS_SYNC_POSTMETA_KEY, true );
 			} else {
 				// If not syncing, set the sync status to false.
-				update_post_meta( $media['id'], Rest_Utils::IS_ONEMEDIA_SYNC_POSTMETA_KEY, 0 );
+				update_post_meta( $media['id'], Rest_Utils::IS_SYNC_POSTMETA_KEY, 0 );
 			}
 
 			// Share the attachment metadata with the brand sites.
@@ -874,7 +874,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 				];
 
 				// Update onemedia_sync_sites meta for each parent_id media.
-				update_post_meta( $parent_id, Rest_Utils::ONEMEDIA_SYNC_SITES_POSTMETA_KEY, $onemedia_sync_sites );
+				update_post_meta( $parent_id, Rest_Utils::SYNC_SITES_POSTMETA_KEY, $onemedia_sync_sites );
 
 				// Create option to store siteurl, parent media id and brand site media id.
 				if ( 'sync' !== $sync_option ) {
@@ -1049,7 +1049,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 					if ( 'sync' === $sync_status ) {
 						// Add attachment metadata for sync status.
 						if ( $sync_status ) {
-							update_post_meta( $saved_attachment_id, Rest_Utils::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY, $sync_status );
+							update_post_meta( $saved_attachment_id, Rest_Utils::SYNC_STATUS_POSTMETA_KEY, $sync_status );
 						}
 
 						// Update the existing attachment with new metadata if any changes are present.
@@ -1087,7 +1087,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 
 					// Add attachment metadata for sync status.
 					if ( $sync_status ) {
-						update_post_meta( $attachment_id, Rest_Utils::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY, $sync_status );
+						update_post_meta( $attachment_id, Rest_Utils::SYNC_STATUS_POSTMETA_KEY, $sync_status );
 					}
 
 					// Update the existing attachment with new metadata if any changes are present.
@@ -1122,7 +1122,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 				}
 
 				// Get all terms of onemedia_media_type taxonomy from current media file.
-				$terms = [ Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY_TERM ];
+				$terms = [ Term_Restriction::TAXONOMY_TERM ];
 
 				// Add the source attachment metadata to the media file.
 				$file_details['attachment_metadata'] = $attachment_metadata;
@@ -1167,7 +1167,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 
 				$saved_attachment_key_map = self::get_attachment_key_map();
 				if ( ! hash_equals( wp_json_encode( $saved_attachment_key_map ), wp_json_encode( $attachment_key_map ) ) ) {
-					$success = update_option( self::ONEMEDIA_ATTACHMENT_KEY_MAP_OPTION, $attachment_key_map );
+					$success = update_option( self::ATTACHMENT_KEY_MAP_OPTION, $attachment_key_map );
 
 					if ( ! $success ) {
 						$errors[] = [
@@ -1291,8 +1291,8 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 
 		if ( 'sync' === $sync_option ) {
 			// Assign the term to the attachment.
-			if ( taxonomy_exists( Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY ) ) {
-				$success = wp_set_object_terms( $attachment_id, Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY_TERM, Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY, true );
+			if ( taxonomy_exists( Term_Restriction::TAXONOMY ) ) {
+				$success = wp_set_object_terms( $attachment_id, Term_Restriction::TAXONOMY_TERM, Term_Restriction::TAXONOMY, true );
 
 				if ( is_wp_error( $success ) ) {
 					return new \WP_Error(
@@ -1319,7 +1319,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 			}
 
 			// Assign the meta key to the attachment.
-			update_post_meta( $attachment_id, Rest_Utils::IS_ONEMEDIA_SYNC_POSTMETA_KEY, true );
+			update_post_meta( $attachment_id, Rest_Utils::IS_SYNC_POSTMETA_KEY, true );
 
 			// Convert non sync to sync media if it was previously shared as non sync.
 			// Check if the media is already shared in non-sync mode.
@@ -1528,7 +1528,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 			}
 		} else {
 			// If not syncing, set the sync status to false.
-			update_post_meta( $attachment_id, Rest_Utils::IS_ONEMEDIA_SYNC_POSTMETA_KEY, 0 );
+			update_post_meta( $attachment_id, Rest_Utils::IS_SYNC_POSTMETA_KEY, 0 );
 		}
 
 		// Return success response with attachment ID.
@@ -1818,7 +1818,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 
 		// Add attachment metadata for sync status.
 		if ( $sync_status ) {
-			update_post_meta( $attachment_id, Rest_Utils::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY, $sync_status );
+			update_post_meta( $attachment_id, Rest_Utils::SYNC_STATUS_POSTMETA_KEY, $sync_status );
 		}
 
 		if ( ! function_exists( 'wp_generate_attachment_metadata' ) ) {
@@ -1845,11 +1845,11 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 		$this->add_source_metadata_to_file( $attachment_id, $source_metadata );
 
 		// Delete all onemedia_media_type terms for this attachment.
-		wp_set_object_terms( $attachment_id, [], Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY, false );
+		wp_set_object_terms( $attachment_id, [], Term_Restriction::TAXONOMY, false );
 
 		// Set the attachment terms if provided.
 		foreach ( $terms as $term ) {
-			wp_set_object_terms( $attachment_id, $term, Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY, false );
+			wp_set_object_terms( $attachment_id, $term, Term_Restriction::TAXONOMY, false );
 		}
 
 		if ( ! empty( $errors ) ) {
@@ -1925,7 +1925,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 		if ( ! Settings::is_consumer_site() ) {
 			return [];
 		}
-		return get_option( self::ONEMEDIA_ATTACHMENT_KEY_MAP_OPTION, [] );
+		return get_option( self::ATTACHMENT_KEY_MAP_OPTION, [] );
 	}
 
 	/**

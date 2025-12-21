@@ -60,8 +60,8 @@ class UserInterface implements Registrable {
 		} else {
 			$labels = [];
 			foreach ( $terms as $term ) {
-				if ( Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY_TERM === $term ) {
-					$labels[] = Media::ONEMEDIA_PLUGIN_TERM_NAME;
+				if ( Term_Restriction::TAXONOMY_TERM === $term ) {
+					$labels[] = Media::TERM_NAME;
 				} else {
 					$labels[] = esc_html( $term );
 				}
@@ -91,7 +91,7 @@ class UserInterface implements Registrable {
 		}
 
 		$terms = Term_Restriction::get_attachment_post_terms( $post->ID, [ 'fields' => 'slugs' ] );
-		if ( ! empty( $terms ) && isset( array_flip( $terms )[ Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY_TERM ] ) ) {
+		if ( ! empty( $terms ) && isset( array_flip( $terms )[ Term_Restriction::TAXONOMY_TERM ] ) ) {
 			if ( isset( $actions['delete'] ) ) {
 				unset( $actions['delete'] );
 			}

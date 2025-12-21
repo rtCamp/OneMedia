@@ -81,7 +81,7 @@ final class Assets implements Registrable {
 				'syncLabel'        => __( 'Synced', 'onemedia' ),
 				'notSyncLabel'     => __( 'Not Synced', 'onemedia' ),
 				'filterLabel'      => __( 'Sync Status', 'onemedia' ),
-				'syncStatus'       => Rest_Utils::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY,
+				'syncStatus'       => Rest_Utils::SYNC_STATUS_POSTMETA_KEY,
 			];
 		}
 

@@ -16,7 +16,7 @@ final class Utils {
 	/**
 	 * The templates dir.
 	 */
-	private const ONEMEDIA_PLUGIN_TEMPLATES_PATH = ONEMEDIA_DIR . '/templates';
+	private const TEMPLATES_PATH = ONEMEDIA_DIR . '/templates';
 
 	/**
 	 * Return onemedia template content.
@@ -32,8 +32,8 @@ final class Utils {
 		$template = sprintf( '%s.php', $slug );
 
 		$located_template = '';
-		if ( file_exists( self::ONEMEDIA_PLUGIN_TEMPLATES_PATH . '/' . $template ) ) {
-			$located_template = self::ONEMEDIA_PLUGIN_TEMPLATES_PATH . '/' . $template;
+		if ( file_exists( self::TEMPLATES_PATH . '/' . $template ) ) {
+			$located_template = self::TEMPLATES_PATH . '/' . $template;
 		}
 
 		if ( '' === $located_template ) {

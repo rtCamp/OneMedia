@@ -82,8 +82,8 @@ class ConsumerAdmin implements Registrable {
 		}
 
 		// This means the form has been submitted, so we have a nonce to verify.
-		$sync_status = isset( $_GET[ Rest_Utils::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY ] )
-			? sanitize_text_field( wp_unslash( $_GET[ Rest_Utils::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY ] ) )
+		$sync_status = isset( $_GET[ Rest_Utils::SYNC_STATUS_POSTMETA_KEY ] )
+			? sanitize_text_field( wp_unslash( $_GET[ Rest_Utils::SYNC_STATUS_POSTMETA_KEY ] ) )
 			: '';
 
 		// Escaping handled in the template file.
@@ -97,7 +97,7 @@ class ConsumerAdmin implements Registrable {
 	 */
 	public function filter_sync_attachments( \WP_Query $query ): void {
 		global $pagenow;
-		$onemedia_sync_status = filter_input( INPUT_GET, Rest_Utils::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY, FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+		$onemedia_sync_status = filter_input( INPUT_GET, Rest_Utils::SYNC_STATUS_POSTMETA_KEY, FILTER_SANITIZE_FULL_SPECIAL_CHARS );
 
 		if ( 'upload.php' !== $pagenow || empty( $onemedia_sync_status ) ) {
 			return;
@@ -111,7 +111,7 @@ class ConsumerAdmin implements Registrable {
 			return;
 		}
 
-		$sync_status = filter_input( INPUT_GET, Rest_Utils::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY, FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+		$sync_status = filter_input( INPUT_GET, Rest_Utils::SYNC_STATUS_POSTMETA_KEY, FILTER_SANITIZE_FULL_SPECIAL_CHARS );
 		$sync_status = isset( $sync_status ) ? sanitize_text_field( wp_unslash( $sync_status ) ) : '';
 
 		if ( 'sync' === $sync_status ) {
@@ -119,7 +119,7 @@ class ConsumerAdmin implements Registrable {
 				'meta_query',
 				[
 					[
-						'key'     => Rest_Utils::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY,
+						'key'     => Rest_Utils::SYNC_STATUS_POSTMETA_KEY,
 						'value'   => 'sync',
 						'compare' => '=',
 					],
@@ -131,12 +131,12 @@ class ConsumerAdmin implements Registrable {
 				[
 					'relation' => 'OR',
 					[
-						'key'     => Rest_Utils::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY,
+						'key'     => Rest_Utils::SYNC_STATUS_POSTMETA_KEY,
 						'value'   => 'no_sync',
 						'compare' => '=',
 					],
 					[
-						'key'     => Rest_Utils::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY,
+						'key'     => Rest_Utils::SYNC_STATUS_POSTMETA_KEY,
 						'compare' => 'NOT EXISTS',
 					],
 				]
@@ -365,7 +365,7 @@ class ConsumerAdmin implements Registrable {
 		$terms                = Term_Restriction::get_attachment_post_terms( $post_id, [ 'fields' => 'names' ] );
 		$onemedia_sync_status = self::get_sync_status_postmeta( $post_id );
 
-		if ( empty( $onemedia_sync_status ) || empty( $terms ) || ! isset( array_flip( $terms )[ Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY_TERM ] ) ) {
+		if ( empty( $onemedia_sync_status ) || empty( $terms ) || ! isset( array_flip( $terms )[ Term_Restriction::TAXONOMY_TERM ] ) ) {
 			printf(
 			/* translators: %s is the screen reader text. */
 				'<span aria-hidden="true">&#8212;</span><span class="screen-reader-text">%s</span>',
@@ -402,6 +402,6 @@ class ConsumerAdmin implements Registrable {
 			return '';
 		}
 
-		return get_post_meta( $attachment_id, Rest_Utils::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY, true );
+		return get_post_meta( $attachment_id, Rest_Utils::SYNC_STATUS_POSTMETA_KEY, true );
 	}
 }

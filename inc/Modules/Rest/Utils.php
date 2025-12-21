@@ -20,21 +20,21 @@ class Utils {
 	 *
 	 * @var string
 	 */
-	public const ONEMEDIA_SYNC_SITES_POSTMETA_KEY = 'onemedia_sync_sites';
+	public const SYNC_SITES_POSTMETA_KEY = 'onemedia_sync_sites';
 
 	/**
 	 * Is OneMedia sync postmeta key.
 	 *
 	 * @var string
 	 */
-	public const IS_ONEMEDIA_SYNC_POSTMETA_KEY = 'is_onemedia_sync';
+	public const IS_SYNC_POSTMETA_KEY = 'is_onemedia_sync';
 
 	/**
 	 * OneMedia sync status postmeta key.
 	 *
 	 * @var string
 	 */
-	public const ONEMEDIA_SYNC_STATUS_POSTMETA_KEY = 'onemedia_sync_status';
+	public const SYNC_STATUS_POSTMETA_KEY = 'onemedia_sync_status';
 
 	/**
 	 * Brand sites synced media option.
@@ -234,7 +234,7 @@ class Utils {
 			return [];
 		}
 
-		$terms = get_the_terms( $attachment_id, Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY );
+		$terms = get_the_terms( $attachment_id, Term_Restriction::TAXONOMY );
 		if ( is_wp_error( $terms ) || ! $terms ) {
 			return [];
 		}
@@ -277,7 +277,7 @@ class Utils {
 			return [];
 		}
 
-		$sites = get_post_meta( $attachment_id, self::ONEMEDIA_SYNC_SITES_POSTMETA_KEY, true );
+		$sites = get_post_meta( $attachment_id, self::SYNC_SITES_POSTMETA_KEY, true );
 		if ( ! is_array( $sites ) ) {
 			return [];
 		}

@@ -37,7 +37,7 @@ class MediaActions implements Registrable {
 	 *
 	 * @var string
 	 */
-	public const ONEMEDIA_SYNC_VERSIONS_POSTMETA_KEY = 'onemedia_sync_versions';
+	public const SYNC_VERSIONS_POSTMETA_KEY = 'onemedia_sync_versions';
 
 	/**
 	 * {@inheritDoc}
@@ -118,10 +118,10 @@ class MediaActions implements Registrable {
 		}
 
 		// Delete onemedia_sync_sites meta.
-		delete_post_meta( $attachment_id, Rest_Utils::ONEMEDIA_SYNC_SITES_POSTMETA_KEY );
+		delete_post_meta( $attachment_id, Rest_Utils::SYNC_SITES_POSTMETA_KEY );
 
 		// Delete is_onemedia_sync meta.
-		delete_post_meta( $attachment_id, Rest_Utils::IS_ONEMEDIA_SYNC_POSTMETA_KEY );
+		delete_post_meta( $attachment_id, Rest_Utils::IS_SYNC_POSTMETA_KEY );
 
 		// Delete onemedia_sync_status from remote sites.
 		$synced_sites = $synced_brand_site_media[ $attachment_id ] ?? [];
@@ -439,8 +439,8 @@ class MediaActions implements Registrable {
 		$sync_status = filter_input( INPUT_GET, 'onemedia_sync_media_upload', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
 		if ( ! empty( $sync_status ) && 'true' === $sync_status ) {
 			// Assign the 'onemedia' term to the attachment.
-			if ( taxonomy_exists( Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY ) ) {
-				wp_set_object_terms( $attachment_id, Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY_TERM, Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY, true );
+			if ( taxonomy_exists( Term_Restriction::TAXONOMY ) ) {
+				wp_set_object_terms( $attachment_id, Term_Restriction::TAXONOMY_TERM, Term_Restriction::TAXONOMY, true );
 			}
 		}
 
@@ -693,9 +693,9 @@ class MediaActions implements Registrable {
 		update_attached_file( $attachment_id, $target_path );
 
 		// Preserve existing taxonomy terms.
-		if ( taxonomy_exists( Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY ) ) {
-			$current_terms = wp_get_object_terms( $attachment_id, Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY, [ 'fields' => 'slugs' ] );
-			wp_set_object_terms( $attachment_id, $current_terms, Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY, false );
+		if ( taxonomy_exists( Term_Restriction::TAXONOMY ) ) {
+			$current_terms = wp_get_object_terms( $attachment_id, Term_Restriction::TAXONOMY, [ 'fields' => 'slugs' ] );
+			wp_set_object_terms( $attachment_id, $current_terms, Term_Restriction::TAXONOMY, false );
 		}
 
 		// Update synced media on brand sites.
@@ -909,12 +909,12 @@ class MediaActions implements Registrable {
 		$meta_value = '';
 		$is_sync    = false;
 		if ( Settings::is_consumer_site() ) { // totally not sure why same meta is not used on both sites & why string instead of boolean.
-			$meta_value = get_post_meta( $attachment_id, Rest_Utils::ONEMEDIA_SYNC_STATUS_POSTMETA_KEY, true );
+			$meta_value = get_post_meta( $attachment_id, Rest_Utils::SYNC_STATUS_POSTMETA_KEY, true );
 			if ( 'sync' === $meta_value ) {
 				$is_sync = true;
 			}
 		} elseif ( Settings::is_governing_site() ) {
-			$meta_value = get_post_meta( $attachment_id, Rest_Utils::IS_ONEMEDIA_SYNC_POSTMETA_KEY, true );
+			$meta_value = get_post_meta( $attachment_id, Rest_Utils::IS_SYNC_POSTMETA_KEY, true );
 			$is_sync    = '1' === $meta_value || 1 === $meta_value || true === $meta_value;
 		}
 
@@ -954,7 +954,7 @@ class MediaActions implements Registrable {
 			return false;
 		}
 
-		return (bool) update_post_meta( $attachment_id, self::ONEMEDIA_SYNC_VERSIONS_POSTMETA_KEY, $versions );
+		return (bool) update_post_meta( $attachment_id, self::SYNC_VERSIONS_POSTMETA_KEY, $versions );
 	}
 
 	/**
@@ -969,7 +969,7 @@ class MediaActions implements Registrable {
 			return [];
 		}
 
-		$versions = get_post_meta( $attachment_id, self::ONEMEDIA_SYNC_VERSIONS_POSTMETA_KEY, true );
+		$versions = get_post_meta( $attachment_id, self::SYNC_VERSIONS_POSTMETA_KEY, true );
 		if ( ! is_array( $versions ) ) {
 			return [];
 		}

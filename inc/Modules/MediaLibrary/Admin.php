@@ -156,9 +156,9 @@ class Admin implements Registrable {
 		if ( 'true' === $onemedia_sync_media_filter ) {
 			$query['tax_query'] = [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
 				[
-					'taxonomy' => Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY,
+					'taxonomy' => Term_Restriction::TAXONOMY,
 					'field'    => 'slug',
-					'terms'    => Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY_TERM,
+					'terms'    => Term_Restriction::TAXONOMY_TERM,
 				],
 			];
 		}
@@ -167,9 +167,9 @@ class Admin implements Registrable {
 		if ( 'false' === $onemedia_sync_media_filter ) {
 			$query['tax_query'] = [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
 				[
-					'taxonomy' => Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY,
+					'taxonomy' => Term_Restriction::TAXONOMY,
 					'field'    => 'slug',
-					'terms'    => Term_Restriction::ONEMEDIA_PLUGIN_TAXONOMY_TERM,
+					'terms'    => Term_Restriction::TAXONOMY_TERM,
 					'operator' => 'NOT IN',
 				],
 			];
