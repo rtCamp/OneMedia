@@ -146,7 +146,7 @@ class MediaActions implements Registrable {
 					) ?: '',
 					'timeout'   => self::SYNC_REQUEST_TIMEOUT, // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout
 					'headers'   => [
-						'origin'           => get_site_url(),
+						'Origin'           => get_site_url(),
 						'X-OneMedia-Token' => $site_api_key,
 						'Cache-Control'    => 'no-cache, no-store, must-revalidate',
 					],
@@ -360,7 +360,7 @@ class MediaActions implements Registrable {
 					],
 					'timeout' => self::SYNC_REQUEST_TIMEOUT, // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout
 					'headers' => [
-						'origin'           => get_site_url(),
+						'Origin'           => get_site_url(),
 						'X-OneMedia-Token' => $site_api_key,
 						'Cache-Control'    => 'no-cache, no-store, must-revalidate',
 					],

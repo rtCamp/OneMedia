@@ -53,7 +53,7 @@ abstract class Abstract_REST_Controller extends \WP_REST_Controller implements R
 	 */
 	public function check_api_permissions( $request ): bool {
 		// If it's the same domain, check if the current user can manage options.
-		$request_origin = $request->get_header( 'origin' );
+		$request_origin = $request->get_header( 'Origin' );
 		$request_origin = ! empty( $request_origin ) ? esc_url_raw( wp_unslash( $request_origin ) ) : '';
 		$parsed_origin  = wp_parse_url( $request_origin );
 		$request_url    = ! empty( $parsed_origin['scheme'] ) && ! empty( $parsed_origin['host'] ) ? sprintf(
