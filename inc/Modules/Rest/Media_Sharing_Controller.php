@@ -897,7 +897,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 
 				// Update the synced media mapping option only if there is a change.
 				$saved_brand_sites_synced_media = Rest_Utils::fetch_brand_sites_synced_media();
-				if ( hash_equals( wp_json_encode( $saved_brand_sites_synced_media ), wp_json_encode( $brand_sites_synced_media ) ) ) {
+				if ( wp_json_encode( $saved_brand_sites_synced_media ) === wp_json_encode( $brand_sites_synced_media ) ) {
 					continue;
 				}
 
@@ -1071,7 +1071,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 						continue;
 					}
 
-					if ( ! hash_equals( wp_json_encode( $saved_attachment_id ), wp_json_encode( $attachment_id ) ) ) {
+					if ( wp_json_encode( $saved_attachment_id ) !== wp_json_encode( $attachment_id ) ) {
 						$errors[] = [
 							'url'   => $media_url,
 							'title' => $media_title,
@@ -1159,7 +1159,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 				$attachment_key_map[ $parent_media_id ] = $attachment_id;
 
 				$saved_attachment_key_map = self::get_attachment_key_map();
-				if ( ! hash_equals( wp_json_encode( $saved_attachment_key_map ), wp_json_encode( $attachment_key_map ) ) ) {
+				if ( wp_json_encode( $saved_attachment_key_map ) !== wp_json_encode( $attachment_key_map ) ) {
 					$success = update_option( self::ATTACHMENT_KEY_MAP_OPTION, $attachment_key_map );
 
 					if ( ! $success ) {
@@ -1476,7 +1476,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 
 						// Update the synced media mapping option only if there is a change.
 						$saved_brand_sites_synced_media = Rest_Utils::fetch_brand_sites_synced_media();
-						if ( hash_equals( wp_json_encode( $saved_brand_sites_synced_media ), wp_json_encode( $brand_sites_synced_media ) ) ) {
+						if ( wp_json_encode( $saved_brand_sites_synced_media ) === wp_json_encode( $brand_sites_synced_media ) ) {
 							continue;
 						}
 
