@@ -251,122 +251,19 @@ class Attachment implements Registrable {
 	}
 
 	/**
-	 * Perform health check on brand sites where a given attachment is shared.
+	 * Updates whether an attachment is currently syncing.
 	 *
-	 * @param int|null $attachment_id The attachment ID.
+	 * @param int  $attachment_id The ID of the attachment.
+	 * @param bool $is_syncing    True if syncing, false otherwise.
 	 *
-	 * @return array Array with 'success' boolean and 'failed_sites' array.
+	 * @return int|bool Meta ID if the key didn't exist, false on failure, true on success.
 	 */
-	public static function health_check_attachment_brand_sites( int|null $attachment_id ): array {
-		if ( ! $attachment_id ) {
-			return [
-				'success'      => false,
-				'failed_sites' => [],
-				'message'      => __( 'Invalid attachment ID.', 'onemedia' ),
-			];
+	public static function update_is_syncing( int $attachment_id, bool $is_syncing ) {
+		if ( Settings::is_consumer_site() || ! $attachment_id ) {
+			return false;
 		}
 
-		// Get URLs of all sites where this attachment is shared.
-		$site_urls = self::get_sync_site_urls_postmeta( $attachment_id );
-
-		if ( empty( $site_urls ) ) {
-			return [
-				'success'      => true,
-				'failed_sites' => [],
-				'message'      => __( 'No connected brand sites for this attachment.', 'onemedia' ),
-			];
-		}
-
-		$failed_sites = [];
-		$tracked_urls = [];
-
-		foreach ( $site_urls as $site_url ) {
-			$site_url = rtrim( $site_url, '/' );
-
-			// Skip if we've already processed this URL.
-			if ( in_array( $site_url, $tracked_urls, true ) ) {
-				continue;
-			}
-
-			$tracked_urls[] = $site_url;
-			$api_key        = Settings::get_brand_site_api_key( $site_url );
-
-			// Brand site not connected.
-			if ( empty( $api_key ) ) {
-				$failed_sites[] = [
-					'site_name' => Settings::get_sitename_by_url( $site_url ),
-					'url'       => $site_url,
-					'message'   => __( 'API key not found', 'onemedia' ),
-				];
-				continue;
-			}
-
-			// Perform health check request.
-			$response = wp_safe_remote_get(
-				$site_url . '/wp-json/' . Abstract_REST_Controller::NAMESPACE . '/health-check',
-				[
-					'timeout' => self::HEALTH_CHECK_REQUEST_TIMEOUT,
-					// phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout
-					'headers' => [
-						'origin'           => get_site_url(),
-						'X-OneMedia-Token' => $api_key,
-						'Cache-Control'    => 'no-cache, no-store, must-revalidate',
-					],
-				]
-			);
-
-			if ( is_wp_error( $response ) ) {
-				$failed_sites[] = [
-					'site_name' => Settings::get_sitename_by_url( $site_url ),
-					'url'       => $site_url,
-					'message'   => $response->get_error_message(),
-				];
-				continue;
-			}
-
-			$response_code = wp_remote_retrieve_response_code( $response );
-			if ( 200 === $response_code ) {
-				continue;
-			}
-
-			$failed_sites[] = [
-				'site_name' => Settings::get_sitename_by_url( $site_url ),
-				'url'       => $site_url,
-				'message'   => sprintf(
-				/* translators: %d is the HTTP response code. */
-					__( 'HTTP %d response', 'onemedia' ),
-					$response_code
-				),
-			];
-		}
-
-		if ( ! empty( $failed_sites ) ) {
-			$failed_sites_list = [];
-			foreach ( $failed_sites as $failed_site ) {
-				$site_name = $failed_site['site_name'];
-				if ( in_array( $site_name, $failed_sites_list, true ) ) {
-					continue;
-				}
-
-				$failed_sites_list[] = $site_name;
-			}
-
-			return [
-				'success'      => false,
-				'failed_sites' => $failed_sites,
-				'message'      => sprintf(
-				/* translators: %s is the list of unreachable sites. */
-					__( 'Please check your connection for unreachable sites: %s.', 'onemedia' ),
-					implode( ', ', $failed_sites_list )
-				),
-			];
-		}
-
-		return [
-			'success'      => true,
-			'failed_sites' => $failed_sites,
-			'message'      => __( 'All connected sites are reachable.', 'onemedia' ),
-		];
+		return update_post_meta( $attachment_id, self::IS_SYNC_POSTMETA_KEY, $is_syncing );
 	}
 
 	/**
@@ -431,18 +328,121 @@ class Attachment implements Registrable {
 	}
 
 	/**
-	 * Updates whether an attachment is currently syncing.
+	 * Perform health check on brand sites where a given attachment is shared.
 	 *
-	 * @param int  $attachment_id The ID of the attachment.
-	 * @param bool $is_syncing    True if syncing, false otherwise.
+	 * @param int|null $attachment_id The attachment ID.
 	 *
-	 * @return int|bool Meta ID if the key didn't exist, false on failure, true on success.
+	 * @return array Array with 'success' boolean and 'failed_sites' array.
 	 */
-	public static function update_is_syncing( int $attachment_id, bool $is_syncing ) {
-		if ( Settings::is_consumer_site() || ! $attachment_id ) {
-			return false;
+	public static function health_check_attachment_brand_sites( int|null $attachment_id ): array {
+		if ( ! $attachment_id ) {
+			return [
+				'success'      => false,
+				'failed_sites' => [],
+				'message'      => __( 'Invalid attachment ID.', 'onemedia' ),
+			];
 		}
 
-		return update_post_meta( $attachment_id, self::IS_SYNC_POSTMETA_KEY, $is_syncing );
+		// Get URLs of all sites where this attachment is shared.
+		$site_urls = self::get_sync_site_urls_postmeta( $attachment_id );
+
+		if ( empty( $site_urls ) ) {
+			return [
+				'success'      => true,
+				'failed_sites' => [],
+				'message'      => __( 'No connected brand sites for this attachment.', 'onemedia' ),
+			];
+		}
+
+		$failed_sites = [];
+		$tracked_urls = [];
+
+		foreach ( $site_urls as $site_url ) {
+			$site_url = rtrim( $site_url, '/' );
+
+			// Skip if we've already processed this URL.
+			if ( in_array( $site_url, $tracked_urls, true ) ) {
+				continue;
+			}
+
+			$tracked_urls[] = $site_url;
+			$api_key        = Settings::get_brand_site_api_key( $site_url );
+
+			// Brand site not connected.
+			if ( empty( $api_key ) ) {
+				$failed_sites[] = [
+					'site_name' => Settings::get_sitename_by_url( $site_url ),
+					'url'       => $site_url,
+					'message'   => __( 'API key not found', 'onemedia' ),
+				];
+				continue;
+			}
+
+			// Perform health check request.
+			$response = wp_safe_remote_get(
+				$site_url . '/wp-json/' . Abstract_REST_Controller::NAMESPACE . '/health-check',
+				[
+					'timeout' => self::HEALTH_CHECK_REQUEST_TIMEOUT,
+					// phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout
+					'headers' => [
+						'Origin'           => get_site_url(),
+						'X-OneMedia-Token' => $api_key,
+						'Cache-Control'    => 'no-cache, no-store, must-revalidate',
+					],
+				]
+			);
+
+			if ( is_wp_error( $response ) ) {
+				$failed_sites[] = [
+					'site_name' => Settings::get_sitename_by_url( $site_url ),
+					'url'       => $site_url,
+					'message'   => $response->get_error_message(),
+				];
+				continue;
+			}
+
+			$response_code = wp_remote_retrieve_response_code( $response );
+			if ( 200 === $response_code ) {
+				continue;
+			}
+
+			$failed_sites[] = [
+				'site_name' => Settings::get_sitename_by_url( $site_url ),
+				'url'       => $site_url,
+				'message'   => sprintf(
+				/* translators: %d is the HTTP response code. */
+					__( 'HTTP %d response', 'onemedia' ),
+					$response_code
+				),
+			];
+		}
+
+		if ( ! empty( $failed_sites ) ) {
+			$failed_sites_list = [];
+			foreach ( $failed_sites as $failed_site ) {
+				$site_name = $failed_site['site_name'];
+				if ( in_array( $site_name, $failed_sites_list, true ) ) {
+					continue;
+				}
+
+				$failed_sites_list[] = $site_name;
+			}
+
+			return [
+				'success'      => false,
+				'failed_sites' => $failed_sites,
+				'message'      => sprintf(
+				/* translators: %s is the list of unreachable sites. */
+					__( 'Please check your connection for unreachable sites: %s.', 'onemedia' ),
+					implode( ', ', $failed_sites_list )
+				),
+			];
+		}
+
+		return [
+			'success'      => true,
+			'failed_sites' => $failed_sites,
+			'message'      => __( 'All connected sites are reachable.', 'onemedia' ),
+		];
 	}
 }
