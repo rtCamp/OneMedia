@@ -746,7 +746,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 
 			// Share the attachment metadata with the brand sites.
 			// Get attachment metadata.
-			$attachment_data = wp_get_attachment_metadata( $media['id'] ?? 0 );
+			$attachment_data = wp_get_attachment_metadata( $media['id'] ) ?: [];
 
 			// Get attachment title, alt text, caption and description.
 			$attachment_data['post_title']  = $media['title'];
@@ -1371,7 +1371,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 
 				// Share the attachment metadata with the brand sites.
 				// Get attachment metadata.
-				$attachment_data = wp_get_attachment_metadata( $attachment_id ?? 0 );
+				$attachment_data = wp_get_attachment_metadata( $attachment_id ) ?: [];
 
 				$title = get_the_title( $attachment_id );
 
