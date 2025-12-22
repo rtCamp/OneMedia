@@ -51,86 +51,82 @@ abstract class Abstract_REST_Controller extends \WP_REST_Controller implements R
 	 * @param \WP_REST_Request<array{}> $request Request.
 	 * @return bool
 	 */
-	public function check_api_permissions( $request ) {
-		// check if the request is from same site.
-		if ( Settings::is_governing_site() ) {
+	public function check_api_permissions( $request ): bool {
+		// If it's the same domain, check if the current user can manage options.
+		$request_origin = $request->get_header( 'origin' );
+		$request_origin = ! empty( $request_origin ) ? esc_url_raw( wp_unslash( $request_origin ) ) : '';
+		$parsed_origin  = wp_parse_url( $request_origin );
+		$request_url    = ! empty( $parsed_origin['scheme'] ) && ! empty( $parsed_origin['host'] ) ? sprintf(
+			'%s://%s',
+			$parsed_origin['scheme'],
+			$parsed_origin['host']
+		) : '';
+
+		if ( empty( $request_url ) || $this->is_url_from_host( get_site_url(), $parsed_origin['host'] ) ) {
 			return current_user_can( 'manage_options' );
 		}
 
-		// See if the `X_ONEMEDIA_TOKEN` header is present.
-		$token = $request->get_header( 'X_ONEMEDIA_TOKEN' );
+		// See if the `X-OneMedia-Token` header is present.
+		$token = $request->get_header( 'X-OneMedia-Token' );
 		$token = ! empty( $token ) ? sanitize_text_field( wp_unslash( $token ) ) : '';
-
-		// Bail if the token is missing or invalid.
-		if ( ! hash_equals( Settings::get_api_key(), $token ) ) {
+		if ( empty( $token ) ) {
 			return false;
 		}
 
-		$request_origin = $request->get_header( 'origin' );
-		if ( empty( $request_origin ) ) {
-			$request_origin = $request->get_header( 'referer' );
-		}
-		$request_origin = ! empty( $request_origin ) ? esc_url_raw( wp_unslash( $request_origin ) ) : '';
-		$user_agent     = $request->get_header( 'user-agent' );
-		$user_agent     = ! empty( $user_agent ) ? sanitize_text_field( wp_unslash( $user_agent ) ) : '';
-
-		/**
-		 * If both origin and user-agent are missing, deny access.
-		 *
-		 * Here checking both because server side requests will not have origin header.
-		 */
-		if ( empty( $request_origin ) && empty( $user_agent ) ) {
+		$stored_key = $this->get_stored_api_key( trailingslashit( $request_url ) );
+		if ( empty( $stored_key ) || ! hash_equals( $stored_key, $token ) ) {
 			return false;
 		}
 
-		// If it's the same domain, we're good.
-		if ( self::is_same_domain( get_site_url(), $request_origin ) ) {
+		// Governing sites were checked by ::get_stored_api_key already.
+		if ( Settings::is_governing_site() ) {
 			return true;
 		}
 
+		// If it's not a healthcheck, compare the origins.
 		$governing_site_url = Settings::get_parent_site_url();
-
-		// If it's a healthcheck with no governing site, allow it and set the governing site.
-		if ( empty( $governing_site_url ) ) {
-			if ( '/' . self::NAMESPACE . '/health-check' === $request->get_route() ) {
-				Settings::set_parent_site_url( $request_origin );
-				return true;
-			}
-			return false;
+		if ( '/' . $this->namespace . '/health-check' !== $request->get_route() ) {
+			return ! empty( $governing_site_url ) ? $this->is_url_from_host( $governing_site_url, $parsed_origin['host'] ) : false;
 		}
 
-		// if token is valid and request is from different domain then check if it matches governing site url.
-		return self::is_same_domain( $governing_site_url, $request_origin ) || false !== strpos( $user_agent, $governing_site_url );
+		// For health-checks, if no governing site is set, we set it now.
+		Settings::set_parent_site_url( $request_origin );
+		return true;
 	}
 
 	/**
-	 * Build API endpoint URL.
+		 * Check if two URLs belong to the same host.
 	 *
-	 * @param string $site_url       The base URL of the site.
-	 * @param string $endpoint       The specific endpoint path.
-	 * @param string $rest_namespace The REST namespace. Default: onemedia/v1).
-	 *
-	 * @return string Full API endpoint URL.
-	 */
-	protected function build_api_endpoint( string $site_url, string $endpoint, string $rest_namespace = self::NAMESPACE ): string {
-		return esc_url_raw( trailingslashit( $site_url ) ) . '/wp-json/' . $rest_namespace . '/' . ltrim( $endpoint, '/' );
-	}
-
-	/**
-	 * Check if two URLs belong to the same domain.
-	 *
-	 * @param string $url1 First URL.
-	 * @param string $url2 Second URL.
+	 * @param string $url  The URL to check.
+	 * @param string $host The host to compare against.
 	 *
 	 * @return bool True if both URLs belong to the same domain, false otherwise.
 	 */
-	private function is_same_domain( string $url1, string $url2 ): bool {
-		$parsed_url1 = wp_parse_url( $url1 );
-		$parsed_url2 = wp_parse_url( $url2 );
+	private function is_url_from_host( string $url, string $host ): bool {
+		$parsed_url = wp_parse_url( $url );
 
-		if ( ! isset( $parsed_url1['host'] ) || ! isset( $parsed_url2['host'] ) ) {
-			return false;
+		return isset( $parsed_url['host'] ) && $parsed_url['host'] === $host;
+	}
+
+	/**
+	 * Gets the locally-stored API key for comparison.
+	 *
+	 * @param ?string $site_url Site URL. Only used for child->governing site requests.
+	 *
+	 * @return string The stored API key. Empty string if not found.
+	 */
+	private function get_stored_api_key( ?string $site_url = null ): string {
+		if ( Settings::is_consumer_site() ) {
+			return Settings::get_api_key();
 		}
-		return hash_equals( $parsed_url1['host'], $parsed_url2['host'] );
+
+		// If there's no child site URL we cannot match the API key.
+		if ( ! isset( $site_url ) ) {
+			return '';
+		}
+
+		$shared_sites = Settings::get_shared_sites();
+
+		return ! empty( $shared_sites[ $site_url ]['api_key'] ) ? $shared_sites[ $site_url ]['api_key'] : '';
 	}
 }

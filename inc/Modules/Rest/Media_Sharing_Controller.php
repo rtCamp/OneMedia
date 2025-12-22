@@ -810,6 +810,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 				$site_url . $brand_site_prefix,
 				[
 					'headers'   => [
+							'origin'           => get_site_url(),
 							'X-OneMedia-Token' => $site_token ,
 							'Cache-Control'    => 'no-cache, no-store, must-revalidate',
 					],
@@ -1401,6 +1402,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 						$site_url . $brand_site_prefix,
 						[
 							'headers'   => [
+								'origin'           => get_site_url(),
 								'X-OneMedia-Token' => $site_token,
 								'Cache-Control'    => 'no-cache, no-store, must-revalidate',
 							],
@@ -1694,6 +1696,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 		$host = wp_parse_url( $url, PHP_URL_HOST );
 		$args = [
 			'headers'   => [
+				'origin'     => get_site_url(),
 				'Host'       => $host,
 				'User-Agent' => 'Mozilla/5.0 WordPress/' . get_bloginfo( 'version' ),
 			],

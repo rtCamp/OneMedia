@@ -86,6 +86,7 @@ class Utils {
 				[
 					'timeout' => self::HEALTH_CHECK_REQUEST_TIMEOUT, // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout
 					'headers' => [
+						'origin'           => get_site_url(),
 						'X-OneMedia-Token' => $api_key,
 						'Cache-Control'    => 'no-cache, no-store, must-revalidate',
 					],
