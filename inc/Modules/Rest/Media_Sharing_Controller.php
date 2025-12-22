@@ -1316,7 +1316,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 
 			// Convert non sync to sync media if it was previously shared as non sync.
 			// Check if the media is already shared in non-sync mode.
-			$shared_sites = Rest_Utils::health_check_attachment_brand_sites( $attachment_id );
+			$shared_sites = Attachment::get_sync_sites( $attachment_id );
 			if ( is_array( $shared_sites ) ) {
 				// Perform the media sync operation here.
 				$brand_site_prefix = '/wp-json/' . Abstract_REST_Controller::NAMESPACE . '/add-media';

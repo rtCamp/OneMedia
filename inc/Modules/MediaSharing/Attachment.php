@@ -55,7 +55,7 @@ class Attachment implements Registrable {
 				],
 				'single'            => true,
 				'type'              => 'string',
-				'default'           => false,
+				'default'           => self::SYNC_STATUS_NO_SYNC,
 				'revisions_enabled' => false,
 				'description'       => __( 'Indicates if the attachment is shared via OneMedia.', 'onemedia' ),
 				'auth_callback'     => static function () {
@@ -155,7 +155,7 @@ class Attachment implements Registrable {
 	 * @return array<string,mixed>
 	 */
 	public static function get_sync_sites( int $attachment_id ): array {
-		if ( ! Settings::is_consumer_site() || ! $attachment_id ) {
+		if (  ! Settings::is_governing_site() || ! $attachment_id ) {
 			return [];
 		}
 
