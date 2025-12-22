@@ -217,7 +217,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 			'/brand-sites-synced-media',
 			[
 				'methods'             => WP_REST_Server::READABLE,
-				'callback'            => [ $this, 'brand_sites_synced_media' ],
+				'callback'            => [ $this, 'brand_sites_synced_media_callback' ],
 				'permission_callback' => [ $this, 'check_api_permissions' ],
 			]
 		);
@@ -301,7 +301,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 	 *
 	 * @return \WP_Error|\WP_REST_Response The response containing the brand sites synced media.
 	 */
-	public function brand_sites_synced_media(): \WP_Error|\WP_REST_Response {
+	public function brand_sites_synced_media_callback(): \WP_Error|\WP_REST_Response {
 		// Get the sync option data.
 		$brand_sites_synced_media = Settings::get_brand_sites_synced_media();
 
@@ -1371,7 +1371,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 
 				// Share the attachment metadata with the brand sites.
 				// Get attachment metadata.
-				$attachment_data = wp_get_attachment_metadata( $attachment_id );
+				$attachment_data = wp_get_attachment_metadata( $attachment_id ?? 0 );
 
 				$title = get_the_title( $attachment_id );
 
