@@ -170,7 +170,7 @@ class Attachment implements Registrable {
 	 * @param int $attachment_id The ID of the attachment.
 	 */
 	public static function is_syncing( int $attachment_id ): bool {
-		if ( ! Settings::is_consumer_site() || ! $attachment_id ) {
+		if ( Settings::is_consumer_site() || ! $attachment_id ) {
 			return false;
 		}
 
