@@ -746,7 +746,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 
 			// Share the attachment metadata with the brand sites.
 			// Get attachment metadata.
-			$attachment_data = wp_get_attachment_metadata( $media['id'] );
+			$attachment_data = wp_get_attachment_metadata( $media['id'] ?? 0 );
 
 			// Get attachment title, alt text, caption and description.
 			$attachment_data['post_title']  = $media['title'];
@@ -767,6 +767,9 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 		// Get all registered brand sites to compare endpoint and get API token before sharing media.
 		$all_brand_sites = Settings::get_shared_sites();
 
+		// Success response.
+		$success_response = [];
+
 		foreach ( $brand_sites as $site ) {
 			$site_url = $site;
 
@@ -776,15 +779,13 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 
 			if ( empty( $site_url ) ) {
 				$failed_sites[] = [
-					'site'      => $site,
-					'message'   => sprintf(
+					'site'     => $site,
+					'message'  => sprintf(
 					/* translators: %s: site URL */
 						__( 'Invalid site URL: %s', 'onemedia' ),
 						$site_url . $brand_site_prefix
 					),
-					'site_url'  => $site_url . $brand_site_prefix,
-					'token'     => $site_token,
-					'child_key' => Settings::get_api_key(),
+					'site_url' => $site_url . $brand_site_prefix,
 				];
 				continue;
 			}
@@ -800,11 +801,8 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 				}
 			}
 
-			// Success response.
-			$success_response = [];
-
 			// Prepare the request to the brand site.
-			$response = wp_remote_post(
+			$response = wp_safe_remote_post(
 				$site_url . $brand_site_prefix,
 				[
 					'headers'   => [
@@ -838,8 +836,6 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 					'message'            => $response_body['message'] ?? __( 'Failed to sync media files.', 'onemedia' ),
 					'errors'             => $errors,
 					'site_url'           => $site_url . $brand_site_prefix,
-					'token'              => $site_token,
-					'child_key'          => Settings::get_api_key(),
 					'is_mime_type_error' => $is_mime_type_error,
 				];
 			}
@@ -911,8 +907,6 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 					'site'      => $site,
 					'message'   => __( 'Failed to update synced media.', 'onemedia' ),
 					'site_url'  => $site_url . $brand_site_prefix,
-					'token'     => $site_token,
-					'child_key' => Settings::get_api_key(),
 				];
 			}
 		}
@@ -1353,8 +1347,6 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 						'site'      => $site,
 						'message'   => __( 'Invalid site URL.', 'onemedia' ),
 						'site_url'  => $site_url . $brand_site_prefix,
-						'token'     => $site_token,
-						'child_key' => Settings::get_api_key(),
 					];
 					continue;
 				}
@@ -1376,8 +1368,6 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 						'site'      => $site,
 						'message'   => __( 'Invalid child ID data.', 'onemedia' ),
 						'site_url'  => $site_url . $brand_site_prefix,
-						'token'     => $site_token,
-						'child_key' => Settings::get_api_key(),
 					];
 					continue;
 				}
@@ -1407,7 +1397,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 				];
 
 				// Prepare the request to the brand site.
-				$response = wp_remote_post(
+				$response = wp_safe_remote_post(
 					$site_url . $brand_site_prefix,
 					[
 						'headers'   => [
@@ -1443,8 +1433,6 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 						'message'            => $response_body['message'] ?? __( 'Failed to sync media files.', 'onemedia' ),
 						'errors'             => $errors,
 						'site_url'           => $site_url . $brand_site_prefix,
-						'token'              => $site_token,
-						'child_key'          => Settings::get_api_key(),
 						'is_mime_type_error' => $is_mime_type_error,
 					];
 				}
@@ -1498,8 +1486,6 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 							'site'      => $site,
 							'message'   => __( 'Failed to update synced media.', 'onemedia' ),
 							'site_url'  => $site_url . $brand_site_prefix,
-							'token'     => $site_token,
-							'child_key' => Settings::get_api_key(),
 						];
 						continue;
 					}

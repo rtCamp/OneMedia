@@ -136,7 +136,7 @@ class MediaActions implements Registrable {
 			}
 
 			// Make POST request to delete attachment on brand sites.
-			$response = wp_remote_post(
+			$response = wp_safe_remote_post(
 				$site_url . '/wp-json/' . Abstract_REST_Controller::NAMESPACE . '/delete-media-metadata',
 				[
 					'body'      => wp_json_encode(
@@ -350,7 +350,7 @@ class MediaActions implements Registrable {
 			$attachment_data['terms']       = $attachment_terms;
 
 			// Make POST request to update existing attachment on brand sites.
-			wp_remote_post(
+			wp_safe_remote_post(
 				$site_url . $post_request_suffix,
 				[
 					'body'    => [
