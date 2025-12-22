@@ -177,7 +177,7 @@ class Utils {
 				continue;
 			}
 
-			$site_urls[] = untrailingslashit( esc_url_raw( $site['site'] ) );
+			$site_urls[] = trailingslashit( esc_url_raw( $site['site'] ) );
 		}
 		return $site_urls;
 	}

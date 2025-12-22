@@ -95,7 +95,7 @@ abstract class Abstract_REST_Controller extends \WP_REST_Controller implements R
 	}
 
 	/**
-		 * Check if two URLs belong to the same host.
+	 * Check if two URLs belong to the same host.
 	 *
 	 * @param string $url  The URL to check.
 	 * @param string $host The host to compare against.

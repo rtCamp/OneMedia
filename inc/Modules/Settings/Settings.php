@@ -205,7 +205,7 @@ final class Settings implements Registrable {
 			$sanitized[] = [
 				'id'      => $site_id ?: wp_generate_uuid4(),
 				'name'    => $site_name,
-				'url'     => untrailingslashit( $site_url ),
+				'url'     => trailingslashit( $site_url ),
 				'api_key' => $site_api_key,
 			];
 		}
@@ -376,7 +376,7 @@ final class Settings implements Registrable {
 	 * @param string $url The parent site URL.
 	 */
 	public static function set_parent_site_url( string $url ): bool {
-		return update_option( self::OPTION_CONSUMER_PARENT_SITE_URL, untrailingslashit( esc_url_raw( $url ) ), false );
+		return update_option( self::OPTION_CONSUMER_PARENT_SITE_URL, trailingslashit( esc_url_raw( $url ) ), false );
 	}
 
 	/**
