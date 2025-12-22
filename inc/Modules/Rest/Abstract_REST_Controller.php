@@ -85,7 +85,7 @@ abstract class Abstract_REST_Controller extends \WP_REST_Controller implements R
 
 		// If it's not a healthcheck, compare the origins.
 		$governing_site_url = Settings::get_parent_site_url();
-		if ( '/' . $this->namespace . '/health-check' !== $request->get_route() ) {
+		if ( '/' . self::NAMESPACE . '/health-check' !== $request->get_route() ) {
 			return ! empty( $governing_site_url ) ? $this->is_url_from_host( $governing_site_url, $parsed_origin['host'] ) : false;
 		}
 
