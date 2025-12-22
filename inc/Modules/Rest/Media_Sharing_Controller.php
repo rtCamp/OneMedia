@@ -1017,11 +1017,8 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 				);
 			}
 
-			// Ensure attachment data is an array.
-			$attachment_data = is_array( $attachment_data ) ? $attachment_data : [];
-
 			// Sanitize attachment data if provided.
-			$attachment_data = array_map( 'sanitize_text_field', $attachment_data );
+			$attachment_data = is_array( $attachment_data ) ? array_map( 'sanitize_text_field', $attachment_data ) : [];
 
 			// Add attachment title, alt_text, caption, description.
 			$attachment_metadata = [
