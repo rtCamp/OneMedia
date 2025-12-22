@@ -696,8 +696,9 @@ class MediaActions implements Registrable {
 		update_attached_file( $attachment_id, $target_path );
 
 		// Preserve existing taxonomy terms.
-		if ( taxonomy_exists( Media::TAXONOMY ) ) {
-			$current_terms = wp_get_object_terms( $attachment_id, Media::TAXONOMY, [ 'fields' => 'slugs' ] );
+		$current_terms = wp_get_object_terms( $attachment_id, Media::TAXONOMY, [ 'fields' => 'slugs' ] );
+
+		if ( ! is_wp_error( $current_terms ) && ! empty( $current_terms ) ) {
 			wp_set_object_terms( $attachment_id, $current_terms, Media::TAXONOMY, false );
 		}
 
