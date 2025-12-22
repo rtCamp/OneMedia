@@ -307,7 +307,7 @@ class MediaActions implements Registrable {
 		}
 
 		// Get the brand sites this media is synced to.
-		$onemedia_sync_sites = Rest_Utils::health_check_attachment_brand_sites( $attachment_id );
+		$onemedia_sync_sites = Attachment::get_sync_sites( $attachment_id );
 
 		// POST request suffix.
 		$post_request_suffix = '/wp-json/' . Abstract_REST_Controller::NAMESPACE . '/update-attachment';

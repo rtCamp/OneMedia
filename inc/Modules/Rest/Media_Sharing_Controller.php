@@ -863,7 +863,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 			foreach ( $media_response_list as $media ) {
 				// Get onemedia_sync_sites meta for each parent_id media.
 				$parent_id           = $media['parent_id'];
-				$onemedia_sync_sites = Rest_Utils::health_check_attachment_brand_sites( $parent_id );
+				$onemedia_sync_sites = Attachment::get_sync_sites( $parent_id );
 
 				// Add brand site with its id so that it can be used to sync media files.
 				$onemedia_sync_sites[] = [
