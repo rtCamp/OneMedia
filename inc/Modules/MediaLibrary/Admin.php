@@ -9,8 +9,9 @@ namespace OneMedia\Modules\MediaLibrary;
 
 use OneMedia\Contracts\Interfaces\Registrable;
 use OneMedia\Modules\Core\Assets;
+use OneMedia\Modules\MediaSharing\Attachment;
 use OneMedia\Modules\Settings\Settings;
-use OneMedia\Modules\Taxonomies\Term_Restriction;
+use OneMedia\Modules\Taxonomies\Media;
 
 /**
  * Class Admin
@@ -92,24 +93,24 @@ class Admin implements Registrable {
 		if ( ! empty( $request_query['onemedia_sync_status'] ) ) {
 			$sync_status = sanitize_text_field( wp_unslash( $request_query['onemedia_sync_status'] ) );
 
-			if ( 'sync' === $sync_status ) {
+			if ( Attachment::SYNC_STATUS_SYNC === $sync_status ) {
 				$query['meta_query'] = [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 					[
-						'key'     => 'onemedia_sync_status',
-						'value'   => 'sync',
+						'key'     => Attachment::SYNC_STATUS_POSTMETA_KEY,
+						'value'   => Attachment::SYNC_STATUS_SYNC,
 						'compare' => '=',
 					],
 				];
-			} elseif ( 'no_sync' === $sync_status ) {
+			} elseif ( Attachment::SYNC_STATUS_NO_SYNC === $sync_status ) {
 				$query['meta_query'] = [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 					'relation' => 'OR',
 					[
-						'key'     => 'onemedia_sync_status',
-						'value'   => 'no_sync',
+						'key'     => Attachment::SYNC_STATUS_POSTMETA_KEY,
+						'value'   => Attachment::SYNC_STATUS_NO_SYNC,
 						'compare' => '=',
 					],
 					[
-						'key'     => 'onemedia_sync_status',
+						'key'     => Attachment::SYNC_STATUS_POSTMETA_KEY,
 						'compare' => 'NOT EXISTS',
 					],
 				];
@@ -156,9 +157,9 @@ class Admin implements Registrable {
 		if ( 'true' === $onemedia_sync_media_filter ) {
 			$query['tax_query'] = [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
 				[
-					'taxonomy' => Term_Restriction::TAXONOMY,
+					'taxonomy' => Media::TAXONOMY,
 					'field'    => 'slug',
-					'terms'    => Term_Restriction::TAXONOMY_TERM,
+					'terms'    => Media::TAXONOMY_TERM,
 				],
 			];
 		}
@@ -167,9 +168,9 @@ class Admin implements Registrable {
 		if ( 'false' === $onemedia_sync_media_filter ) {
 			$query['tax_query'] = [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
 				[
-					'taxonomy' => Term_Restriction::TAXONOMY,
+					'taxonomy' => Media::TAXONOMY,
 					'field'    => 'slug',
-					'terms'    => Term_Restriction::TAXONOMY_TERM,
+					'terms'    => Media::TAXONOMY_TERM,
 					'operator' => 'NOT IN',
 				],
 			];

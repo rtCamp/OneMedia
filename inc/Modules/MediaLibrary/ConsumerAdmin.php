@@ -10,9 +10,9 @@
 namespace OneMedia\Modules\MediaLibrary;
 
 use OneMedia\Contracts\Interfaces\Registrable;
-use OneMedia\Modules\Rest\Utils as Rest_Utils;
+use OneMedia\Modules\MediaSharing\Attachment;
 use OneMedia\Modules\Settings\Settings;
-use OneMedia\Modules\Taxonomies\Term_Restriction;
+use OneMedia\Modules\Taxonomies\Media;
 use OneMedia\Utils;
 
 /**
@@ -56,95 +56,6 @@ class ConsumerAdmin implements Registrable {
 	}
 
 	/**
-	 * Add filter for synced attachments.
-	 *
-	 * @return void
-	 */
-	public function add_sync_filter(): void {
-		global $pagenow;
-
-		if ( 'upload.php' !== $pagenow ) {
-			return;
-		}
-
-		// Nonce verification for filter form.
-		$nonce = filter_input( INPUT_GET, 'onemedia_sync_nonce', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
-		$nonce = isset( $nonce ) ? sanitize_text_field( wp_unslash( $nonce ) ) : '';
-
-		if ( ! $nonce ) {
-			// This means this is the first load of the page, so we don't have onemedia_sync_filter nonce yet.
-			echo Utils::get_template_content( 'brand-site/sync-status' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			return;
-		}
-
-		if ( ! wp_verify_nonce( $nonce, 'onemedia_sync_filter' ) ) {
-			return;
-		}
-
-		// This means the form has been submitted, so we have a nonce to verify.
-		$sync_status = isset( $_GET[ Rest_Utils::SYNC_STATUS_POSTMETA_KEY ] )
-			? sanitize_text_field( wp_unslash( $_GET[ Rest_Utils::SYNC_STATUS_POSTMETA_KEY ] ) )
-			: '';
-
-		// Escaping handled in the template file.
-		echo Utils::get_template_content( 'brand-site/sync-status', [ 'sync_status' => $sync_status ] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-	}
-
-	/**
-	 * Filter attachments based on sync status.
-	 *
-	 * @param \WP_Query $query A reference of the current query object.
-	 */
-	public function filter_sync_attachments( \WP_Query $query ): void {
-		global $pagenow;
-		$onemedia_sync_status = filter_input( INPUT_GET, Rest_Utils::SYNC_STATUS_POSTMETA_KEY, FILTER_SANITIZE_FULL_SPECIAL_CHARS );
-
-		if ( 'upload.php' !== $pagenow || empty( $onemedia_sync_status ) ) {
-			return;
-		}
-
-		// Nonce verification for filter query.
-		$nonce = filter_input( INPUT_GET, 'onemedia_sync_nonce', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
-		$nonce = isset( $nonce ) ? sanitize_text_field( wp_unslash( $nonce ) ) : '';
-
-		if ( ! $nonce || ! wp_verify_nonce( $nonce, 'onemedia_sync_filter' ) ) {
-			return;
-		}
-
-		$sync_status = filter_input( INPUT_GET, Rest_Utils::SYNC_STATUS_POSTMETA_KEY, FILTER_SANITIZE_FULL_SPECIAL_CHARS );
-		$sync_status = isset( $sync_status ) ? sanitize_text_field( wp_unslash( $sync_status ) ) : '';
-
-		if ( 'sync' === $sync_status ) {
-			$query->set(
-				'meta_query',
-				[
-					[
-						'key'     => Rest_Utils::SYNC_STATUS_POSTMETA_KEY,
-						'value'   => 'sync',
-						'compare' => '=',
-					],
-				]
-			);
-		} elseif ( 'no_sync' === $sync_status ) {
-			$query->set(
-				'meta_query',
-				[
-					'relation' => 'OR',
-					[
-						'key'     => Rest_Utils::SYNC_STATUS_POSTMETA_KEY,
-						'value'   => 'no_sync',
-						'compare' => '=',
-					],
-					[
-						'key'     => Rest_Utils::SYNC_STATUS_POSTMETA_KEY,
-						'compare' => 'NOT EXISTS',
-					],
-				]
-			);
-		}
-	}
-
-	/**
 	 * Prevent attachment deletion.
 	 *
 	 * @param bool          $check Whether to allow deletion.
@@ -159,8 +70,8 @@ class ConsumerAdmin implements Registrable {
 		}
 
 		// Check if attachment is synced.
-		$onemedia_sync_status = self::get_sync_status_postmeta( $post->ID );
-		if ( 'sync' === $onemedia_sync_status ) {
+		$onemedia_sync_status = Attachment::get_sync_status( $post->ID );
+		if ( Attachment::SYNC_STATUS_SYNC === $onemedia_sync_status ) {
 			// Set transient to show admin notice.
 			set_transient( 'onemedia_sync_delete_notice', true, 30 );
 
@@ -225,8 +136,8 @@ class ConsumerAdmin implements Registrable {
 		}
 
 		// Check if attachment is synced.
-		$onemedia_sync_status = self::get_sync_status_postmeta( $post_id );
-		if ( 'sync' !== $onemedia_sync_status ) {
+		$onemedia_sync_status = Attachment::get_sync_status( $post_id );
+		if ( Attachment::SYNC_STATUS_SYNC !== $onemedia_sync_status ) {
 			return;
 		}
 
@@ -259,8 +170,8 @@ class ConsumerAdmin implements Registrable {
 			return;
 		}
 
-		$onemedia_sync_status = self::get_sync_status_postmeta( $attachment_id );
-		if ( 'sync' !== $onemedia_sync_status ) {
+		$onemedia_sync_status = Attachment::get_sync_status( $attachment_id );
+		if ( Attachment::SYNC_STATUS_SYNC !== $onemedia_sync_status ) {
 			return;
 		}
 
@@ -288,8 +199,8 @@ class ConsumerAdmin implements Registrable {
 		}
 
 		// Check if attachment is synced.
-		$onemedia_sync_status = self::get_sync_status_postmeta( $post->ID );
-		if ( 'sync' === $onemedia_sync_status ) {
+		$onemedia_sync_status = Attachment::get_sync_status( $post->ID );
+		if ( Attachment::SYNC_STATUS_SYNC === $onemedia_sync_status ) {
 			// Remove edit links.
 			if ( isset( $actions['edit'] ) ) {
 				unset( $actions['edit'] );
@@ -328,8 +239,8 @@ class ConsumerAdmin implements Registrable {
 			return;
 		}
 
-		$onemedia_sync_status = self::get_sync_status_postmeta( $post_id );
-		if ( 'sync' === $onemedia_sync_status ) {
+		$onemedia_sync_status = Attachment::get_sync_status( $post_id );
+		if ( Attachment::SYNC_STATUS_SYNC === $onemedia_sync_status ) {
 			echo '<span class="onemedia-sync-badge dashicons dashicons-yes"></span>';
 			return;
 		}
@@ -362,10 +273,10 @@ class ConsumerAdmin implements Registrable {
 			return;
 		}
 
-		$terms                = Term_Restriction::get_attachment_post_terms( $post_id, [ 'fields' => 'names' ] );
-		$onemedia_sync_status = self::get_sync_status_postmeta( $post_id );
+		$terms                = Attachment::get_post_terms( $post_id, [ 'fields' => 'names' ] );
+		$onemedia_sync_status = Attachment::get_sync_status( $post_id );
 
-		if ( empty( $onemedia_sync_status ) || empty( $terms ) || ! isset( array_flip( $terms )[ Term_Restriction::TAXONOMY_TERM ] ) ) {
+		if ( empty( $onemedia_sync_status ) || empty( $terms ) || ! isset( array_flip( $terms )[ Media::TAXONOMY_TERM ] ) ) {
 			printf(
 			/* translators: %s is the screen reader text. */
 				'<span aria-hidden="true">&#8212;</span><span class="screen-reader-text">%s</span>',
@@ -391,17 +302,92 @@ class ConsumerAdmin implements Registrable {
 	}
 
 	/**
-	 * Get OneMedia sync status postmeta value.
+	 * Add filter for synced attachments.
 	 *
-	 * @param int $attachment_id The attachment ID.
-	 *
-	 * @return string The sync status value.
+	 * @return void
 	 */
-	public static function get_sync_status_postmeta( int $attachment_id ): string {
-		if ( ! Settings::is_consumer_site() || ! $attachment_id ) {
-			return '';
+	public function add_sync_filter(): void {
+		global $pagenow;
+
+		if ( 'upload.php' !== $pagenow ) {
+			return;
 		}
 
-		return get_post_meta( $attachment_id, Rest_Utils::SYNC_STATUS_POSTMETA_KEY, true );
+		// Nonce verification for filter form.
+		$nonce = filter_input( INPUT_GET, 'onemedia_sync_nonce', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+		$nonce = isset( $nonce ) ? sanitize_text_field( wp_unslash( $nonce ) ) : '';
+
+		if ( ! $nonce ) {
+			// This means this is the first load of the page, so we don't have onemedia_sync_filter nonce yet.
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaping handled in the template file.
+			echo Utils::get_template_content( 'brand-site/sync-status' );
+			return;
+		}
+
+		if ( ! wp_verify_nonce( $nonce, 'onemedia_sync_filter' ) ) {
+			return;
+		}
+
+		// This means the form has been submitted, so we have a nonce to verify.
+		$sync_status = isset( $_GET[ Attachment::SYNC_STATUS_POSTMETA_KEY ] )
+			? sanitize_text_field( wp_unslash( $_GET[ Attachment::SYNC_STATUS_POSTMETA_KEY ] ) )
+			: '';
+
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaping handled in the template file.
+		echo Utils::get_template_content( 'brand-site/sync-status', [ 'sync_status' => $sync_status ] );
+	}
+
+	/**
+	 * Filter attachments based on sync status.
+	 *
+	 * @param \WP_Query $query A reference of the current query object.
+	 */
+	public function filter_sync_attachments( \WP_Query $query ): void {
+		global $pagenow;
+		$onemedia_sync_status = filter_input( INPUT_GET, Attachment::SYNC_STATUS_POSTMETA_KEY, FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+
+		if ( 'upload.php' !== $pagenow || empty( $onemedia_sync_status ) ) {
+			return;
+		}
+
+		// Nonce verification for filter query.
+		$nonce = filter_input( INPUT_GET, 'onemedia_sync_nonce', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+		$nonce = isset( $nonce ) ? sanitize_text_field( wp_unslash( $nonce ) ) : '';
+
+		if ( ! $nonce || ! wp_verify_nonce( $nonce, 'onemedia_sync_filter' ) ) {
+			return;
+		}
+
+		$sync_status = filter_input( INPUT_GET, Attachment::SYNC_STATUS_POSTMETA_KEY, FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+		$sync_status = isset( $sync_status ) ? sanitize_text_field( wp_unslash( $sync_status ) ) : '';
+
+		if ( Attachment::SYNC_STATUS_SYNC === $sync_status ) {
+			$query->set(
+				'meta_query',
+				[
+					[
+						'key'     => Attachment::SYNC_STATUS_POSTMETA_KEY,
+						'value'   => Attachment::SYNC_STATUS_SYNC,
+						'compare' => '=',
+					],
+				]
+			);
+		} elseif ( Attachment::SYNC_STATUS_NO_SYNC === $sync_status ) {
+			$query->set(
+				'meta_query',
+				[
+					'relation' => 'OR',
+					[
+						'key'     => Attachment::SYNC_STATUS_POSTMETA_KEY,
+						'value'   => Attachment::SYNC_STATUS_NO_SYNC,
+						'compare' => '=',
+					],
+					[
+						'key'     => Attachment::SYNC_STATUS_POSTMETA_KEY,
+						'compare' => 'NOT EXISTS',
+					],
+				]
+			);
+		}
 	}
 }

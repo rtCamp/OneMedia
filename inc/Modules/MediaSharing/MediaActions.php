@@ -11,7 +11,8 @@ use OneMedia\Contracts\Interfaces\Registrable;
 use OneMedia\Modules\Rest\Abstract_REST_Controller;
 use OneMedia\Modules\Rest\Utils as Rest_Utils;
 use OneMedia\Modules\Settings\Settings;
-use OneMedia\Modules\Taxonomies\Term_Restriction;
+use OneMedia\Modules\Taxonomies\Media;
+use OneMedia\Utils;
 
 /**
  * Class Admin
@@ -118,10 +119,10 @@ class MediaActions implements Registrable {
 		}
 
 		// Delete onemedia_sync_sites meta.
-		delete_post_meta( $attachment_id, Rest_Utils::SYNC_SITES_POSTMETA_KEY );
+		delete_post_meta( $attachment_id, Attachment::SYNC_SITES_POSTMETA_KEY );
 
 		// Delete is_onemedia_sync meta.
-		delete_post_meta( $attachment_id, Rest_Utils::IS_SYNC_POSTMETA_KEY );
+		delete_post_meta( $attachment_id, Attachment::IS_SYNC_POSTMETA_KEY );
 
 		// Delete onemedia_sync_status from remote sites.
 		$synced_sites = $synced_brand_site_media[ $attachment_id ] ?? [];
@@ -345,7 +346,7 @@ class MediaActions implements Registrable {
 			$attachment_description = get_post_field( 'post_content', $attachment_id );
 
 			// Get attachment terms.
-			$attachment_terms = Rest_Utils::get_attachment_terms( $attachment_id );
+			$attachment_terms = Attachment::get_terms( $attachment_id );
 			$attachment_terms = wp_list_pluck( $attachment_terms, 'slug' );
 
 			// Set attachment data.
@@ -399,10 +400,10 @@ class MediaActions implements Registrable {
 		];
 
 		// Decode filename to handle special characters.
-		$file['name'] = Rest_Utils::decode_filename( $file['name'] );
+		$file['name'] = Utils::decode_filename( $file['name'] );
 
 		// Validate file type.
-		if ( ! in_array( $file['type'], Rest_Utils::get_supported_mime_types(), true ) ) {
+		if ( ! in_array( $file['type'], Utils::get_supported_mime_types(), true ) ) {
 			wp_send_json_error( [ 'message' => __( 'Invalid file type. Only JPG, PNG, WEBP, BMP, SVG and GIF files are allowed.', 'onemedia' ) ], 400 );
 		}
 
@@ -439,8 +440,8 @@ class MediaActions implements Registrable {
 		$sync_status = filter_input( INPUT_GET, 'onemedia_sync_media_upload', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
 		if ( ! empty( $sync_status ) && 'true' === $sync_status ) {
 			// Assign the 'onemedia' term to the attachment.
-			if ( taxonomy_exists( Term_Restriction::TAXONOMY ) ) {
-				wp_set_object_terms( $attachment_id, Term_Restriction::TAXONOMY_TERM, Term_Restriction::TAXONOMY, true );
+			if ( taxonomy_exists( Media::TAXONOMY ) ) {
+				wp_set_object_terms( $attachment_id, Media::TAXONOMY_TERM, Media::TAXONOMY, true );
 			}
 		}
 
@@ -589,10 +590,10 @@ class MediaActions implements Registrable {
 		}
 
 		// Decode filename.
-		$file['name'] = Rest_Utils::decode_filename( $file['name'] );
+		$file['name'] = Utils::decode_filename( $file['name'] );
 
 		// Validate mime type.
-		if ( ! in_array( $file['type'], Rest_Utils::get_supported_mime_types(), true ) ) {
+		if ( ! in_array( $file['type'], Utils::get_supported_mime_types(), true ) ) {
 			return new \WP_Error(
 				'invalid_file_type',
 				__( 'Invalid file type. Only JPG, PNG, WEBP, BMP, SVG and GIF files are allowed.', 'onemedia' )
@@ -693,9 +694,9 @@ class MediaActions implements Registrable {
 		update_attached_file( $attachment_id, $target_path );
 
 		// Preserve existing taxonomy terms.
-		if ( taxonomy_exists( Term_Restriction::TAXONOMY ) ) {
-			$current_terms = wp_get_object_terms( $attachment_id, Term_Restriction::TAXONOMY, [ 'fields' => 'slugs' ] );
-			wp_set_object_terms( $attachment_id, $current_terms, Term_Restriction::TAXONOMY, false );
+		if ( taxonomy_exists( Media::TAXONOMY ) ) {
+			$current_terms = wp_get_object_terms( $attachment_id, Media::TAXONOMY, [ 'fields' => 'slugs' ] );
+			wp_set_object_terms( $attachment_id, $current_terms, Media::TAXONOMY, false );
 		}
 
 		// Update synced media on brand sites.
@@ -906,16 +907,11 @@ class MediaActions implements Registrable {
 		}
 
 		// Get post meta value.
-		$meta_value = '';
-		$is_sync    = false;
+		$is_sync = false;
 		if ( Settings::is_consumer_site() ) { // totally not sure why same meta is not used on both sites & why string instead of boolean.
-			$meta_value = get_post_meta( $attachment_id, Rest_Utils::SYNC_STATUS_POSTMETA_KEY, true );
-			if ( 'sync' === $meta_value ) {
-				$is_sync = true;
-			}
+			$is_sync = Attachment::SYNC_STATUS_SYNC === Attachment::get_sync_status( $attachment_id );
 		} elseif ( Settings::is_governing_site() ) {
-			$meta_value = get_post_meta( $attachment_id, Rest_Utils::IS_SYNC_POSTMETA_KEY, true );
-			$is_sync    = '1' === $meta_value || 1 === $meta_value || true === $meta_value;
+			$is_sync = Attachment::is_syncing( $attachment_id );
 		}
 
 		// Update cache.
@@ -934,7 +930,7 @@ class MediaActions implements Registrable {
 	 * @return void -- clear cache if the meta key matches.
 	 */
 	public function clear_sync_cache( int|array $meta_id, int $object_id, string $meta_key ): void {
-		if ( 'is_onemedia_sync' !== $meta_key ) {
+		if ( Attachment::IS_SYNC_POSTMETA_KEY !== $meta_key ) {
 			return;
 		}
 

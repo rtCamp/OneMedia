@@ -7,34 +7,13 @@
 
 namespace OneMedia\Modules\Rest;
 
+use OneMedia\Modules\MediaSharing\Attachment;
 use OneMedia\Modules\Settings\Settings;
-use OneMedia\Modules\Taxonomies\Term_Restriction;
 
 /**
  * Class Admin
  */
 class Utils {
-
-	/**
-	 * OneMedia sync sites postmeta key.
-	 *
-	 * @var string
-	 */
-	public const SYNC_SITES_POSTMETA_KEY = 'onemedia_sync_sites';
-
-	/**
-	 * Is OneMedia sync postmeta key.
-	 *
-	 * @var string
-	 */
-	public const IS_SYNC_POSTMETA_KEY = 'is_onemedia_sync';
-
-	/**
-	 * OneMedia sync status postmeta key.
-	 *
-	 * @var string
-	 */
-	public const SYNC_STATUS_POSTMETA_KEY = 'onemedia_sync_status';
 
 	/**
 	 * Brand sites synced media option.
@@ -49,24 +28,6 @@ class Utils {
 	 * @var int
 	 */
 	private const HEALTH_CHECK_REQUEST_TIMEOUT = 15;
-
-	/**
-	 * Allowed mime types array.
-	 *
-	 * This is a list of potentially supported mime types, any unsupported mime types will
-	 * be removed during usage, on that particular server.
-	 *
-	 * @var array
-	 */
-	private const ALLOWED_MIME_TYPES = [
-		'image/jpg',
-		'image/jpeg',
-		'image/png',
-		'image/gif',
-		'image/webp',
-		'image/bmp',
-		'image/svg+xml',
-	];
 
 	/**
 	 * Perform health check on brand sites where a given attachment is shared.
@@ -186,32 +147,6 @@ class Utils {
 	}
 
 	/**
-	 * Get supported mime types.
-	 *
-	 * @return array Array of supported mime types by the server.
-	 */
-	public static function get_supported_mime_types(): array {
-		$allowed_types = self::ALLOWED_MIME_TYPES;
-
-		// Remove any types that are not supported by the server.
-		$supported_types = array_values( get_allowed_mime_types() );
-		$allowed_types   = array_intersect( $allowed_types, $supported_types );
-
-		return $allowed_types;
-	}
-
-	/**
-	 * Decode filename to handle special characters.
-	 *
-	 * @param string $filename The filename to decode.
-	 *
-	 * @return string The decoded filename.
-	 */
-	public static function decode_filename( string $filename ): string {
-		return html_entity_decode( $filename, ENT_QUOTES, 'UTF-8' );
-	}
-
-	/**
 	 * Get brand site's synced media array.
 	 *
 	 * The structure of this array is different on governing and brand sites.
@@ -223,33 +158,14 @@ class Utils {
 	}
 
 	/**
-	 * Get OneMedia attachment terms.
-	 *
-	 * @param int|\WP_Post $attachment_id The attachment ID.
-	 *
-	 * @return array Array of terms.
-	 */
-	public static function get_attachment_terms( int|\WP_Post $attachment_id ): array {
-		if ( ! $attachment_id ) {
-			return [];
-		}
-
-		$terms = get_the_terms( $attachment_id, Term_Restriction::TAXONOMY );
-		if ( is_wp_error( $terms ) || ! $terms ) {
-			return [];
-		}
-		return $terms;
-	}
-
-	/**
 	 * Get OneMedia sync site URLs postmeta value.
 	 *
 	 * @param int $attachment_id The attachment ID.
 	 *
 	 * @return array The array of sync site URLs.
 	 */
-	private function get_sync_site_urls_postmeta( int $attachment_id ): array {
-		$sites = self::get_sync_sites_postmeta( $attachment_id );
+	private static function get_sync_site_urls_postmeta( int $attachment_id ): array {
+		$sites = Attachment::get_sync_sites( $attachment_id );
 		if ( empty( $sites ) ) {
 			return [];
 		}
@@ -263,24 +179,5 @@ class Utils {
 			$site_urls[] = untrailingslashit( esc_url_raw( $site['site'] ) );
 		}
 		return $site_urls;
-	}
-
-	/**
-	 * Get OneMedia sync sites postmeta value.
-	 *
-	 * @param int $attachment_id The attachment ID.
-	 *
-	 * @return array The array of sync sites.
-	 */
-	private static function get_sync_sites_postmeta( int $attachment_id ): array {
-		if ( ! Settings::is_governing_site() || ! $attachment_id ) {
-			return [];
-		}
-
-		$sites = get_post_meta( $attachment_id, self::SYNC_SITES_POSTMETA_KEY, true );
-		if ( ! is_array( $sites ) ) {
-			return [];
-		}
-		return $sites;
 	}
 }

@@ -35,6 +35,7 @@ final class Main {
 		Modules\MediaLibrary\Admin::class,
 		Modules\MediaLibrary\ConsumerAdmin::class,
 		Modules\MediaSharing\Admin::class,
+		Modules\MediaSharing\Attachment::class,
 		Modules\MediaSharing\UserInterface::class,
 		Modules\MediaSharing\MediaProtection::class,
 		Modules\MediaSharing\MediaActions::class,

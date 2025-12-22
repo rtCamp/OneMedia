@@ -19,6 +19,50 @@ final class Utils {
 	private const TEMPLATES_PATH = ONEMEDIA_DIR . '/templates';
 
 	/**
+	 * Allowed mime types array.
+	 *
+	 * This is a list of potentially supported mime types, any unsupported mime types will
+	 * be removed during usage, on that particular server.
+	 *
+	 * @var array
+	 */
+	private const ALLOWED_MIME_TYPES = [
+		'image/jpg',
+		'image/jpeg',
+		'image/png',
+		'image/gif',
+		'image/webp',
+		'image/bmp',
+		'image/svg+xml',
+	];
+
+	/**
+	 * Decode filename to handle special characters.
+	 *
+	 * @param string $filename The filename to decode.
+	 *
+	 * @return string The decoded filename.
+	 */
+	public static function decode_filename( string $filename ): string {
+		return html_entity_decode( $filename, ENT_QUOTES, 'UTF-8' );
+	}
+
+	/**
+	 * Get supported mime types.
+	 *
+	 * @return array Array of supported mime types by the server.
+	 */
+	public static function get_supported_mime_types(): array {
+		$allowed_types = self::ALLOWED_MIME_TYPES;
+
+		// Remove any types that are not supported by the server.
+		$supported_types = array_values( get_allowed_mime_types() );
+		$allowed_types   = array_intersect( $allowed_types, $supported_types );
+
+		return $allowed_types;
+	}
+
+	/**
 	 * Return onemedia template content.
 	 *
 	 * @param string $slug Template path.

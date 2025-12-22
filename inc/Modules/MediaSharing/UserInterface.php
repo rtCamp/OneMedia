@@ -9,7 +9,6 @@ namespace OneMedia\Modules\MediaSharing;
 
 use OneMedia\Contracts\Interfaces\Registrable;
 use OneMedia\Modules\Taxonomies\Media;
-use OneMedia\Modules\Taxonomies\Term_Restriction;
 
 /**
  * Class CPT_Restriction
@@ -50,7 +49,7 @@ class UserInterface implements Registrable {
 			return;
 		}
 
-		$terms   = Term_Restriction::get_attachment_post_terms( $attachment_id, [ 'fields' => 'names' ] );
+		$terms   = Attachment::get_post_terms( $attachment_id, [ 'fields' => 'names' ] );
 		$classes = 'onemedia-media-term-label';
 
 		// Build the labels and css classes.
@@ -60,11 +59,7 @@ class UserInterface implements Registrable {
 		} else {
 			$labels = [];
 			foreach ( $terms as $term ) {
-				if ( Term_Restriction::TAXONOMY_TERM === $term ) {
-					$labels[] = Media::TERM_NAME;
-				} else {
-					$labels[] = esc_html( $term );
-				}
+				$labels[] = Media::TAXONOMY_TERM === $term ? Media::TERM_NAME : esc_html( $term );
 			}
 			$label = implode( ', ', $labels );
 		}
@@ -90,8 +85,8 @@ class UserInterface implements Registrable {
 			return $actions;
 		}
 
-		$terms = Term_Restriction::get_attachment_post_terms( $post->ID, [ 'fields' => 'slugs' ] );
-		if ( ! empty( $terms ) && isset( array_flip( $terms )[ Term_Restriction::TAXONOMY_TERM ] ) ) {
+		$terms = Attachment::get_post_terms( $post->ID, [ 'fields' => 'slugs' ] );
+		if ( ! empty( $terms ) && isset( array_flip( $terms )[ Media::TAXONOMY_TERM ] ) ) {
 			if ( isset( $actions['delete'] ) ) {
 				unset( $actions['delete'] );
 			}

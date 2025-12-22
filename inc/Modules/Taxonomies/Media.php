@@ -12,7 +12,9 @@ namespace OneMedia\Modules\Taxonomies;
  */
 class Media extends Abstract_Taxonomy {
 
-	public const TERM_NAME = 'OneMedia';
+	public const TAXONOMY      = 'onemedia_media_type';
+	public const TAXONOMY_TERM = 'onemedia';
+	public const TERM_NAME     = 'OneMedia';
 
 	/**
 	 * {@inheritDoc}
@@ -27,7 +29,7 @@ class Media extends Abstract_Taxonomy {
 	 * {@inheritDoc}
 	 */
 	public static function get_slug(): string {
-		return 'onemedia_media_type';
+		return self::TAXONOMY;
 	}
 
 	/**
@@ -73,10 +75,8 @@ class Media extends Abstract_Taxonomy {
 
 	/**
 	 * Add the custom media taxonomy to the attachment post type.
-	 *
-	 * @return void
 	 */
 	public function add_media_taxonomy_to_post_type(): void {
-		register_taxonomy_for_object_type( Term_Restriction::TAXONOMY, 'attachment' );
+		register_taxonomy_for_object_type( self::TAXONOMY, 'attachment' );
 	}
 }

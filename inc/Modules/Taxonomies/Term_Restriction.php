@@ -9,32 +9,12 @@ namespace OneMedia\Modules\Taxonomies;
 
 use OneMedia\Contracts\Interfaces\Registrable;
 use OneMedia\Modules\Settings\Settings;
+use OneMedia\Utils;
 
 /**
  * Class CPT_Restriction
  */
 class Term_Restriction implements Registrable {
-
-	public const TAXONOMY_TERM = 'onemedia';
-	public const TAXONOMY      = 'onemedia_media_type';
-
-	/**
-	 * Get OneMedia attachment terms with args.
-	 *
-	 * @param int                 $attachment_id The attachment ID.
-	 * @param array<string,mixed> $args          Arguments to pass to wp_get_post_terms function.
-	 *
-	 * @return array Array of terms.
-	 */
-	public static function get_attachment_post_terms( int $attachment_id, array $args = [] ): array {
-		$terms = wp_get_post_terms( $attachment_id, self::TAXONOMY, $args );
-
-		if ( ! is_array( $terms ) ) {
-			return [];
-		}
-
-		return $terms;
-	}
 
 	/**
 	 * {@inheritDoc}
@@ -51,51 +31,42 @@ class Term_Restriction implements Registrable {
 	}
 
 	/**
-	 * Remove edit, inline, and delete actions for the 'onemedia' term in the media taxonomy.
-	 *
-	 * @param array    $actions Existing actions.
-	 * @param \WP_Term $term    The term object.
-	 *
-	 * @return array Modified actions.
-	 */
-	public function remove_term_actions( array $actions, \WP_Term $term ): array {
-		if ( self::TAXONOMY === $term->taxonomy && self::TAXONOMY_TERM === $term->slug ) {
-			if ( isset( $actions['edit'] ) ) {
-				unset( $actions['edit'] );
-			}
-			if ( isset( $actions['inline hide-if-no-js'] ) ) {
-				unset( $actions['inline hide-if-no-js'] );
-			}
-			if ( isset( $actions['delete'] ) ) {
-				unset( $actions['delete'] );
-			}
-		}
-		return $actions;
-	}
-
-	/**
 	 * Add default terms to the custom media taxonomy.
 	 *
 	 * This method ensures that the 'onemedia' term is always present in the taxonomy.
 	 * If it does not exist, it will be created with a specific description and slug.
-	 *
-	 * @return void
 	 */
 	public function add_default_terms(): void {
-		$term_exists_fn = function_exists( 'wpcom_vip_term_exists' ) ? 'wpcom_vip_term_exists' : 'term_exists';
-
-		if ( is_callable( $term_exists_fn ) && $term_exists_fn( self::TAXONOMY_TERM, self::TAXONOMY ) ) {
+		if ( Utils::term_exists( Media::TAXONOMY_TERM, Media::TAXONOMY ) ) {
 			return;
 		}
 
 		wp_insert_term(
 			Media::TERM_NAME,
-			self::TAXONOMY,
+			Media::TAXONOMY,
 			[
 				'description' => __( 'To indicate media type which can not be deleted.', 'onemedia' ),
-				'slug'        => self::TAXONOMY_TERM,
+				'slug'        => Media::TAXONOMY_TERM,
 			]
 		);
+	}
+
+	/**
+	 * Make onemedia_media_type taxonomy hidden on brand sites.
+	 */
+	public function hide_term_on_brand_site(): void {
+		if ( ! Settings::is_consumer_site() ) {
+			return;
+		}
+
+		// Get onemedia_media_type.
+		$taxonomy = get_taxonomy( Media::TAXONOMY );
+		if ( ! $taxonomy || ! $taxonomy->show_ui ) {
+			return;
+		}
+
+		// Set onemedia_media_type to private.
+		$taxonomy->show_ui = false;
 	}
 
 	/**
@@ -126,7 +97,7 @@ class Term_Restriction implements Registrable {
 	 * @return void
 	 */
 	public function on_term_delete( \WP_Term $term, int $tt_id, string $taxonomy, \WP_Term $deleted_term ): void {
-		if ( self::TAXONOMY !== $taxonomy || self::TAXONOMY_TERM !== $deleted_term->slug ) {
+		if ( Media::TAXONOMY !== $taxonomy || Media::TAXONOMY_TERM !== $deleted_term->slug ) {
 			return;
 		}
 
@@ -134,25 +105,43 @@ class Term_Restriction implements Registrable {
 	}
 
 	/**
+	 * Remove edit, inline, and delete actions for the 'onemedia' term in the media taxonomy.
+	 *
+	 * @param array    $actions Existing actions.
+	 * @param \WP_Term $term    The term object.
+	 *
+	 * @return array Modified actions.
+	 */
+	public function remove_term_actions( array $actions, \WP_Term $term ): array {
+		if ( Media::TAXONOMY === $term->taxonomy && Media::TAXONOMY_TERM === $term->slug ) {
+			$actions_to_unset = [ 'edit', 'inline hide-if-no-js', 'delete' ];
+			foreach ( $actions_to_unset as $action ) {
+				if ( ! isset( $actions[ $action ] ) ) {
+					continue;
+				}
+
+				unset( $actions[ $action ] );
+			}
+		}
+		return $actions;
+	}
+
+	/**
 	 * Block insertion of new terms in the plugin taxonomy.
 	 *
 	 * This method prevents the addition of new terms to the plugin taxonomy, except for the 'onemedia' term.
 	 *
-	 * @param string|array|\WP_Error $term     The term being inserted.
-	 * @param string                 $taxonomy The taxonomy slug.
+	 * @param string|\WP_Error $term     The term being inserted.
+	 * @param string           $taxonomy The taxonomy slug.
 	 *
-	 * @return string|array|\WP_Error The term if valid, or a WP_Error if blocked.
+	 * @return string|\WP_Error The term if valid, or a WP_Error if blocked.
 	 */
-	public function maybe_block_term_insert( string|array|\WP_Error $term, string $taxonomy ): string|array|\WP_Error {
-		if ( self::TAXONOMY !== $taxonomy ) {
+	public function maybe_block_term_insert( $term, $taxonomy ) {
+		if ( Media::TAXONOMY !== $taxonomy ) {
 			return $term;
 		}
 
-		if ( is_string( $term ) && self::TAXONOMY_TERM === $term ) {
-			return $term;
-		}
-
-		if ( is_array( $term ) && self::TAXONOMY_TERM === ( $term['slug'] ?? '' ) ) {
+		if ( is_string( $term ) && Media::TAXONOMY_TERM === $term ) {
 			return $term;
 		}
 
@@ -202,14 +191,14 @@ class Term_Restriction implements Registrable {
 	 *
 	 * @return void
 	 */
-	public function show_term_change_message( int $term_id, string $taxonomy, string $action ): void {
-		if ( self::TAXONOMY !== $taxonomy ) {
+	private function show_term_change_message( int $term_id, string $taxonomy, string $action ): void {
+		if ( Media::TAXONOMY !== $taxonomy ) {
 			return;
 		}
 
 		$term = get_term( $term_id, $taxonomy );
 
-		if ( ! $term instanceof \WP_Term || self::TAXONOMY_TERM !== $term->slug ) {
+		if ( ! $term instanceof \WP_Term || Media::TAXONOMY_TERM !== $term->slug ) {
 			return;
 		}
 
@@ -240,25 +229,5 @@ class Term_Restriction implements Registrable {
 			),
 			[ 'response' => 403 ]
 		);
-	}
-
-	/**
-	 * Make onemedia_media_type taxonomy hidden on brand sites.
-	 *
-	 * @return void
-	 */
-	private function hide_term_on_brand_site(): void {
-		if ( ! Settings::is_consumer_site() ) {
-			return;
-		}
-
-		// Get onemedia_media_type.
-		$taxonomy = get_taxonomy( self::TAXONOMY );
-		if ( ! $taxonomy || ! $taxonomy->show_ui ) {
-			return;
-		}
-
-		// Set onemedia_media_type to private.
-		$taxonomy->show_ui = false;
 	}
 }
