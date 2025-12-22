@@ -9,7 +9,6 @@ namespace OneMedia\Modules\MediaSharing;
 
 use OneMedia\Contracts\Interfaces\Registrable;
 use OneMedia\Modules\Rest\Abstract_REST_Controller;
-use OneMedia\Modules\Rest\Utils as Rest_Utils;
 use OneMedia\Modules\Settings\Settings;
 use OneMedia\Modules\Taxonomies\Media;
 use OneMedia\Utils;
@@ -32,13 +31,6 @@ class MediaActions implements Registrable {
 	 * @var int
 	 */
 	public const SYNC_REQUEST_TIMEOUT = 25;
-
-	/**
-	 * OneMedia sync versions postmeta key.
-	 *
-	 * @var string
-	 */
-	public const SYNC_VERSIONS_POSTMETA_KEY = 'onemedia_sync_versions';
 
 	/**
 	 * {@inheritDoc}
@@ -113,7 +105,7 @@ class MediaActions implements Registrable {
 		// On Governing Site.
 
 		// Check post is_onemedia_sync is set to be true.
-		$synced_brand_site_media = Rest_Utils::fetch_brand_sites_synced_media();
+		$synced_brand_site_media = Settings::get_brand_sites_synced_media();
 		if ( ! $synced_brand_site_media || ! isset( $synced_brand_site_media[ $attachment_id ] ) ) {
 			return;
 		}
@@ -193,7 +185,7 @@ class MediaActions implements Registrable {
 		}
 
 		unset( $synced_brand_site_media[ $attachment_id ] );
-		update_option( Rest_Utils::BRAND_SITES_SYNCED_MEDIA_OPTION, $synced_brand_site_media );
+		update_option( Settings::BRAND_SITES_SYNCED_MEDIA, $synced_brand_site_media );
 	}
 
 	/**
@@ -217,7 +209,7 @@ class MediaActions implements Registrable {
 			return;
 		}
 
-		$health_check_connected_sites = Rest_Utils::health_check_attachment_brand_sites( $post_id );
+		$health_check_connected_sites = Attachment::health_check_attachment_brand_sites( $post_id );
 		$success                      = isset( $health_check_connected_sites['success'] ) ? $health_check_connected_sites['success'] : false;
 
 		// If any of the connected brand sites are not reachable, prevent updating the attachment.
@@ -270,7 +262,7 @@ class MediaActions implements Registrable {
 			return;
 		}
 
-		$health_check_connected_sites = Rest_Utils::health_check_attachment_brand_sites( $attachment_id );
+		$health_check_connected_sites = Attachment::health_check_attachment_brand_sites( $attachment_id );
 		$success                      = isset( $health_check_connected_sites['success'] ) ? $health_check_connected_sites['success'] : false;
 
 		// If any of the connected brand sites are not reachable, prevent updating the attachment.
@@ -723,7 +715,7 @@ class MediaActions implements Registrable {
 	 */
 	public function restore_attachment_version( int $attachment_id, array $version_file ): array|\WP_Error {
 		// Get existing versions.
-		$existing_versions = self::get_sync_attachment_versions( $attachment_id );
+		$existing_versions = Attachment::get_sync_attachment_versions( $attachment_id );
 		$is_new_meta       = empty( $existing_versions );
 		$existing_versions = array_values( $existing_versions );
 
@@ -772,7 +764,7 @@ class MediaActions implements Registrable {
 			$existing_versions = array_slice( $existing_versions, 0, self::ATTACHMENT_VERSIONS_TO_KEEP );
 
 			// Update version history.
-			self::update_sync_attachment_versions( $attachment_id, $existing_versions );
+			Attachment::update_sync_attachment_versions( $attachment_id, $existing_versions );
 		}
 
 		return $result;
@@ -789,7 +781,7 @@ class MediaActions implements Registrable {
 	 */
 	public function update_attachment_versions( int $attachment_id, array $file, array $update_result, array $original_data ): void {
 		// Get existing versions.
-		$existing_versions = self::get_sync_attachment_versions( $attachment_id );
+		$existing_versions = Attachment::get_sync_attachment_versions( $attachment_id );
 		$is_new_meta       = empty( $existing_versions );
 		$existing_versions = array_values( $existing_versions );
 
@@ -864,7 +856,7 @@ class MediaActions implements Registrable {
 		// Keep only the 5 most recent versions.
 		$versions = array_slice( $versions, 0, self::ATTACHMENT_VERSIONS_TO_KEEP );
 
-		self::update_sync_attachment_versions( $attachment_id, $versions );
+		Attachment::update_sync_attachment_versions( $attachment_id, $versions );
 	}
 
 	/**
@@ -938,41 +930,5 @@ class MediaActions implements Registrable {
 		}
 
 		wp_cache_delete( "onemedia_sync_status_{$object_id}", 'onemedia' );
-	}
-
-	/**
-	 * Update OneMedia sync versions postmeta value.
-	 *
-	 * @param int   $attachment_id The attachment ID.
-	 * @param array $versions      The array of sync versions to set.
-	 *
-	 * @return bool True if the update was successful, false otherwise.
-	 */
-	public static function update_sync_attachment_versions( int $attachment_id, array $versions ): bool {
-		if ( ! $attachment_id || empty( $versions ) ) {
-			return false;
-		}
-
-		return (bool) update_post_meta( $attachment_id, self::SYNC_VERSIONS_POSTMETA_KEY, $versions );
-	}
-
-	/**
-	 * Get OneMedia sync versions postmeta value.
-	 *
-	 * @param int $attachment_id The attachment ID.
-	 *
-	 * @return array The array of sync versions.
-	 */
-	public static function get_sync_attachment_versions( int $attachment_id ): array {
-		if ( ! $attachment_id ) {
-			return [];
-		}
-
-		$versions = get_post_meta( $attachment_id, self::SYNC_VERSIONS_POSTMETA_KEY, true );
-		if ( ! is_array( $versions ) ) {
-			return [];
-		}
-
-		return $versions;
 	}
 }

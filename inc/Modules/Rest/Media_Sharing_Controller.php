@@ -10,7 +10,6 @@ namespace OneMedia\Modules\Rest;
 use OneMedia\Modules\MediaSharing\Attachment;
 use OneMedia\Modules\MediaSharing\MediaActions;
 use OneMedia\Modules\MediaSharing\MediaReplacement;
-use OneMedia\Modules\Rest\Utils as Rest_Utils;
 use OneMedia\Modules\Settings\Settings;
 use OneMedia\Modules\Taxonomies\Media;
 use OneMedia\Utils;
@@ -34,7 +33,6 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 	 * @var int
 	 */
 	public const FETCH_MEDIA_REQUEST_TIMEOUT = 30;
-
 
 	/**
 	 * OneMedia brand site to governing site attachment key map.
@@ -219,7 +217,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 			'/brand-sites-synced-media',
 			[
 				'methods'             => WP_REST_Server::READABLE,
-				'callback'            => [ $this, 'get_brand_sites_synced_media' ],
+				'callback'            => [ $this, 'brand_sites_synced_media' ],
 				'permission_callback' => [ $this, 'check_api_permissions' ],
 			]
 		);
@@ -303,9 +301,9 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 	 *
 	 * @return \WP_Error|\WP_REST_Response The response containing the brand sites synced media.
 	 */
-	public function get_brand_sites_synced_media(): \WP_Error|\WP_REST_Response {
+	public function brand_sites_synced_media(): \WP_Error|\WP_REST_Response {
 		// Get the sync option data.
-		$brand_sites_synced_media = Rest_Utils::fetch_brand_sites_synced_media();
+		$brand_sites_synced_media = Settings::get_brand_sites_synced_media();
 
 		// Get all registered brand sites.
 		$all_brand_sites = Settings::get_shared_sites();
@@ -621,7 +619,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 				'url'       => wp_get_attachment_url( $post_id ),
 				'title'     => Utils::decode_filename( get_the_title( $post_id ) ),
 				'mime_type' => get_post_mime_type( $post_id ),
-				'revision'  => get_post_meta( $post_id, MediaActions::SYNC_VERSIONS_POSTMETA_KEY, true ),
+				'revision'  => get_post_meta( $post_id, Attachment::SYNC_VERSIONS_POSTMETA_KEY, true ),
 			];
 		}
 
@@ -780,7 +778,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 				$failed_sites[] = [
 					'site'      => $site,
 					'message'   => sprintf(
-						/* translators: %s: site URL */
+					/* translators: %s: site URL */
 						__( 'Invalid site URL: %s', 'onemedia' ),
 						$site_url . $brand_site_prefix
 					),
@@ -810,15 +808,16 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 				$site_url . $brand_site_prefix,
 				[
 					'headers'   => [
-							'origin'           => get_site_url(),
-							'X-OneMedia-Token' => $site_token ,
-							'Cache-Control'    => 'no-cache, no-store, must-revalidate',
+						'origin'           => get_site_url(),
+						'X-OneMedia-Token' => $site_token,
+						'Cache-Control'    => 'no-cache, no-store, must-revalidate',
 					],
 					'body'      => [
-							'media_files' => $media_details,
-							'sync_option' => $sync_option,
-						],
-					'timeout'   => self::SYNC_MEDIA_REQUEST_TIMEOUT, // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout
+						'media_files' => $media_details,
+						'sync_option' => $sync_option,
+					],
+					'timeout'   => self::SYNC_MEDIA_REQUEST_TIMEOUT,
+					// phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout
 					'sslverify' => false,
 				]
 			);
@@ -879,7 +878,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 					continue;
 				}
 
-				$brand_sites_synced_media = Rest_Utils::fetch_brand_sites_synced_media();
+				$brand_sites_synced_media = Settings::get_brand_sites_synced_media();
 
 				// Add brand site media id to the option.
 				$parent_sync_media_mapping = [
@@ -896,12 +895,12 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 				);
 
 				// Update the synced media mapping option only if there is a change.
-				$saved_brand_sites_synced_media = Rest_Utils::fetch_brand_sites_synced_media();
+				$saved_brand_sites_synced_media = Settings::get_brand_sites_synced_media();
 				if ( wp_json_encode( $saved_brand_sites_synced_media ) === wp_json_encode( $brand_sites_synced_media ) ) {
 					continue;
 				}
 
-				$success = update_option( Rest_Utils::BRAND_SITES_SYNCED_MEDIA_OPTION, $brand_sites_synced_media );
+				$success = update_option( Settings::BRAND_SITES_SYNCED_MEDIA, $brand_sites_synced_media );
 
 				if ( $success ) {
 					continue;
@@ -936,7 +935,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 				'status'               => 200,
 				'success'              => true,
 				'success_response'     => $success_response,
-				'onemedia_sync_option' => Rest_Utils::fetch_brand_sites_synced_media(),
+				'onemedia_sync_option' => Settings::get_brand_sites_synced_media(),
 			]
 		);
 	}
@@ -953,7 +952,14 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 		$sync_status = $request->get_param( 'sync_option' );
 
 		// Validate sync_option, it should be either 'sync' or 'no_sync'.
-		if ( empty( $sync_status ) || ! is_string( $sync_status ) || ! in_array( $sync_status, [ Attachment::SYNC_STATUS_SYNC, Attachment::SYNC_STATUS_NO_SYNC ], true ) ) {
+		if ( empty( $sync_status ) || ! is_string( $sync_status ) || ! in_array(
+			$sync_status,
+			[
+				Attachment::SYNC_STATUS_SYNC,
+				Attachment::SYNC_STATUS_NO_SYNC,
+			],
+			true
+		) ) {
 			return new \WP_Error(
 				'invalid_sync_option',
 				__( 'Invalid sync option provided.', 'onemedia' ),
@@ -1016,6 +1022,9 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 					]
 				);
 			}
+
+			// Ensure attachment data is an array.
+			$attachment_data = is_array( $attachment_data ) ? $attachment_data : [];
 
 			// Sanitize attachment data if provided.
 			$attachment_data = array_map( 'sanitize_text_field', $attachment_data );
@@ -1191,7 +1200,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 			return new \WP_Error(
 				'unsupported_file_types',
 				sprintf(
-					/* translators: %1$s: Site name, %2$s: Unsupported file types. */
+				/* translators: %1$s: Site name, %2$s: Unsupported file types. */
 					__( '%1$s site doesn\'t support the following file type(s): %2$s.', 'onemedia' ),
 					Settings::get_sitename_by_url( get_bloginfo( 'url' ) ),
 					$unsupported_file_types,
@@ -1211,7 +1220,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 			return new \WP_Error(
 				'media_addition_failed',
 				sprintf(
-					/* translators: %s: Site name */
+				/* translators: %s: Site name */
 					__( 'Some media files failed to upload to %s site.', 'onemedia' ),
 					get_bloginfo( 'name' )
 				),
@@ -1317,209 +1326,209 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 			// Convert non sync to sync media if it was previously shared as non sync.
 			// Check if the media is already shared in non-sync mode.
 			$shared_sites = Attachment::get_sync_sites( $attachment_id );
-			if ( is_array( $shared_sites ) ) {
-				// Perform the media sync operation here.
-				$brand_site_prefix = '/wp-json/' . Abstract_REST_Controller::NAMESPACE . '/add-media';
 
-				// Failed to sync media files to brand sites.
-				$failed_sites = [];
+			// Perform the media sync operation here.
+			$brand_site_prefix = '/wp-json/' . Abstract_REST_Controller::NAMESPACE . '/add-media';
 
-				// Success response.
-				$success_response = [];
+			// Failed to sync media files to brand sites.
+			$failed_sites = [];
 
-				// Get all registered brand sites to compare endpoint and get API token before sharing media.
-				$all_brand_sites = Settings::get_shared_sites();
+			// Success response.
+			$success_response = [];
 
-				foreach ( $shared_sites as $site ) {
-					$site_url = $site['site'];
+			// Get all registered brand sites to compare endpoint and get API token before sharing media.
+			$all_brand_sites = Settings::get_shared_sites();
 
-					// Strip the trailing slash.
-					$site_url   = rtrim( $site_url, '/' );
-					$site_name  = Settings::get_sitename_by_url( $site_url );
-					$site_token = '';
+			foreach ( $shared_sites as $site ) {
+				$site_url = $site['site'];
 
-					if ( empty( $site_url ) ) {
-						$failed_sites[] = [
-							'site_name' => $site_name,
-							'site'      => $site,
-							'message'   => __( 'Invalid site URL.', 'onemedia' ),
-							'site_url'  => $site_url . $brand_site_prefix,
-							'token'     => $site_token,
-							'child_key' => Settings::get_api_key(),
-						];
-						continue;
+				// Strip the trailing slash.
+				$site_url   = rtrim( $site_url, '/' );
+				$site_name  = Settings::get_sitename_by_url( $site_url );
+				$site_token = '';
+
+				if ( empty( $site_url ) ) {
+					$failed_sites[] = [
+						'site_name' => $site_name,
+						'site'      => $site,
+						'message'   => __( 'Invalid site URL.', 'onemedia' ),
+						'site_url'  => $site_url . $brand_site_prefix,
+						'token'     => $site_token,
+						'child_key' => Settings::get_api_key(),
+					];
+					continue;
+				}
+
+				// Find the site in all brand sites to get its API token.
+				foreach ( $all_brand_sites as $site_data ) {
+					// Trim trailing slash.
+					if ( rtrim( $site_data['url'], '/' ) === rtrim( $site_url, '/' ) ) {
+						$site_token = $site_data['api_key'];
+						break;
 					}
+				}
 
-					// Find the site in all brand sites to get its API token.
-					foreach ( $all_brand_sites as $site_data ) {
-						// Trim trailing slash.
-						if ( rtrim( $site_data['url'], '/' ) === rtrim( $site_url, '/' ) ) {
-							$site_token = $site_data['api_key'];
-							break;
-						}
-					}
+				// This is the attachment id on the brand site since this media was previously shared.
+				$child_id = $site['id'];
+				if ( ! isset( $child_id ) ) {
+					$failed_sites[] = [
+						'site_name' => $site_name,
+						'site'      => $site,
+						'message'   => __( 'Invalid child ID data.', 'onemedia' ),
+						'site_url'  => $site_url . $brand_site_prefix,
+						'token'     => $site_token,
+						'child_key' => Settings::get_api_key(),
+					];
+					continue;
+				}
 
-					// This is the attachment id on the brand site since this media was previously shared.
-					$child_id = $site['id'];
-					if ( ! isset( $child_id ) ) {
-						$failed_sites[] = [
-							'site_name' => $site_name,
-							'site'      => $site,
-							'message'   => __( 'Invalid child ID data.', 'onemedia' ),
-							'site_url'  => $site_url . $brand_site_prefix,
-							'token'     => $site_token,
-							'child_key' => Settings::get_api_key(),
-						];
-						continue;
-					}
+				// Share the attachment metadata with the brand sites.
+				// Get attachment metadata.
+				$attachment_data = wp_get_attachment_metadata( $attachment_id );
 
-					// Share the attachment metadata with the brand sites.
-					// Get attachment metadata.
-					$attachment_data = wp_get_attachment_metadata( $attachment_id );
+				$title = get_the_title( $attachment_id );
 
-					$title = get_the_title( $attachment_id );
+				// Get attachment title, alt text, caption and description.
+				$attachment_data['post_title']  = $title;
+				$attachment_data['alt_text']    = get_post_meta( $attachment_id, '_wp_attachment_image_alt', true );
+				$attachment_data['caption']     = get_post_field( 'post_excerpt', $attachment_id );
+				$attachment_data['description'] = get_post_field( 'post_content', $attachment_id );
 
-					// Get attachment title, alt text, caption and description.
-					$attachment_data['post_title']  = $title;
-					$attachment_data['alt_text']    = get_post_meta( $attachment_id, '_wp_attachment_image_alt', true );
-					$attachment_data['caption']     = get_post_field( 'post_excerpt', $attachment_id );
-					$attachment_data['description'] = get_post_field( 'post_content', $attachment_id );
+				// Add the file to convert its type from non sync to sync.
+				$media_files = [
+					[
+						'id'              => $attachment_id,
+						'url'             => wp_get_attachment_url( $attachment_id ),
+						'title'           => $title,
+						'child_id'        => $child_id,
+						'mime_type'       => $attachment_file_type,
+						'attachment_data' => $attachment_data,
+					],
+				];
 
-					// Add the file to convert its type from non sync to sync.
-					$media_files = [
-						[
-							'id'              => $attachment_id,
-							'url'             => wp_get_attachment_url( $attachment_id ),
-							'title'           => $title,
-							'child_id'        => $child_id,
-							'mime_type'       => $attachment_file_type,
-							'attachment_data' => $attachment_data,
+				// Prepare the request to the brand site.
+				$response = wp_remote_post(
+					$site_url . $brand_site_prefix,
+					[
+						'headers'   => [
+							'origin'           => get_site_url(),
+							'X-OneMedia-Token' => $site_token,
+							'Cache-Control'    => 'no-cache, no-store, must-revalidate',
 						],
+						'body'      => (
+						[
+							'media_files' => $media_files,
+							'sync_option' => $sync_option,
+						]
+						),
+						'timeout'   => self::SYNC_MEDIA_REQUEST_TIMEOUT,
+						// phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout
+						'sslverify' => false,
+					]
+				);
+
+				$response_body = wp_remote_retrieve_body( $response );
+				$response_body = json_decode( $response_body, true );
+
+				// Check the response from the brand site.
+				$response_code = wp_remote_retrieve_response_code( $response );
+
+				if ( is_wp_error( $response ) || 200 !== $response_code ) {
+					$errors             = $response_body['data']['errors'] ?? [];
+					$is_mime_type_error = $response_body['data']['is_mime_type_error'] ?? false;
+
+					$failed_sites[] = [
+						'site_name'          => $site_name,
+						'site'               => $site,
+						'message'            => $response_body['message'] ?? __( 'Failed to sync media files.', 'onemedia' ),
+						'errors'             => $errors,
+						'site_url'           => $site_url . $brand_site_prefix,
+						'token'              => $site_token,
+						'child_key'          => Settings::get_api_key(),
+						'is_mime_type_error' => $is_mime_type_error,
+					];
+				}
+
+				// If there are any successful media syncs, process them.
+				// Successful response from the brand site, the media files were synced.
+				$success_response[] = $response_body;
+
+				$media_response_list = isset( $response_body['media'] ) ? $response_body['media'] : [];
+
+				// In case of error response, media list is in data key.
+				if ( empty( $media_response_list ) && isset( $response_body['data']['media'] ) ) {
+					$media_response_list = $response_body['data']['media'];
+				}
+
+				if ( empty( $media_response_list ) ) {
+					continue;
+				}
+
+				foreach ( $media_response_list as $media ) {
+					$parent_id = $media['parent_id'];
+
+					// Create option to store siteurl, parent media id and brand site media id.
+					$brand_sites_synced_media = Settings::get_brand_sites_synced_media();
+
+					// Add brand site media id to the option.
+					$parent_sync_media_mapping = [
+						$site_url => $media['id'],
 					];
 
-					// Prepare the request to the brand site.
-					$response = wp_remote_post(
-						$site_url . $brand_site_prefix,
-						[
-							'headers'   => [
-								'origin'           => get_site_url(),
-								'X-OneMedia-Token' => $site_token,
-								'Cache-Control'    => 'no-cache, no-store, must-revalidate',
-							],
-							'body'      => (
-								[
-									'media_files' => $media_files,
-									'sync_option' => $sync_option,
-								]
-							),
-							'timeout'   => self::SYNC_MEDIA_REQUEST_TIMEOUT, // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout
-							'sslverify' => false,
-						]
+					if ( ! isset( $brand_sites_synced_media[ $parent_id ] ) ) {
+						$brand_sites_synced_media[ $parent_id ] = [];
+					}
+
+					$brand_sites_synced_media[ $parent_id ] = array_merge(
+						$brand_sites_synced_media[ $parent_id ],
+						$parent_sync_media_mapping
 					);
 
-					$response_body = wp_remote_retrieve_body( $response );
-					$response_body = json_decode( $response_body, true );
-
-					// Check the response from the brand site.
-					$response_code = wp_remote_retrieve_response_code( $response );
-
-					if ( is_wp_error( $response ) || 200 !== $response_code ) {
-						$errors             = $response_body['data']['errors'] ?? [];
-						$is_mime_type_error = $response_body['data']['is_mime_type_error'] ?? false;
-
-						$failed_sites[] = [
-							'site_name'          => $site_name,
-							'site'               => $site,
-							'message'            => $response_body['message'] ?? __( 'Failed to sync media files.', 'onemedia' ),
-							'errors'             => $errors,
-							'site_url'           => $site_url . $brand_site_prefix,
-							'token'              => $site_token,
-							'child_key'          => Settings::get_api_key(),
-							'is_mime_type_error' => $is_mime_type_error,
-						];
-					}
-
-					// If there are any successful media syncs, process them.
-					// Successful response from the brand site, the media files were synced.
-					$success_response[] = $response_body;
-
-					$media_response_list = isset( $response_body['media'] ) ? $response_body['media'] : [];
-
-					// In case of error response, media list is in data key.
-					if ( empty( $media_response_list ) && isset( $response_body['data']['media'] ) ) {
-						$media_response_list = $response_body['data']['media'];
-					}
-
-					if ( empty( $media_response_list ) ) {
+					// Update the synced media mapping option only if there is a change.
+					$saved_brand_sites_synced_media = Settings::get_brand_sites_synced_media();
+					if ( wp_json_encode( $saved_brand_sites_synced_media ) === wp_json_encode( $brand_sites_synced_media ) ) {
 						continue;
 					}
 
-					foreach ( $media_response_list as $media ) {
-						$parent_id = $media['parent_id'];
+					$success = update_option( Settings::BRAND_SITES_SYNCED_MEDIA, $brand_sites_synced_media );
 
-						// Create option to store siteurl, parent media id and brand site media id.
-						$brand_sites_synced_media = Rest_Utils::fetch_brand_sites_synced_media();
-
-						// Add brand site media id to the option.
-						$parent_sync_media_mapping = [
-							$site_url => $media['id'],
+					if ( ! $success ) {
+						$failed_sites[] = [
+							'site_name' => $site_name,
+							'site'      => $site,
+							'message'   => __( 'Failed to update synced media.', 'onemedia' ),
+							'site_url'  => $site_url . $brand_site_prefix,
+							'token'     => $site_token,
+							'child_key' => Settings::get_api_key(),
 						];
-
-						if ( ! isset( $brand_sites_synced_media[ $parent_id ] ) ) {
-							$brand_sites_synced_media[ $parent_id ] = [];
-						}
-
-						$brand_sites_synced_media[ $parent_id ] = array_merge(
-							$brand_sites_synced_media[ $parent_id ],
-							$parent_sync_media_mapping
-						);
-
-						// Update the synced media mapping option only if there is a change.
-						$saved_brand_sites_synced_media = Rest_Utils::fetch_brand_sites_synced_media();
-						if ( wp_json_encode( $saved_brand_sites_synced_media ) === wp_json_encode( $brand_sites_synced_media ) ) {
-							continue;
-						}
-
-						$success = update_option( Rest_Utils::BRAND_SITES_SYNCED_MEDIA_OPTION, $brand_sites_synced_media );
-
-						if ( ! $success ) {
-							$failed_sites[] = [
-								'site_name' => $site_name,
-								'site'      => $site,
-								'message'   => __( 'Failed to update synced media.', 'onemedia' ),
-								'site_url'  => $site_url . $brand_site_prefix,
-								'token'     => $site_token,
-								'child_key' => Settings::get_api_key(),
-							];
-							continue;
-						}
+						continue;
 					}
 				}
+			}
 
-				if ( ! empty( $failed_sites ) ) {
-					return new \WP_Error(
-						'sync_failed',
-						__( 'Failed to sync media files to some brand sites.', 'onemedia' ),
-						[
-							'attachment_id' => $attachment_id,
-							'status'        => 500,
-							'failed_sites'  => $failed_sites,
-							'success'       => false,
-						]
-					);
-				}
-
-				return rest_ensure_response(
+			if ( ! empty( $failed_sites ) ) {
+				return new \WP_Error(
+					'sync_failed',
+					__( 'Failed to sync media files to some brand sites.', 'onemedia' ),
 					[
-						'message'              => __( 'Sync media added successfully!', 'onemedia' ),
-						'status'               => 200,
-						'success_response'     => $success_response,
-						'attachment_id'        => $attachment_id,
-						'onemedia_sync_option' => Rest_Utils::fetch_brand_sites_synced_media(),
-						'success'              => true,
+						'attachment_id' => $attachment_id,
+						'status'        => 500,
+						'failed_sites'  => $failed_sites,
+						'success'       => false,
 					]
 				);
 			}
+
+			return rest_ensure_response(
+				[
+					'message'              => __( 'Sync media added successfully!', 'onemedia' ),
+					'status'               => 200,
+					'success_response'     => $success_response,
+					'attachment_id'        => $attachment_id,
+					'onemedia_sync_option' => Settings::get_brand_sites_synced_media(),
+					'success'              => true,
+				]
+			);
 		} else {
 			// If not syncing, set the sync status to false.
 			Attachment::update_is_syncing( $attachment_id, false );
@@ -1605,7 +1614,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 			);
 		}
 
-		$versions = MediaActions::get_sync_attachment_versions( $attachment_id );
+		$versions = Attachment::get_sync_attachment_versions( $attachment_id );
 
 		return rest_ensure_response(
 			[
@@ -1680,8 +1689,8 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 	/**
 	 * Fetch a remote file when direct file system access isn't available.
 	 *
-	 * @param string $url URL to fetch.
-	 * @param string $temp_file Temporary file path.
+	 * @param string $url          URL to fetch.
+	 * @param string $temp_file    Temporary file path.
 	 * @param bool   $put_contents Whether to put contents into the temp file.
 	 *
 	 * @return array|\WP_Error File details or error
@@ -1700,7 +1709,8 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 				'Host'       => $host,
 				'User-Agent' => 'Mozilla/5.0 WordPress/' . get_bloginfo( 'version' ),
 			],
-			'timeout'   => self::FETCH_MEDIA_REQUEST_TIMEOUT, // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout
+			'timeout'   => self::FETCH_MEDIA_REQUEST_TIMEOUT,
+			// phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout
 			'sslverify' => false,
 		];
 
@@ -1716,6 +1726,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 					'error' => __( 'Failed to delete temporary file.', 'onemedia' ),
 				];
 			}
+
 			return new \WP_Error(
 				'download_failed',
 				sprintf(
@@ -1808,6 +1819,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 					'error' => __( 'Failed to delete file after failed attachment insert.', 'onemedia' ),
 				];
 			}
+
 			return $attachment_id;
 		}
 
@@ -1920,6 +1932,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 		if ( ! Settings::is_consumer_site() ) {
 			return [];
 		}
+
 		return get_option( self::ATTACHMENT_KEY_MAP_OPTION, [] );
 	}
 
@@ -1940,6 +1953,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 
 		// Handle cases like 'svg+xml'.
 		$type = explode( '+', $type )[0];
+
 		return strtoupper( $type );
 	}
 

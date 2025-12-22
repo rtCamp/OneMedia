@@ -7,7 +7,7 @@
 
 namespace OneMedia\Modules\Rest;
 
-use OneMedia\Modules\Rest\Utils as Rest_Utils;
+use OneMedia\Modules\MediaSharing\Attachment;
 use OneMedia\Modules\Settings\Settings;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -357,7 +357,7 @@ class Basic_Options_Controller extends Abstract_REST_Controller {
 		}
 
 		// Check if all the sites for this attachment are connected.
-		$health_check_connected_sites = Rest_Utils::health_check_attachment_brand_sites( $attachment_id );
+		$health_check_connected_sites = Attachment::health_check_attachment_brand_sites( $attachment_id );
 
 		return rest_ensure_response( $health_check_connected_sites );
 	}

@@ -36,6 +36,9 @@ final class Settings implements Registrable {
 	public const OPTION_CONSUMER_PARENT_SITE_URL = self::SETTING_PREFIX . 'parent_site_url';
 	// Governing settings.
 	public const OPTION_GOVERNING_SHARED_SITES = self::SETTING_PREFIX . 'shared_sites';
+	// Brand sites synced media option.
+	public const BRAND_SITES_SYNCED_MEDIA = self::SETTING_PREFIX . 'brand_sites_synced_media';
+
 
 	/**
 	 * Site type keys.
@@ -428,6 +431,17 @@ final class Settings implements Registrable {
 			}
 		}
 		return '';
+	}
+
+	/**
+	 * Get brand site's synced media array.
+	 *
+	 * The structure of this array is different on governing and brand sites.
+	 *
+	 * @return array Array of brand site's synced media.
+	 */
+	public static function get_brand_sites_synced_media(): array {
+		return get_option( self::BRAND_SITES_SYNCED_MEDIA, [] );
 	}
 
 	/**
