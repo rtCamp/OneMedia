@@ -27,10 +27,12 @@ class Attachment implements Registrable {
 	 * @var string
 	 */
 	public const SYNC_VERSIONS_POSTMETA_KEY = 'onemedia_sync_versions';
+
 	/**
 	 * Meta key for sync sites.
 	 */
 	public const SYNC_SITES_POSTMETA_KEY = 'onemedia_sync_sites';
+
 	/**
 	 * Meta key for indicating if attachment is syncing.
 	 */
