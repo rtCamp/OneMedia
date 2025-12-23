@@ -76,7 +76,7 @@ class MediaActions implements Registrable {
 		}
 
 		// Don't show replace media button for non sync media.
-		$show_replace_media = self::is_sync_attachment( $post->ID );
+		$show_replace_media = Attachment::is_sync_attachment( $post->ID );
 		if ( ! $show_replace_media ) {
 			return $form_fields;
 		}
@@ -203,7 +203,7 @@ class MediaActions implements Registrable {
 		}
 
 		// Check post is_onemedia_sync is set to be true.
-		$is_onemedia_sync = self::is_sync_attachment( $post_id );
+		$is_onemedia_sync = Attachment::is_sync_attachment( $post_id );
 
 		if ( ! $is_onemedia_sync ) {
 			return;
@@ -256,7 +256,7 @@ class MediaActions implements Registrable {
 		}
 
 		// Check post is_onemedia_sync is set to be true.
-		$is_onemedia_sync = self::is_sync_attachment( $attachment_id );
+		$is_onemedia_sync = Attachment::is_sync_attachment( $attachment_id );
 
 		if ( ! $is_onemedia_sync ) {
 			return;
@@ -292,7 +292,7 @@ class MediaActions implements Registrable {
 	 */
 	public function update_sync_attachments( int $attachment_id ): void {
 		// Check post is_onemedia_sync is set to be true.
-		$is_onemedia_sync = self::is_sync_attachment( $attachment_id );
+		$is_onemedia_sync = Attachment::is_sync_attachment( $attachment_id );
 
 		if ( ! $is_onemedia_sync ) {
 			return;
@@ -874,45 +874,9 @@ class MediaActions implements Registrable {
 		}
 
 		// Add sync status to the response.
-		$response['is_sync_attachment'] = self::is_sync_attachment( $attachment->ID );
+		$response['is_sync_attachment'] = Attachment::is_sync_attachment( $attachment->ID );
 
 		return $response;
-	}
-
-	/**
-	 * Check if an attachment is a sync attachment.
-	 *
-	 * @param int $attachment_id The attachment ID.
-	 *
-	 * @return bool True if sync attachment, false otherwise.
-	 */
-	public static function is_sync_attachment( int $attachment_id ): bool {
-		// Validate input.
-		$attachment_id = absint( $attachment_id );
-		if ( ! $attachment_id ) {
-			return false;
-		}
-
-		// Check object cache first.
-		$cache_key = "onemedia_sync_status_{$attachment_id}";
-		$cached    = wp_cache_get( $cache_key, 'onemedia' );
-
-		if ( false !== $cached ) {
-			return (bool) $cached;
-		}
-
-		// Get post meta value.
-		$is_sync = false;
-		if ( Settings::is_consumer_site() ) { // totally not sure why same meta is not used on both sites & why string instead of boolean.
-			$is_sync = Attachment::SYNC_STATUS_SYNC === Attachment::get_sync_status( $attachment_id );
-		} elseif ( Settings::is_governing_site() ) {
-			$is_sync = Attachment::is_syncing( $attachment_id );
-		}
-
-		// Update cache.
-		wp_cache_set( $cache_key, $is_sync, 'onemedia', HOUR_IN_SECONDS );
-
-		return $is_sync;
 	}
 
 	/**

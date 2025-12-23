@@ -240,16 +240,27 @@ class Attachment implements Registrable {
 	}
 
 	/**
-	 * Gets whether an attachment is currently syncing.
+	 * Gets whether an attachment is currently synced or not.
 	 *
 	 * @param int $attachment_id The ID of the attachment.
+	 *
+	 * @return bool True if the attachment is a sync attachment, false otherwise.
 	 */
-	public static function is_syncing( int $attachment_id ): bool {
-		if ( Settings::is_consumer_site() || ! $attachment_id ) {
+	public static function is_sync_attachment( int $attachment_id ): bool {
+
+		$attachment_id = absint( $attachment_id );
+		if ( ! $attachment_id ) {
 			return false;
 		}
 
-		return (bool) get_post_meta( $attachment_id, self::IS_SYNC_POSTMETA_KEY, true );
+		$is_sync = false;
+		if ( Settings::is_consumer_site() ) { // totally not sure why same meta is not used on both sites & why string instead of boolean.
+			$is_sync = self::SYNC_STATUS_SYNC === self::get_sync_status( $attachment_id );
+		} elseif ( Settings::is_governing_site() ) {
+			$is_sync = (bool) get_post_meta( $attachment_id, self::IS_SYNC_POSTMETA_KEY, true );
+		}
+
+		return (bool) $is_sync;
 	}
 
 	/**

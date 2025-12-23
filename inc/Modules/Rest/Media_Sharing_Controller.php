@@ -8,7 +8,6 @@
 namespace OneMedia\Modules\Rest;
 
 use OneMedia\Modules\MediaSharing\Attachment;
-use OneMedia\Modules\MediaSharing\MediaActions;
 use OneMedia\Modules\MediaSharing\MediaReplacement;
 use OneMedia\Modules\Settings\Settings;
 use OneMedia\Modules\Taxonomies\Media;
@@ -539,8 +538,8 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 	 * @return \WP_REST_Response|\WP_Error The response containing the media files.
 	 */
 	public function get_media_files( \WP_REST_Request $request ): \WP_Error|\WP_REST_Response {
-		$page        = $request->get_param( 'page' );
-		$per_page    = $request->get_param( 'per_page' );
+		$page        = (int) $request->get_param( 'page' );
+		$per_page    = (int) $request->get_param( 'per_page' );
 		$image_type  = $request->get_param( 'image_type' );
 		$search_term = $request->get_param( 'search_term' );
 
@@ -1300,7 +1299,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 			}
 
 			// Check if the media is already marked as sync media.
-			$is_sync_media = MediaActions::is_sync_attachment( $attachment_id );
+			$is_sync_media = Attachment::is_sync_attachment( $attachment_id );
 			if ( $is_sync_media ) {
 				return rest_ensure_response(
 					[
@@ -1550,7 +1549,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 			);
 		}
 
-		$is_sync = MediaActions::is_sync_attachment( $attachment_id );
+		$is_sync = Attachment::is_sync_attachment( $attachment_id );
 
 		return rest_ensure_response(
 			[
@@ -1585,7 +1584,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 		}
 
 		// Check if attachment is not a sync attachment.
-		$is_sync = MediaActions::is_sync_attachment( $attachment_id );
+		$is_sync = Attachment::is_sync_attachment( $attachment_id );
 		if ( ! $is_sync ) {
 			return new \WP_Error(
 				'not_sync_attachment',
