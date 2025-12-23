@@ -316,31 +316,6 @@ class Attachment implements Registrable {
 	}
 
 	/**
-	 * Get OneMedia sync site URLs postmeta value.
-	 *
-	 * @param int $attachment_id The attachment ID.
-	 *
-	 * @return array The array of sync site URLs.
-	 */
-	private static function get_sync_site_urls_postmeta( int $attachment_id ): array {
-		$sites = self::get_sync_sites( $attachment_id );
-		if ( empty( $sites ) ) {
-			return [];
-		}
-
-		$site_urls = [];
-		foreach ( $sites as $site ) {
-			if ( ! isset( $site['site'] ) ) {
-				continue;
-			}
-
-			$site_urls[] = trailingslashit( esc_url_raw( $site['site'] ) );
-		}
-
-		return $site_urls;
-	}
-
-	/**
 	 * Perform health check on brand sites where a given attachment is shared.
 	 *
 	 * @param int|null $attachment_id The attachment ID.
@@ -457,5 +432,30 @@ class Attachment implements Registrable {
 			'failed_sites' => $failed_sites,
 			'message'      => __( 'All connected sites are reachable.', 'onemedia' ),
 		];
+	}
+
+	/**
+	 * Get OneMedia sync site URLs postmeta value.
+	 *
+	 * @param int $attachment_id The attachment ID.
+	 *
+	 * @return array The array of sync site URLs.
+	 */
+	private static function get_sync_site_urls_postmeta( int $attachment_id ): array {
+		$sites = self::get_sync_sites( $attachment_id );
+		if ( empty( $sites ) ) {
+			return [];
+		}
+
+		$site_urls = [];
+		foreach ( $sites as $site ) {
+			if ( ! isset( $site['site'] ) ) {
+				continue;
+			}
+
+			$site_urls[] = trailingslashit( esc_url_raw( $site['site'] ) );
+		}
+
+		return $site_urls;
 	}
 }
