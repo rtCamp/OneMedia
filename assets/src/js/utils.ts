@@ -155,7 +155,7 @@ function getFrameProperty<T = object>( propertyPath: string ): T | undefined {
 		let current: Record<string, unknown> = window as unknown as Record<string, unknown>;
 
 		for ( const key of keys ) {
-			if ( current && typeof current === 'object' && key in current ) {
+			if ( current && ( typeof current === 'object' || typeof current === 'function' ) && key in current ) {
 				current = current[ key ] as Record<string, unknown>;
 			} else {
 				return undefined;
