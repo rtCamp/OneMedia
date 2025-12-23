@@ -544,10 +544,10 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 		$search_term = $request->get_param( 'search_term' );
 
 		// Validate page param.
-		$page = isset( $page ) && is_numeric( $page ) && $page > 0 ? intval( $page ) : 1;
+		$page = $page > 0 ? $page : 1;
 
 		// Validate per page param.
-		$per_page = isset( $per_page ) && is_numeric( $per_page ) && $per_page > 0 ? intval( $per_page ) : 10;
+		$per_page = $per_page > 0 ? $per_page : 10;
 		$per_page = $per_page > 100 ? 100 : $per_page; // Limit per_page to 100 max.
 
 		// Validate search term param.
