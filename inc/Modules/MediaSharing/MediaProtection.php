@@ -8,6 +8,7 @@
 namespace OneMedia\Modules\MediaSharing;
 
 use OneMedia\Contracts\Interfaces\Registrable;
+use OneMedia\Modules\Settings\Settings;
 use OneMedia\Modules\Taxonomies\Media;
 
 /**
@@ -22,6 +23,11 @@ class MediaProtection implements Registrable {
 		add_filter( 'delete_attachment', [ $this, 'maybe_block_media_delete' ], 10, 1 );
 		add_action( 'admin_notices', [ $this, 'show_deletion_notice' ] );
 		add_action( 'add_attachment', [ $this, 'add_term_to_attachment' ] );
+
+		if ( ! Settings::is_consumer_site() ) {
+			return;
+		}
+		add_filter( 'map_meta_cap', [ $this, 'prevent_sync_media_editing' ], 10, 4 );
 	}
 
 	/**
@@ -91,5 +97,34 @@ class MediaProtection implements Registrable {
 		<?php
 		// Delete the transient so the notice only shows once.
 		delete_transient( 'onemedia_delete_notice' );
+	}
+
+	/**
+	 * Prevent editing or deleting of synced media attachments on brand sites.
+	 *
+	 * @param array  $caps Current user's capabilities.
+	 * @param string $cap Capability being checked.
+	 * @param int    $user_id User ID.
+	 * @param array  $args Arguments for the capability check.
+	 *
+	 * @return array|string[]
+	 */
+	public function prevent_sync_media_editing( array $caps, string $cap, int $user_id, array $args ): array {
+
+		if ( ! in_array( $cap, [ 'edit_post', 'delete_post' ], true ) ) {
+			return $caps;
+		}
+
+		$post_id = $args[0] ?? 0;
+
+		if ( ! $post_id || 'attachment' !== get_post_type( $post_id ) ) {
+			return $caps;
+		}
+
+		if ( Attachment::SYNC_STATUS_SYNC === get_post_meta( $post_id, Attachment::SYNC_STATUS_POSTMETA_KEY, true ) ) {
+			return [ 'do_not_allow' ];
+		}
+
+		return $caps;
 	}
 }

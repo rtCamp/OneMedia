@@ -53,7 +53,7 @@ class Admin implements Registrable {
 			array_merge(
 				Assets::get_localized_data(),
 				[
-					'isMediaPage'      => (bool) (is_admin() && $current_screen && 'upload' === $current_screen->id),
+					'isMediaPage' => (bool) ( is_admin() && 'upload' === $current_screen->id ),
 				]
 			)
 		);
