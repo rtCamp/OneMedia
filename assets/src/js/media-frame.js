@@ -16,6 +16,7 @@ import { observeElement, getFrameProperty, getNoticeClass, showSnackbarNotice } 
 import BrowserUploaderButton from '../admin/media-sharing/components/browser-uploader';
 
 const isBrandSite = window.OneMediaMediaFrame.siteType === 'brand-site';
+const isMediaPage = window.OneMediaMediaUpload?.isMediaPage;
 
 /**
  * Get sync status from attachment model/element.
@@ -86,7 +87,7 @@ function customizeSyncMediaFrame() {
 			element.classList.add( 'onemedia-synced-media' );
 
 			// Disable pointer events on sync media for brand site's upload page.
-			if ( isBrandSite ) {
+			if ( isBrandSite && isMediaPage ) {
 				element.style.pointerEvents = 'none';
 			}
 		} else {

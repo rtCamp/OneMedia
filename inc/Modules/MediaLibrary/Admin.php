@@ -49,8 +49,13 @@ class Admin implements Registrable {
 
 		wp_localize_script(
 			Assets::MEDIA_SYNC_FILTER_SCRIPT_HANDLE,
-			'oneMediaMediaUpload',
-			Assets::get_localized_data(),
+			'OneMediaMediaUpload',
+			array_merge(
+				Assets::get_localized_data(),
+				[
+					'isMediaPage'      => (bool) (is_admin() && $current_screen && 'upload' === $current_screen->id),
+				]
+			)
 		);
 
 		// Required scripts for showing sync filter in media library.
