@@ -232,6 +232,10 @@ const MediaSharingApp = ( {
 						// Fallback: add without fetch.
 						editFrame.state().get( 'selection' ).add( attachment );
 					} );
+
+				if ( editFrame.el ) {
+					editFrame.el.classList.add( 'onemedia-edit-media-frame' );
+				}
 			} );
 
 			editFrame.on( 'close', () => {

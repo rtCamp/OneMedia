@@ -80,16 +80,17 @@ const trimTitle = ( title: string, maxLength: number = 25 ): string => {
  * Debounced function that delays invoking the provided function until after
  * the specified wait time has elapsed since the last time it was invoked.
  *
- * @param {Function} func - The function to debounce.
- * @param {number}   wait - The number of milliseconds to delay.
- * @return {Function}        - The debounced function.
+ * @param { Function } func - The function to debounce.
+ * @param { number }   wait - The number of milliseconds to delay.
+ *
+ * @return {Function} A debounced version of the provided function.
  */
-const debounce = <T extends ( ...args: Array<string | number | boolean | object> ) => T>(
-	func: T,
+const debounce = <TArgs extends Array<string | number | boolean | object>>(
+	func: ( ...args: TArgs ) => void,
 	wait: number,
-): ( ( ...args: Parameters<T> ) => void ) => {
+): ( ( ...args: TArgs ) => void ) => {
 	let timeout: ReturnType<typeof setTimeout> | undefined;
-	return function executedFunction( ...args: Parameters<T> ) {
+	return function executedFunction( ...args: TArgs ) {
 		const later = () => {
 			clearTimeout( timeout );
 			func( ...args );
@@ -140,38 +141,32 @@ const observeElement = (
 /**
  * Retrieves a nested property from the window object based on a dot-separated path.
  *
- * @param {string} propertyPath - Dot-separated path to the property, e.g. 'wp.media.view.AttachmentDetails'
- * @return {*} The value of the nested property, or undefined if not found.
+ * @template T -- The expected type of the property.
+ * @param {string} propertyPath - Dot-separated path to the property, e.g. 'wp.media.view.AttachmentsBrowser'
+ * @return {T | undefined} The value of the nested property, or undefined if not found.
  */
-const getFrameProperty = ( propertyPath: string ): string | undefined => {
+function getFrameProperty<T = object>( propertyPath: string ): T | undefined {
 	if ( typeof propertyPath !== 'string' || ! propertyPath ) {
 		return undefined;
 	}
 
 	try {
-		// Split the path by dots and reduce to get the nested property.
-		return propertyPath.split( '.' ).reduce( ( obj, key ) => obj?.[ key ], window as object );
+		const keys = propertyPath.split( '.' );
+		let current: Record<string, unknown> = window as unknown as Record<string, unknown>;
+
+		for ( const key of keys ) {
+			if ( current && typeof current === 'object' && key in current ) {
+				current = current[ key ] as Record<string, unknown>;
+			} else {
+				return undefined;
+			}
+		}
+
+		return current as T;
 	} catch ( error ) {
 		return undefined;
 	}
-};
-
-/**
- * Retrieves the title of the current wp.media frame.
- *
- * @return {string} The title of the media frame, or an empty string if not found.
- */
-const getFrameTitle = (): string => {
-	const frameTitleProperty = getFrameProperty( 'wp.media.frame' );
-
-	if ( ! frameTitleProperty || typeof frameTitleProperty?.state !== 'function' ) {
-		return '';
-	}
-
-	const frameTitle = frameTitleProperty?.state()?.get( 'title' );
-
-	return typeof frameTitle === 'string' ? frameTitle : '';
-};
+}
 
 /**
  * Show a snackbar notice with the specified type and message.
@@ -207,7 +202,6 @@ export {
 	trimTitle,
 	debounce,
 	observeElement,
-	getFrameTitle,
 	getFrameProperty,
 	showSnackbarNotice,
 };

@@ -195,6 +195,13 @@ const BrowserUploaderButton = ( {
 			},
 		} );
 
+		frame.on( 'open', () => {
+			const frameEl = frame.el;
+			if ( frameEl ) {
+				frameEl.classList.add( 'onemedia-select-non-sync-media-frame' );
+			}
+		} );
+
 		frame.on( 'select', async () => {
 			const selection = frame.state().get( 'selection' );
 			const attachment = selection.first().toJSON();
