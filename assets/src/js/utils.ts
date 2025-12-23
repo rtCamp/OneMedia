@@ -84,7 +84,7 @@ const trimTitle = ( title: string, maxLength: number = 25 ): string => {
  * @param {number}   wait - The number of milliseconds to delay.
  * @return {Function}        - The debounced function.
  */
-const debounce = <T extends ( ...args: any[] ) => any>(
+const debounce = <T extends ( ...args: Array<string | number | boolean | object> ) => T>(
 	func: T,
 	wait: number,
 ): ( ( ...args: Parameters<T> ) => void ) => {
@@ -143,14 +143,14 @@ const observeElement = (
  * @param {string} propertyPath - Dot-separated path to the property, e.g. 'wp.media.view.AttachmentDetails'
  * @return {*} The value of the nested property, or undefined if not found.
  */
-const getFrameProperty = ( propertyPath: string ): any => {
+const getFrameProperty = ( propertyPath: string ): string | undefined => {
 	if ( typeof propertyPath !== 'string' || ! propertyPath ) {
 		return undefined;
 	}
 
 	try {
 		// Split the path by dots and reduce to get the nested property.
-		return propertyPath.split( '.' ).reduce( ( obj, key ) => obj?.[ key ], window as any );
+		return propertyPath.split( '.' ).reduce( ( obj, key ) => obj?.[ key ], window as object );
 	} catch ( error ) {
 		return undefined;
 	}
