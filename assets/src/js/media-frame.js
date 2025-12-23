@@ -7,14 +7,16 @@
  */
 import { createRoot, createElement, useState, useEffect } from '@wordpress/element';
 import { Snackbar } from '@wordpress/components';
-import { __ } from '@wordpress/i18n';
 import domReady from '@wordpress/dom-ready';
 
 /**
  * Internal dependencies
  */
-import { observeElement, getFrameTitle, getFrameProperty, isBrandSite, getNoticeClass, showSnackbarNotice } from './utils';
-import BrowserUploaderButton from '../admin/media-sharing/browser-uploader';
+import { observeElement, getFrameProperty, getNoticeClass, showSnackbarNotice } from './utils';
+import BrowserUploaderButton from '../admin/media-sharing/components/browser-uploader';
+
+const isBrandSite = window.OneMediaMediaFrame.siteType === 'brand-site';
+const isMediaPage = window.OneMediaMediaUpload?.isMediaPage;
 
 /**
  * Get sync status from attachment model/element.
@@ -62,30 +64,48 @@ function isSyncAttachment( attachmentOrElement ) {
 }
 
 /**
+ * Extend Backbone media view to add custom class for synced attachments.
+ * This should only be called once during initialization.
+ */
+function customizeSyncMediaFrame() {
+	// Check if wp.media is available
+	if ( ! window.wp || ! window.wp.media ) {
+		return;
+	}
+
+	const originalAttachmentRender = window.wp.media.view.Attachment.prototype.render;
+
+	window.wp.media.view.Attachment.prototype.render = function() {
+		// Call original render.
+		originalAttachmentRender.apply( this, arguments );
+
+		// Add custom class if synced.
+		if ( this.model.get( 'is_sync_attachment' ) === true ) {
+			// this.el is the native DOM element
+			const element = this.el;
+
+			element.classList.add( 'onemedia-synced-media' );
+
+			// Disable pointer events on sync media for brand site's upload page.
+			if ( isBrandSite && isMediaPage ) {
+				element.style.pointerEvents = 'none';
+			}
+		} else {
+			// Ensure class is removed for non-sync media.
+			const element = this.el;
+			element.classList.add( 'onemedia-non-synced-media' );
+		}
+
+		return this;
+	};
+}
+
+/**
  * Customize the media frame.
  */
 async function customizeMediaFrame() {
 	// Add replace media button and remove 'delete permanently' link in attachment details.
 	customizeMediaDetails();
-
-	// Customize media items display.
-	// Get all attachments.
-	const attachmentElements = document.querySelectorAll(
-		'.attachments-wrapper ul li.attachment',
-	);
-
-	if ( ! attachmentElements || 0 === attachmentElements.length ) {
-		return;
-	}
-
-	// For 'Upload Non-Sync Media' frame hide sync media items.
-	hideMediaItems( true, __( 'Upload Non-Sync Media', 'onemedia' ), attachmentElements );
-
-	// For 'Edit Media' frame hide non-sync media items.
-	hideMediaItems( false, __( 'Edit Media', 'onemedia' ), attachmentElements );
-
-	// For all the media items in the wp media modal, add sync badge if it's a sync media.
-	showSyncBadge( attachmentElements );
 }
 
 /**
@@ -135,10 +155,8 @@ async function customizeMediaDetails() {
 		},
 	);
 
-	const isBrand = await isBrandSite();
-
 	// Process attachments on brand site.
-	if ( isBrand ) {
+	if ( isBrandSite ) {
 		// Get attachment id from URL parameter if available.
 		const urlParams = new URLSearchParams( window?.location?.search );
 		const attachmentId = urlParams?.get( 'item' );
@@ -157,56 +175,6 @@ async function customizeMediaDetails() {
 			}
 		}
 	}
-}
-
-/**
- * Show 'SYNCED' badge on sync media items.
- *
- * @param {NodeList} attachmentElements - The media attachment elements.
- */
-async function showSyncBadge( attachmentElements ) {
-	const isBrand = await isBrandSite();
-
-	processAttachments(
-		attachmentElements,
-		'data-sync-badge-processed',
-		true,
-		false,
-		( element ) => {
-			// Add 'SYNCED' badge.
-			element.classList.add( 'onemedia-synced-media' );
-
-			// Disable pointer events on sync media for brand site's upload page.
-			if ( isBrand && ! getFrameTitle() ) {
-				element.style.pointerEvents = 'none';
-			}
-		},
-	);
-}
-
-/**
- * Hide sync media items in specific frames.
- *
- * @param {boolean}  hideSync           - Whether to hide sync media items or non-sync.
- * @param {string}   frameTitle         - The title of the media frame to match.
- * @param {NodeList} attachmentElements - The media attachment elements.
- */
-function hideMediaItems( hideSync, frameTitle, attachmentElements ) {
-	const currentFrameTitle = getFrameTitle();
-	if ( ! currentFrameTitle || ! frameTitle || currentFrameTitle.toLocaleLowerCase() !== frameTitle.toLocaleLowerCase() ) {
-		return;
-	}
-
-	processAttachments(
-		attachmentElements,
-		'data-hide-sync-media-processed',
-		hideSync,
-		! hideSync,
-		( element ) => {
-			// Hide media item.
-			element.style.display = 'none';
-		},
-	);
 }
 
 /**
@@ -263,6 +231,9 @@ function processAttachments( attachmentElements, processedAttr, processedSync, p
  * Initialize customization of the media frame.
  */
 function initCustomizeMediaFrame() {
+	// Extend Backbone prototype once on initialization
+	customizeSyncMediaFrame();
+
 	// For media library page and media modal.
 	observeElement( '.attachments-wrapper ul li.attachment', () => {
 		customizeMediaFrame();

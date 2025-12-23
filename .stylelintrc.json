@@ -1,9 +1,12 @@
 {
 	"extends": "@wordpress/stylelint-config/scss",
-	"ignoreFiles": ["**/*.js", "**/*.json"],
+	"ignoreFiles": [
+		"**/*.js",
+		"**/*.json",
+		"**/*.php",
+		"**/*.svg"
+	],
 	"rules": {
-		"selector-class-pattern": null,
-		"declaration-property-unit-allowed-list": null,
-		"function-url-quotes": null
+		"selector-class-pattern": null
 	}
 }

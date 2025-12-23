@@ -1,0 +1,157 @@
+<?php
+/**
+ * Admin class to handle all the admin functionalities related to Media Sharing.
+ *
+ * @package OneMedia\Modules\Post_Types;
+ */
+
+namespace OneMedia\Modules\MediaSharing;
+
+use OneMedia\Contracts\Interfaces\Registrable;
+use OneMedia\Modules\Core\Assets;
+use OneMedia\Modules\Settings\Admin as Settings_Admin;
+use OneMedia\Modules\Settings\Settings;
+use OneMedia\Utils;
+
+/**
+ * Class Admin
+ */
+class Admin implements Registrable {
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function register_hooks(): void {
+		// 20 priority to make sure settings page respect its position.
+		add_action( 'admin_menu', [ $this, 'add_submenu' ], 20 );
+		// Run after Core/Admin hooks so screen context and dependencies are fully available.
+		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_scripts' ], 20, 1 );
+		add_action( 'current_screen', [ $this, 'add_help_tabs' ] );
+	}
+
+	/**
+	 * Register submenu pages.
+	 */
+	public function add_submenu(): void {
+		// Only add plugin-specific submenu pages if sites have been connecting.
+		if ( ! Settings::is_governing_site() ) {
+			return;
+		}
+
+		add_submenu_page(
+			Settings_Admin::MENU_SLUG,
+			__( 'Media Sharing', 'onemedia' ),
+			__( 'Media Sharing', 'onemedia' ),
+			'manage_options',
+			Settings_Admin::MENU_SLUG,
+			[ $this, 'screen_callback' ],
+			1
+		);
+	}
+
+	/**
+	 * Enqueue admin scripts.
+	 *
+	 * @param string $hook Current admin page hook.
+	 */
+	public function enqueue_scripts( string $hook ): void {
+		if ( str_contains( $hook, 'onemedia' ) === false ) {
+			return;
+		}
+
+		$current_screen = get_current_screen();
+
+		if ( ! $current_screen instanceof \WP_Screen || str_contains( $current_screen->id, Settings_Admin::MENU_SLUG ) === false ) {
+			return;
+		}
+
+		wp_enqueue_media();
+
+		wp_localize_script(
+			Assets::MEDIA_SHARING_SCRIPT_HANDLE,
+			'OneMediaMediaSharing',
+			Assets::get_localized_data(),
+		);
+
+		wp_localize_script(
+			Assets::MEDIA_FRAME_SCRIPT_HANDLE,
+			'OneMediaMediaFrame',
+			Assets::get_localized_data(),
+		);
+
+		// Required for showing replace media button and other media frame functionalities.
+		wp_enqueue_script( Assets::MEDIA_FRAME_SCRIPT_HANDLE );
+
+		// Required for main media sharing.
+		wp_enqueue_script( Assets::MEDIA_SHARING_SCRIPT_HANDLE );
+
+		// Media sharing styles. // @todo Rename this to media sharing styles, if not used elsewhere.
+		wp_enqueue_style( Assets::MAIN_STYLE_HANDLE );
+	}
+
+	/**
+	 * Callback for the screen content.
+	 */
+	public function screen_callback(): void {
+		?>
+		<div class="wrap">
+			<h1><?php esc_html_e( 'Media Sharing', 'onemedia' ); ?></h1>
+			<div id="onemedia-media-sharing"></div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Add help tabs to the media sharing page.
+	 *
+	 * @return void
+	 */
+	public function add_help_tabs(): void {
+		$screen = get_current_screen();
+
+		if ( ! $screen || false === strpos( $screen->id, 'toplevel_page_onemedia' ) ) {
+			return;
+		}
+
+		$help_overview_content       = Utils::get_template_content( 'help/overview' );
+		$help_how_to_share_content   = Utils::get_template_content( 'help/how-to-share' );
+		$help_sharing_modes_content  = Utils::get_template_content( 'help/sharing-modes' );
+		$help_best_practices_content = Utils::get_template_content( 'help/best-practices' );
+
+		// Overview tab.
+		$screen->add_help_tab(
+			[
+				'id'      => 'onemedia-overview',
+				'title'   => __( 'Overview', 'onemedia' ),
+				'content' => $help_overview_content,
+			]
+		);
+
+		// How to Share tab.
+		$screen->add_help_tab(
+			[
+				'id'      => 'onemedia-how-to-share',
+				'title'   => __( 'How to Share', 'onemedia' ),
+				'content' => $help_how_to_share_content,
+			]
+		);
+
+		// Sharing Modes tab.
+		$screen->add_help_tab(
+			[
+				'id'      => 'onemedia-sharing-modes',
+				'title'   => __( 'Sharing Modes', 'onemedia' ),
+				'content' => $help_sharing_modes_content,
+			]
+		);
+
+		// Best Practices tab.
+		$screen->add_help_tab(
+			[
+				'id'      => 'onemedia-best-practices',
+				'title'   => __( 'Tips & Best Practices', 'onemedia' ),
+				'content' => $help_best_practices_content,
+			]
+		);
+	}
+}

@@ -1,0 +1,97 @@
+<?php
+/**
+ * Term protection and restriction.
+ *
+ * @package OneMedia
+ */
+
+namespace OneMedia\Modules\MediaSharing;
+
+use OneMedia\Contracts\Interfaces\Registrable;
+use OneMedia\Modules\Taxonomies\Media;
+
+/**
+ * Class CPT_Restriction
+ */
+class UserInterface implements Registrable {
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function register_hooks(): void {
+		add_filter( 'manage_media_columns', [ $this, 'add_media_column' ] );
+		add_action( 'manage_media_custom_column', [ $this, 'display_media_column_content' ], 10, 2 );
+		add_filter( 'media_row_actions', [ $this, 'filter_media_row_actions' ], 10, 2 );
+	}
+
+	/**
+	 * Add a custom column to the media library for displaying image types.
+	 *
+	 * @param array $columns Existing columns.
+	 *
+	 * @return array Modified columns.
+	 */
+	public function add_media_column( array $columns ): array {
+		$columns['image_type'] = __( 'Image Type', 'onemedia' );
+		return $columns;
+	}
+
+	/**
+	 * Display content for the custom media column.
+	 *
+	 * @param string $column_name   The name of the column.
+	 * @param int    $attachment_id The ID of the attachment.
+	 *
+	 * @return void
+	 */
+	public function display_media_column_content( string $column_name, int $attachment_id ): void {
+		if ( 'image_type' !== $column_name ) {
+			return;
+		}
+
+		$terms   = Attachment::get_post_terms( $attachment_id, [ 'fields' => 'names' ] );
+		$classes = 'onemedia-media-term-label';
+
+		// Build the labels and css classes.
+		if ( empty( $terms ) ) {
+			$label    = __( 'Not assigned', 'onemedia' );
+			$classes .= ' empty';
+		} else {
+			$labels = [];
+			foreach ( $terms as $term ) {
+				$labels[] = Media::TAXONOMY_TERM === $term ? Media::TERM_NAME : esc_html( $term );
+			}
+			$label = implode( ', ', $labels );
+		}
+
+		printf(
+		/* translators: %1$s is the class attribute, %2$s is the label text. */
+			'<span class="%1$s">%2$s</span>',
+			esc_attr( $classes ),
+			esc_html( $label )
+		);
+	}
+
+	/**
+	 * Filter media row actions to remove the delete action for attachments with the 'onemedia' term.
+	 *
+	 * @param array    $actions Array of action links.
+	 * @param \WP_Post $post    The post object.
+	 *
+	 * @return array Modified actions.
+	 */
+	public function filter_media_row_actions( array $actions, \WP_Post $post ): array {
+		if ( 'attachment' !== $post->post_type ) {
+			return $actions;
+		}
+
+		$terms = Attachment::get_post_terms( $post->ID, [ 'fields' => 'slugs' ] );
+		if ( ! empty( $terms ) && isset( array_flip( $terms )[ Media::TAXONOMY_TERM ] ) ) {
+			if ( isset( $actions['delete'] ) ) {
+				unset( $actions['delete'] );
+			}
+		}
+
+		return $actions;
+	}
+}

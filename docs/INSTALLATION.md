@@ -4,12 +4,12 @@ This guide provides detailed instructions for installing and configuring OneMedi
 
 ## System Requirements
 
-| Requirement  | Version   |
-|:-------------|:----------|
-| WordPress    | \>= 6.5   |
-| PHP          | \>= 7.4   |
-| Tested Up to | \>= 6.8.2 |
-| Stable Tag   | 1.0       |
+| Requirement  | Version |
+|:-------------|:--------|
+| WordPress    | \>= 6.5 |
+| PHP          | \>= 7.4 |
+| Tested Up to | \>= 6.9 |
+| Stable Tag   | 1.0     |
 
 ## Installation Overview
 
