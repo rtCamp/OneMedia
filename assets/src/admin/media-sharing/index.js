@@ -199,7 +199,7 @@ const MediaSharingApp = ( {
 		}
 	};
 
-	const handleEditMedia = ( mediaId, currentImageType ) => {
+	const handleEditMedia = ( mediaId ) => {
 		if ( getFrameProperty( 'wp.media' ) ) {
 			// Create edit media frame.
 			const editFrame = window.wp.media( {
@@ -210,8 +210,7 @@ const MediaSharingApp = ( {
 				multiple: false,
 				library: {
 					type: 'image',
-					onemedia_sync_media_filter:
-						ONEMEDIA_PLUGIN_TAXONOMY_TERM === currentImageType ? true : false,
+					is_onemedia_sync: true,
 				},
 			} );
 
@@ -516,7 +515,6 @@ const MediaSharingApp = ( {
 													e.stopPropagation();
 													handleEditMedia(
 														media.id,
-														imageType,
 													);
 												} }
 												title={ __( 'Edit Media', 'onemedia' ) }

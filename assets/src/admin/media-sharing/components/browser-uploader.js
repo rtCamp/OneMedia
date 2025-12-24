@@ -109,6 +109,7 @@ const BrowserUploaderButton = ( {
 			multiple: false,
 			library: {
 				type: ALLOWED_MIME_TYPES,
+				is_onemedia_sync: false,
 			},
 		} );
 
@@ -192,6 +193,7 @@ const BrowserUploaderButton = ( {
 			multiple: false,
 			library: {
 				type: ALLOWED_MIME_TYPES,
+				is_onemedia_sync: false,
 			},
 		} );
 
