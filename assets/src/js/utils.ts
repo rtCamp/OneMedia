@@ -274,7 +274,11 @@ const restrictMediaFrameUploadTypes = ( frame : WPMediaFrame, allowedTypes: stri
 		} );
 	} );
 
-	// Observe the library to link with uploader queue.
+	/**
+	 * Observe the library to link with uploader queue.
+	 *
+	 * @see https://core.trac.wordpress.org/ticket/34465
+	 */
 	frame.on( 'ready', function() {
 		const library = frame.state().get( 'library' );
 		if ( library && window.wp.Uploader && window.wp.Uploader.queue ) {
