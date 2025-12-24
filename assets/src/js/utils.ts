@@ -4,6 +4,21 @@
 
 import type { NoticeType } from '../admin/settings/page';
 
+declare global {
+	interface Window {
+		wp: {
+			Uploader: {
+				queue: unknown;
+			};
+			media: {
+				attachment( id: number ): {
+					get( key: string ): unknown;
+				} | undefined;
+			};
+		};
+	}
+}
+
 type WPMediaUploader = {
 	settings: {
 		multipart_params: Record<string, unknown>;
@@ -28,21 +43,6 @@ type WPMediaFrame = {
 		} | undefined;
 	};
 };
-
-declare global {
-	interface Window {
-		wp: {
-			Uploader: {
-				queue: unknown;
-			};
-			media: {
-				attachment( id: number ): {
-					get( key: string ): unknown;
-				} | undefined;
-			};
-		};
-	}
-}
 
 /**
  * Helper function to validate if a string is a well-formed URL.

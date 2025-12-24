@@ -121,7 +121,7 @@ class Admin implements Registrable {
 		}
 
 		// check for is_onemedia_sync meta filter.
-		if ( isset( $request_query['is_onemedia_sync'] ) ) {
+		if ( ! empty( $request_query['is_onemedia_sync'] ) ) {
 			$is_onemedia_sync = filter_var( $request_query['is_onemedia_sync'], FILTER_VALIDATE_BOOLEAN );
 
 			if ( true === $is_onemedia_sync ) {

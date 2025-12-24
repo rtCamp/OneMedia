@@ -41,25 +41,16 @@ class MediaProtection implements Registrable {
 		if ( ! wp_doing_ajax() ) {
 			return;
 		}
-		$action = isset( $_REQUEST['action'] ) ? sanitize_text_field( $_REQUEST['action'] ) : '';
-		if ( 'upload-attachment' !== $action ) {
+		if ( ! isset( $_POST['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( $_POST['_wpnonce'] ), 'media-form' ) ) {
 			return;
 		}
-		// check if is_onemedia_sync is set and true.
-		$is_onemedia_sync = isset( $_POST['is_onemedia_sync'] ) &&
-						filter_var( $_POST['is_onemedia_sync'], FILTER_VALIDATE_BOOLEAN );
-
-		// Verify nonce for security.
-		if ( ! isset( $_POST['_wpnonce'] ) ) {
+		if ( ! isset( $_REQUEST['action'] ) || 'upload-attachment' !== sanitize_text_field( $_REQUEST['action'] ) ) {
 			return;
 		}
 
-		if ( isset( $_POST['_wpnonce'] ) ) {
-			$nonce = sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) );
-			if ( ! wp_verify_nonce( $nonce, 'media-form' ) ) {
-				return;
-			}
-		}
+		// Check if is_onemedia_sync is set and true.
+		$is_onemedia_sync = ! empty( $_POST['is_onemedia_sync'] );
+
 		update_post_meta( $attachment_id, Attachment::IS_SYNC_POSTMETA_KEY, $is_onemedia_sync );
 
 		if ( true !== $is_onemedia_sync ) {
@@ -89,6 +80,7 @@ class MediaProtection implements Registrable {
 			wp_safe_redirect( $redirect_url );
 			exit;
 		}
+
 		return $attachment_id;
 	}
 
@@ -118,10 +110,10 @@ class MediaProtection implements Registrable {
 	/**
 	 * Prevent editing or deleting of synced media attachments on brand sites.
 	 *
-	 * @param array  $caps Current user's capabilities.
-	 * @param string $cap Capability being checked.
+	 * @param array  $caps    Current user's capabilities.
+	 * @param string $cap     Capability being checked.
 	 * @param int    $user_id User ID.
-	 * @param array  $args Arguments for the capability check.
+	 * @param array  $args    Arguments for the capability check.
 	 *
 	 * @return array|string[]
 	 */
