@@ -68,21 +68,21 @@ final class Assets implements Registrable {
 	public static function get_localized_data(): array {
 		if ( empty( self::$localized_data ) ) {
 			self::$localized_data = [
-				'restUrl'          => esc_url( home_url( '/wp-json' ) ),
-				'restNonce'        => wp_create_nonce( 'wp_rest' ),
-				'apiKey'           => Settings::get_api_key(),
-				'settingsLink'     => esc_url( admin_url( 'admin.php?page=onemedia-settings' ) ),
-				'siteType'         => Settings::get_site_type(),
-				'siteName'         => get_bloginfo( 'name' ),
-				'ajaxUrl'          => admin_url( 'admin-ajax.php' ),
-				'uploadNonce'      => wp_create_nonce( 'onemedia_upload_media' ),
-				'allowedMimeTypes' => Utils::get_supported_mime_types(),
-				'mediaSyncNonce'   => wp_create_nonce( 'onemedia_check_sync_status' ),
-				'allLabel'         => __( 'All media', 'onemedia' ),
-				'syncLabel'        => __( 'Synced', 'onemedia' ),
-				'notSyncLabel'     => __( 'Not Synced', 'onemedia' ),
-				'filterLabel'      => __( 'Sync Status', 'onemedia' ),
-				'syncStatus'       => Attachment::SYNC_STATUS_POSTMETA_KEY,
+				'restUrl'             => esc_url( home_url( '/wp-json' ) ),
+				'restNonce'           => wp_create_nonce( 'wp_rest' ),
+				'apiKey'              => Settings::get_api_key(),
+				'settingsLink'        => esc_url( admin_url( 'admin.php?page=onemedia-settings' ) ),
+				'siteType'            => Settings::get_site_type(),
+				'siteName'            => get_bloginfo( 'name' ),
+				'ajaxUrl'             => admin_url( 'admin-ajax.php' ),
+				'uploadNonce'         => wp_create_nonce( 'onemedia_upload_media' ),
+				'allowedMimeTypesMap' => Utils::get_supported_mime_types(),
+				'mediaSyncNonce'      => wp_create_nonce( 'onemedia_check_sync_status' ),
+				'allLabel'            => __( 'All media', 'onemedia' ),
+				'syncLabel'           => __( 'Synced', 'onemedia' ),
+				'notSyncLabel'        => __( 'Not Synced', 'onemedia' ),
+				'filterLabel'         => __( 'Sync Status', 'onemedia' ),
+				'syncStatus'          => Attachment::SYNC_STATUS_POSTMETA_KEY,
 			];
 		}
 

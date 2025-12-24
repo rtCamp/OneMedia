@@ -53,16 +53,18 @@ final class Utils {
 	 * @return array Array of supported mime types by the server.
 	 */
 	public static function get_supported_mime_types(): array {
-		$allowed_types = self::ALLOWED_MIME_TYPES;
+		$allowed_mimes = array_flip( self::ALLOWED_MIME_TYPES );
+		$wp_mimes      = get_allowed_mime_types();
 
-		// Remove any types that are not supported by the server.
-		$supported_types = array_values( get_allowed_mime_types() );
-		$allowed_types   = array_intersect( $allowed_types, $supported_types );
-
-		// WP uses jpeg for all jpeg types, so we need to add jpg and jpe as well explicitly.
-		$allowed_types = array_merge( $allowed_types, [ 'image/jpg', 'image/jpe' ] );
-
-		return $allowed_types;
+		/**
+		 * Filter WordPress mime list by allowed mime values.
+		 */
+		return array_filter(
+			$wp_mimes,
+			static function ( string $mime ) use ( $allowed_mimes ): bool {
+				return isset( $allowed_mimes[ $mime ] );
+			}
+		);
 	}
 
 	/**

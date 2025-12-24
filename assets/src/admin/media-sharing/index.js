@@ -32,15 +32,15 @@ import BrowserUploaderButton from './components/browser-uploader';
 import ShareMediaModal from './components/ShareMediaModal';
 import VersionModal from './components/VersionModal';
 import { fetchSyncedSites as fetchSyncedSitesApi, fetchMediaItems as fetchMediaItemsApi, fetchBrandSites as fetchBrandSitesApi, shareMedia as shareMediaApi, uploadMedia } from '../../components/api';
-import { getNoticeClass, trimTitle, debounce, getFrameProperty, restrictMediaFrameUploadTypes } from '../../js/utils';
+import { getNoticeClass, trimTitle, debounce, getFrameProperty, restrictMediaFrameUploadTypes, getExtensions } from '../../js/utils';
 import fallbackImage from '../../images/fallback-image.svg';
 
 const MEDIA_PER_PAGE = 12;
 const ONEMEDIA_PLUGIN_TAXONOMY_TERM = 'onemedia';
 const UPLOAD_NONCE = window.OneMediaMediaSharing?.uploadNonce || '';
 const ONEMEDIA_MEDIA_SHARING = window.OneMediaMediaSharing || {};
-const ALLOWED_MIME_TYPES = typeof window.OneMediaMediaFrame?.allowedMimeTypes !== 'undefined'
-	? Object.values( window.OneMediaMediaFrame?.allowedMimeTypes )
+const ALLOWED_MIME_TYPES_MAP = typeof window.OneMediaMediaFrame?.allowedMimeTypesMap !== 'undefined'
+	? window.OneMediaMediaFrame?.allowedMimeTypesMap
 	: [];
 
 const MediaSharingApp = ( {
@@ -217,7 +217,7 @@ const MediaSharingApp = ( {
 				},
 			} );
 
-			restrictMediaFrameUploadTypes( editFrame, ALLOWED_MIME_TYPES.join( ',' ).replaceAll( 'image/', '' ).replaceAll( '+xml', '' ), true );
+			restrictMediaFrameUploadTypes( editFrame, getExtensions( ALLOWED_MIME_TYPES_MAP ).join( ',' ), true );
 
 			editFrame.on( 'open', function() {
 				// Reset the selection state.

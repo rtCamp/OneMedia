@@ -287,6 +287,23 @@ const restrictMediaFrameUploadTypes = ( frame : WPMediaFrame, allowedTypes: stri
 	} );
 };
 
+/**
+ * Get MIME types from a MIME map.
+ * @param {Object} mimeMap
+ */
+function getMimeTypes( mimeMap : Object ) : string[] {
+	return [ ...new Set( Object.values( mimeMap ) ) ];
+}
+
+/**
+ * Get extensions from a MIME map.
+ * @param {Object} mimeMap
+ */
+function getExtensions( mimeMap : Object ) : string[] {
+	return Object.keys( mimeMap )
+		.flatMap( ( key ) => key.split( '|' ) );
+}
+
 export {
 	isURL,
 	isValidUrl,
@@ -298,4 +315,6 @@ export {
 	getFrameProperty,
 	showSnackbarNotice,
 	restrictMediaFrameUploadTypes,
+	getMimeTypes,
+	getExtensions,
 };
