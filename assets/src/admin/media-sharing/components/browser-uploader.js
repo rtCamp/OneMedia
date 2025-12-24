@@ -9,7 +9,7 @@ import { useState, useRef } from '@wordpress/element';
  * Internal dependencies
  */
 import { uploadMedia, updateExistingAttachment, checkIfAllSitesConnected, isSyncAttachment as isSyncAttachmentApi } from '../../../components/api';
-import { getFrameProperty, showSnackbarNotice } from '../../../js/utils';
+import { getFrameProperty, restrictMediaFrameUploadTypes, showSnackbarNotice } from '../../../js/utils';
 
 //
 const UPLOAD_NONCE = window.OneMediaMediaFrame?.uploadNonce || '';
@@ -113,25 +113,7 @@ const BrowserUploaderButton = ( {
 			},
 		} );
 
-		/**
-		 * Using mine_type will restrict the upload types in media modal,
-		 * Which we don't want as we only need to restrict for OneMedia uploader frame.
-		 *
-		 * @see https://wordpress.stackexchange.com/questions/343320/restrict-file-types-in-the-uploader-of-a-wp-media-frame
-		 */
-		frame.once( 'uploader:ready', () => {
-			const uploader = frame.uploader.uploader.uploader;
-			uploader.setOption( 'filters',
-				{
-					mime_types: [
-						{ extensions: ALLOWED_MIME_TYPES.join( ',' ).replaceAll( 'image/', '' ) },
-					],
-				},
-			);
-
-			// Trick to re-init field
-			uploader.setOption( 'multi_selection', false );
-		} );
+		restrictMediaFrameUploadTypes( frame, ALLOWED_MIME_TYPES.join( ',' ).replaceAll( 'image/', '' ).replaceAll( '+xml', '' ) );
 
 		frame.on( 'open', () => {
 			const frameEl = frame.el;
@@ -217,25 +199,7 @@ const BrowserUploaderButton = ( {
 			},
 		} );
 
-		/**
-		 * Using mine_type will restrict the upload types in media modal,
-		 * Which we don't want as we only need to restrict for OneMedia uploader frame.
-		 *
-		 * @see https://wordpress.stackexchange.com/questions/343320/restrict-file-types-in-the-uploader-of-a-wp-media-frame
-		 */
-		frame.once( 'uploader:ready', () => {
-			const uploader = frame.uploader.uploader.uploader;
-			uploader.setOption( 'filters',
-				{
-					mime_types: [
-						{ extensions: ALLOWED_MIME_TYPES.join( ',' ).replaceAll( 'image/', '' ) },
-					],
-				},
-			);
-
-			// Trick to re-init field
-			uploader.setOption( 'multi_selection', false );
-		} );
+		restrictMediaFrameUploadTypes( frame, ALLOWED_MIME_TYPES.join( ',' ).replaceAll( 'image/', '' ).replaceAll( '+xml', '' ) );
 
 		frame.on( 'open', () => {
 			const frameEl = frame.el;

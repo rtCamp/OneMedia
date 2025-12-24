@@ -32,7 +32,7 @@ import BrowserUploaderButton from './components/browser-uploader';
 import ShareMediaModal from './components/ShareMediaModal';
 import VersionModal from './components/VersionModal';
 import { fetchSyncedSites as fetchSyncedSitesApi, fetchMediaItems as fetchMediaItemsApi, fetchBrandSites as fetchBrandSitesApi, shareMedia as shareMediaApi, uploadMedia } from '../../components/api';
-import { getNoticeClass, trimTitle, debounce, getFrameProperty } from '../../js/utils';
+import { getNoticeClass, trimTitle, debounce, getFrameProperty, restrictMediaFrameUploadTypes } from '../../js/utils';
 import fallbackImage from '../../images/fallback-image.svg';
 
 const MEDIA_PER_PAGE = 12;
@@ -217,25 +217,7 @@ const MediaSharingApp = ( {
 				},
 			} );
 
-			/**
-			 * Using mine_type will restrict the upload types in media modal,
-			 * Which we don't want as we only need to restrict for OneMedia uploader frame.
-			 *
-			 * @see https://wordpress.stackexchange.com/questions/343320/restrict-file-types-in-the-uploader-of-a-wp-media-frame
-			 */
-			editFrame.once( 'uploader:ready', () => {
-				const uploader = editFrame.uploader.uploader.uploader;
-				uploader.setOption( 'filters',
-					{
-						mime_types: [
-							{ extensions: ALLOWED_MIME_TYPES.join( ',' ).replaceAll( 'image/', '' ) },
-						],
-					},
-				);
-
-				// Trick to re-init field
-				uploader.setOption( 'multi_selection', false );
-			} );
+			restrictMediaFrameUploadTypes( editFrame, ALLOWED_MIME_TYPES.join( ',' ).replaceAll( 'image/', '' ).replaceAll( '+xml', '' ) );
 
 			editFrame.on( 'open', function() {
 				// Reset the selection state.

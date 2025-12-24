@@ -4,6 +4,22 @@
 
 import type { NoticeType } from '../admin/settings/page';
 
+type WPMediaUploader = {
+	setOption(
+		key: 'filters' | 'multi_selection' | string,
+		value: string | object | boolean,
+	): void;
+};
+
+type WPMediaFrame = {
+	once( event: 'uploader:ready' | string, cb: () => void ): void;
+	uploader: {
+		uploader: {
+			uploader: WPMediaUploader;
+		};
+	};
+};
+
 /**
  * Helper function to validate if a string is a well-formed URL.
  *
@@ -194,6 +210,28 @@ const showSnackbarNotice = ( detail: NoticeType ): void => {
 	document.dispatchEvent( event );
 };
 
+const restrictMediaFrameUploadTypes = ( frame : WPMediaFrame, allowedTypes: string ) => {
+	/**
+	 * Using mime_type will restrict the upload types in media modal,
+	 * Which we don't want as we only need to restrict for OneMedia uploader frame.
+	 *
+	 * @see https://wordpress.stackexchange.com/questions/343320/restrict-file-types-in-the-uploader-of-a-wp-media-frame
+	 */
+	frame.once( 'uploader:ready', () => {
+		const uploader = frame.uploader.uploader.uploader;
+		uploader.setOption( 'filters',
+			{
+				mime_types: [
+					{ extensions: allowedTypes },
+				],
+			},
+		);
+
+		// Trick to re-init field
+		uploader.setOption( 'multi_selection', false );
+	} );
+};
+
 export {
 	isURL,
 	isValidUrl,
@@ -204,4 +242,5 @@ export {
 	observeElement,
 	getFrameProperty,
 	showSnackbarNotice,
+	restrictMediaFrameUploadTypes,
 };
