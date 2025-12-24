@@ -39,7 +39,7 @@ const MEDIA_PER_PAGE = 12;
 const ONEMEDIA_PLUGIN_TAXONOMY_TERM = 'onemedia';
 const UPLOAD_NONCE = window.OneMediaMediaSharing?.uploadNonce || '';
 const ONEMEDIA_MEDIA_SHARING = window.OneMediaMediaSharing || {};
-const ALLOWED_MIME_TYPES = window.OneMediaMediaFrame?.allowedMimeTypes !== 'undefined'
+const ALLOWED_MIME_TYPES = typeof window.OneMediaMediaFrame?.allowedMimeTypes !== 'undefined'
 	? Object.values( window.OneMediaMediaFrame?.allowedMimeTypes )
 	: [];
 

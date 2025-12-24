@@ -13,7 +13,7 @@ import { getFrameProperty, showSnackbarNotice } from '../../../js/utils';
 
 //
 const UPLOAD_NONCE = window.OneMediaMediaFrame?.uploadNonce || '';
-const ALLOWED_MIME_TYPES = window.OneMediaMediaFrame?.allowedMimeTypes !== 'undefined'
+const ALLOWED_MIME_TYPES = typeof window.OneMediaMediaFrame?.allowedMimeTypes !== 'undefined'
 	? Object.values( window.OneMediaMediaFrame?.allowedMimeTypes )
 	: [];
 
