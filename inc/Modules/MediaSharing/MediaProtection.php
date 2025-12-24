@@ -41,9 +41,11 @@ class MediaProtection implements Registrable {
 		if ( ! wp_doing_ajax() ) {
 			return;
 		}
+
 		if ( ! isset( $_POST['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( $_POST['_wpnonce'] ), 'media-form' ) ) {
 			return;
 		}
+
 		if ( ! isset( $_REQUEST['action'] ) || 'upload-attachment' !== sanitize_text_field( $_REQUEST['action'] ) ) {
 			return;
 		}

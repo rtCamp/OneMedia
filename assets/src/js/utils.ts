@@ -291,7 +291,7 @@ const restrictMediaFrameUploadTypes = ( frame : WPMediaFrame, allowedTypes: stri
  * Get MIME types from a MIME map.
  * @param {Object} mimeMap
  */
-function getMimeTypes( mimeMap : Object ) : string[] {
+function getAllowedMimeTypes( mimeMap : Object ) : string[]|undefined {
 	return [ ...new Set( Object.values( mimeMap ) ) ];
 }
 
@@ -299,7 +299,7 @@ function getMimeTypes( mimeMap : Object ) : string[] {
  * Get extensions from a MIME map.
  * @param {Object} mimeMap
  */
-function getExtensions( mimeMap : Object ) : string[] {
+function getAllowedMimeTypeExtensions( mimeMap : Object ) : string[] {
 	return Object.keys( mimeMap )
 		.flatMap( ( key ) => key.split( '|' ) );
 }
@@ -315,6 +315,6 @@ export {
 	getFrameProperty,
 	showSnackbarNotice,
 	restrictMediaFrameUploadTypes,
-	getMimeTypes,
-	getExtensions,
+	getAllowedMimeTypes,
+	getAllowedMimeTypeExtensions,
 };

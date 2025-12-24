@@ -9,7 +9,7 @@ import { useState, useRef } from '@wordpress/element';
  * Internal dependencies
  */
 import { uploadMedia, updateExistingAttachment, checkIfAllSitesConnected, isSyncAttachment as isSyncAttachmentApi } from '../../../components/api';
-import { getExtensions, getFrameProperty, getMimeTypes, restrictMediaFrameUploadTypes, showSnackbarNotice } from '../../../js/utils';
+import { getAllowedMimeTypeExtensions, getFrameProperty, getAllowedMimeTypes, restrictMediaFrameUploadTypes, showSnackbarNotice } from '../../../js/utils';
 
 //
 const UPLOAD_NONCE = window.OneMediaMediaFrame?.uploadNonce || '';
@@ -108,12 +108,12 @@ const BrowserUploaderButton = ( {
 			},
 			multiple: false,
 			library: {
-				type: getMimeTypes( ALLOWED_MIME_TYPES_MAP ),
+				type: getAllowedMimeTypes( ALLOWED_MIME_TYPES_MAP ),
 				is_onemedia_sync: false,
 			},
 		} );
 
-		restrictMediaFrameUploadTypes( frame, getExtensions( ALLOWED_MIME_TYPES_MAP ).join( ',' ) );
+		restrictMediaFrameUploadTypes( frame, getAllowedMimeTypeExtensions( ALLOWED_MIME_TYPES_MAP ).join( ',' ) );
 
 		frame.on( 'open', () => {
 			const frameEl = frame.el;
@@ -194,12 +194,12 @@ const BrowserUploaderButton = ( {
 			},
 			multiple: false,
 			library: {
-				type: getMimeTypes( ALLOWED_MIME_TYPES_MAP ),
+				type: getAllowedMimeTypes( ALLOWED_MIME_TYPES_MAP ),
 				is_onemedia_sync: false,
 			},
 		} );
 
-		restrictMediaFrameUploadTypes( frame, getExtensions( ALLOWED_MIME_TYPES_MAP ).join( ',' ) );
+		restrictMediaFrameUploadTypes( frame, getAllowedMimeTypeExtensions( ALLOWED_MIME_TYPES_MAP ).join( ',' ) );
 
 		frame.on( 'open', () => {
 			const frameEl = frame.el;
@@ -258,7 +258,7 @@ const BrowserUploaderButton = ( {
 			return;
 		}
 
-		const mimeTypes = getMimeTypes( ALLOWED_MIME_TYPES_MAP );
+		const mimeTypes = getAllowedMimeTypes( ALLOWED_MIME_TYPES_MAP );
 
 		// Validate file type.
 		if ( ! mimeTypes.length > 0 || ! mimeTypes.includes( file.type ) ) {
@@ -354,7 +354,7 @@ const BrowserUploaderButton = ( {
 				<input
 					className="onemedia-hidden-file-input"
 					type="file"
-					accept={ getMimeTypes( ALLOWED_MIME_TYPES_MAP ).join( ',' ) }
+					accept={ getAllowedMimeTypes( ALLOWED_MIME_TYPES_MAP ).join( ',' ) }
 					ref={ fileInputRef }
 					onChange={ handleFileSelect }
 				/>

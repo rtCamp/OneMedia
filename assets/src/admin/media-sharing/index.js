@@ -32,7 +32,7 @@ import BrowserUploaderButton from './components/browser-uploader';
 import ShareMediaModal from './components/ShareMediaModal';
 import VersionModal from './components/VersionModal';
 import { fetchSyncedSites as fetchSyncedSitesApi, fetchMediaItems as fetchMediaItemsApi, fetchBrandSites as fetchBrandSitesApi, shareMedia as shareMediaApi, uploadMedia } from '../../components/api';
-import { getNoticeClass, trimTitle, debounce, getFrameProperty, restrictMediaFrameUploadTypes, getExtensions } from '../../js/utils';
+import { getNoticeClass, trimTitle, debounce, getFrameProperty, restrictMediaFrameUploadTypes, getAllowedMimeTypeExtensions } from '../../js/utils';
 import fallbackImage from '../../images/fallback-image.svg';
 
 const MEDIA_PER_PAGE = 12;
@@ -217,7 +217,7 @@ const MediaSharingApp = ( {
 				},
 			} );
 
-			restrictMediaFrameUploadTypes( editFrame, getExtensions( ALLOWED_MIME_TYPES_MAP ).join( ',' ), true );
+			restrictMediaFrameUploadTypes( editFrame, getAllowedMimeTypeExtensions( ALLOWED_MIME_TYPES_MAP ).join( ',' ), true );
 
 			editFrame.on( 'open', function() {
 				// Reset the selection state.
