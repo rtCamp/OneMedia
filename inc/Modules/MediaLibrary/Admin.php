@@ -121,14 +121,14 @@ class Admin implements Registrable {
 		}
 
 		// check for is_onemedia_sync meta filter.
-		if ( ! empty( $request_query['is_onemedia_sync'] ) ) {
+		if ( isset( $request_query['is_onemedia_sync'] ) ) {
 			$is_onemedia_sync = filter_var( $request_query['is_onemedia_sync'], FILTER_VALIDATE_BOOLEAN );
 
 			if ( true === $is_onemedia_sync ) {
 				$query['meta_query'] = [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 					[
 						'key'     => Attachment::IS_SYNC_POSTMETA_KEY,
-						'value'   => true,
+						'value'   => '1',
 						'compare' => '=',
 					],
 				];
@@ -137,7 +137,7 @@ class Admin implements Registrable {
 					'relation' => 'OR',
 					[
 						'key'     => Attachment::IS_SYNC_POSTMETA_KEY,
-						'value'   => false,
+						'value'   => '0',
 						'compare' => '=',
 					],
 					[
