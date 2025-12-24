@@ -5,7 +5,7 @@
  * @package OneMedia
  */
 
-declare( strict_types = 1 );
+declare( strict_types=1 );
 
 namespace OneMedia;
 
@@ -58,6 +58,9 @@ final class Utils {
 		// Remove any types that are not supported by the server.
 		$supported_types = array_values( get_allowed_mime_types() );
 		$allowed_types   = array_intersect( $allowed_types, $supported_types );
+
+		// WP uses jpeg for all jpeg types, so we need to add jpg and jpe as well explicitly.
+		$allowed_types = array_merge( $allowed_types, [ 'image/jpg', 'image/jpe' ] );
 
 		return $allowed_types;
 	}
