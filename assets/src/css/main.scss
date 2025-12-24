@@ -252,7 +252,7 @@
 }
 
 .onemedia_page_onemedia-media-sharing,
-.media_page_onemedia-media-sharing {
+.toplevel_page_onemedia {
 
 	.components-tooltip {
 		white-space: pre-line;
@@ -270,8 +270,8 @@
 		}
 
 		.media-toolbar-secondary .attachment-filters {
-			width: 100%;
-			max-width: 100%;
+			width: 100% !important;
+			max-width: 100% !important;
 		}
 	}
 }
@@ -502,9 +502,9 @@
 	}
 }
 
-.onemedia-selec-sync-media-frame{
+.onemedia-selec-sync-media-frame {
 
-	.onemedia-synced-media{
+	.onemedia-synced-media {
 		pointer-events: none;
 	}
 }
