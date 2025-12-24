@@ -39,6 +39,9 @@ const MEDIA_PER_PAGE = 12;
 const ONEMEDIA_PLUGIN_TAXONOMY_TERM = 'onemedia';
 const UPLOAD_NONCE = window.OneMediaMediaSharing?.uploadNonce || '';
 const ONEMEDIA_MEDIA_SHARING = window.OneMediaMediaSharing || {};
+const ALLOWED_MIME_TYPES = window.OneMediaMediaFrame?.allowedMimeTypes !== 'undefined'
+	? Object.values( window.OneMediaMediaFrame?.allowedMimeTypes )
+	: [];
 
 const MediaSharingApp = ( {
 	imageType = '',
@@ -212,6 +215,21 @@ const MediaSharingApp = ( {
 					type: 'image',
 					is_onemedia_sync: true,
 				},
+			} );
+
+			// restrict upload type for our media modal.
+			editFrame.once( 'uploader:ready', () => {
+				const uploader = editFrame.uploader.uploader.uploader;
+				uploader.setOption( 'filters',
+					{
+						mime_types: [
+							{ extensions: ALLOWED_MIME_TYPES.join( ',' ).replaceAll( 'image/', '' ) },
+						],
+					},
+				);
+
+				//Trick to reinit field
+				uploader.setOption( 'multi_selection', false );
 			} );
 
 			editFrame.on( 'open', function() {

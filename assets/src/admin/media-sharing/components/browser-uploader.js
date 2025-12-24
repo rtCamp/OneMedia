@@ -113,6 +113,21 @@ const BrowserUploaderButton = ( {
 			},
 		} );
 
+		// restrict upload type for our media modal.
+		frame.once( 'uploader:ready', () => {
+			const uploader = frame.uploader.uploader.uploader;
+			uploader.setOption( 'filters',
+				{
+					mime_types: [
+						{ extensions: ALLOWED_MIME_TYPES.join( ',' ).replaceAll( 'image/', '' ) },
+					],
+				},
+			);
+
+			//Trick to reinit field
+			uploader.setOption( 'multi_selection', false );
+		} );
+
 		frame.on( 'open', () => {
 			const frameEl = frame.el;
 			if ( frameEl ) {
@@ -195,6 +210,21 @@ const BrowserUploaderButton = ( {
 				type: ALLOWED_MIME_TYPES,
 				is_onemedia_sync: false,
 			},
+		} );
+
+		// restrict upload type for our media modal.
+		frame.once( 'uploader:ready', () => {
+			const uploader = frame.uploader.uploader.uploader;
+			uploader.setOption( 'filters',
+				{
+					mime_types: [
+						{ extensions: ALLOWED_MIME_TYPES.join( ',' ).replaceAll( 'image/', '' ) },
+					],
+				},
+			);
+
+			//Trick to reinit field
+			uploader.setOption( 'multi_selection', false );
 		} );
 
 		frame.on( 'open', () => {
