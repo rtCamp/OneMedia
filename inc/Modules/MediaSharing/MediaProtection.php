@@ -38,19 +38,35 @@ class MediaProtection implements Registrable {
 	 * @return void
 	 */
 	public function add_term_to_attachment( int $attachment_id ): void {
-		$is_onemedia_attachment = metadata_exists( 'post', $attachment_id, Attachment::IS_SYNC_POSTMETA_KEY );
-		if ( ! $attachment_id || ! taxonomy_exists( Media::TAXONOMY ) || ! $is_onemedia_attachment ) {
+		if ( ! wp_doing_ajax() ) {
+			return;
+		}
+		$action = isset( $_REQUEST['action'] ) ? sanitize_text_field( $_REQUEST['action'] ) : '';
+		if ( 'upload-attachment' !== $action ) {
+			return;
+		}
+		// check if is_onemedia_sync is set and true.
+		$is_onemedia_sync = isset( $_POST['is_onemedia_sync'] ) &&
+						filter_var( $_POST['is_onemedia_sync'], FILTER_VALIDATE_BOOLEAN );
+
+		// Verify nonce for security.
+		if ( ! isset( $_POST['_wpnonce'] ) ) {
 			return;
 		}
 
-		// Assign the 'onemedia' term to the attachment.
-		$success = wp_set_object_terms( $attachment_id, Media::TAXONOMY_TERM, Media::TAXONOMY, true );
+		if ( isset( $_POST['_wpnonce'] ) ) {
+			$nonce = sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) );
+			if ( ! wp_verify_nonce( $nonce, 'media-form' ) ) {
+				return;
+			}
+		}
+		update_post_meta( $attachment_id, Attachment::IS_SYNC_POSTMETA_KEY, $is_onemedia_sync );
 
-		if ( ! is_wp_error( $success ) ) {
+		if ( true !== $is_onemedia_sync ) {
 			return;
 		}
 
-		wp_send_json_error( [ 'message' => __( 'Failed to assign taxonomy term to attachment.', 'onemedia' ) ], 500 );
+		wp_set_object_terms( $attachment_id, Media::TAXONOMY_TERM, Media::TAXONOMY, true );
 	}
 
 	/**

@@ -217,7 +217,7 @@ const MediaSharingApp = ( {
 				},
 			} );
 
-			restrictMediaFrameUploadTypes( editFrame, ALLOWED_MIME_TYPES.join( ',' ).replaceAll( 'image/', '' ).replaceAll( '+xml', '' ) );
+			restrictMediaFrameUploadTypes( editFrame, ALLOWED_MIME_TYPES.join( ',' ).replaceAll( 'image/', '' ).replaceAll( '+xml', '' ), true );
 
 			editFrame.on( 'open', function() {
 				// Reset the selection state.

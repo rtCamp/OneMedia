@@ -49,20 +49,9 @@ class UserInterface implements Registrable {
 			return;
 		}
 
-		$terms   = Attachment::get_post_terms( $attachment_id, [ 'fields' => 'names' ] );
-		$classes = 'onemedia-media-term-label';
-
-		// Build the labels and css classes.
-		if ( empty( $terms ) ) {
-			$label    = __( 'Not assigned', 'onemedia' );
-			$classes .= ' empty';
-		} else {
-			$labels = [];
-			foreach ( $terms as $term ) {
-				$labels[] = Media::TAXONOMY_TERM === $term ? Media::TERM_NAME : esc_html( $term );
-			}
-			$label = implode( ', ', $labels );
-		}
+		$is_sync = Attachment::is_sync_attachment( $attachment_id );
+		$label   = $is_sync ? __( 'OneMedia', 'onemedia' ) : __( 'Not Assigned', 'onemedia' );
+		$classes = $is_sync ? 'onemedia-media-term-label' : 'onemedia-media-term-label empty';
 
 		printf(
 		/* translators: %1$s is the class attribute, %2$s is the label text. */

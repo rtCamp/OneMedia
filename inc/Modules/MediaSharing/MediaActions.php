@@ -874,7 +874,7 @@ class MediaActions implements Registrable {
 		}
 
 		// Add sync status to the response.
-		$response['is_sync_attachment'] = Attachment::is_sync_attachment( $attachment->ID );
+		$response['is_onemedia_sync'] = Attachment::is_sync_attachment( $attachment->ID );
 
 		return $response;
 	}

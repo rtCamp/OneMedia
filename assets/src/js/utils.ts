@@ -5,6 +5,9 @@
 import type { NoticeType } from '../admin/settings/page';
 
 type WPMediaUploader = {
+	settings: {
+		multipart_params: Record<string, unknown>;
+	}
 	setOption(
 		key: 'filters' | 'multi_selection' | string,
 		value: string | object | boolean,
@@ -18,7 +21,28 @@ type WPMediaFrame = {
 			uploader: WPMediaUploader;
 		};
 	};
+	on( event: 'ready' | string, cb: () => void ): void;
+	state(): {
+		get( key: 'library' | string ): {
+			observe( queue: unknown ): void;
+		} | undefined;
+	};
 };
+
+declare global {
+	interface Window {
+		wp: {
+			Uploader: {
+				queue: unknown;
+			};
+			media: {
+				attachment( id: number ): {
+					get( key: string ): unknown;
+				} | undefined;
+			};
+		};
+	}
+}
 
 /**
  * Helper function to validate if a string is a well-formed URL.
@@ -210,7 +234,16 @@ const showSnackbarNotice = ( detail: NoticeType ): void => {
 	document.dispatchEvent( event );
 };
 
-const restrictMediaFrameUploadTypes = ( frame : WPMediaFrame, allowedTypes: string ) => {
+/**
+ * Restrict upload types in a WordPress media frame.
+ *
+ * @param {WPMediaFrame} frame        - The WordPress media frame to restrict.
+ * @param {string}       allowedTypes - Comma-separated list of allowed file extensions.
+ * @param {boolean}      is_sync      - Whether the upload is for sync (default false).
+ *
+ * @return {void}
+ */
+const restrictMediaFrameUploadTypes = ( frame : WPMediaFrame, allowedTypes: string, is_sync:boolean = false ) => {
 	/**
 	 * Using mime_type will restrict the upload types in media modal,
 	 * Which we don't want as we only need to restrict for OneMedia uploader frame.
@@ -219,6 +252,10 @@ const restrictMediaFrameUploadTypes = ( frame : WPMediaFrame, allowedTypes: stri
 	 */
 	frame.once( 'uploader:ready', () => {
 		const uploader = frame.uploader.uploader.uploader;
+
+		// Get existing multipart_params first
+		const existingParams = uploader.settings.multipart_params || {};
+
 		uploader.setOption( 'filters',
 			{
 				mime_types: [
@@ -229,6 +266,20 @@ const restrictMediaFrameUploadTypes = ( frame : WPMediaFrame, allowedTypes: stri
 
 		// Trick to re-init field
 		uploader.setOption( 'multi_selection', false );
+
+		// Set is_onemedia_sync param
+		uploader.setOption( 'multipart_params', {
+			...existingParams,
+			is_onemedia_sync: is_sync,
+		} );
+	} );
+
+	// Observe the library to link with uploader queue.
+	frame.on( 'ready', function() {
+		const library = frame.state().get( 'library' );
+		if ( library && window.wp.Uploader && window.wp.Uploader.queue ) {
+			library.observe( window.wp.Uploader.queue );
+		}
 	} );
 };
 

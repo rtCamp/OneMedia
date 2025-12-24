@@ -63,6 +63,17 @@ class Attachment implements Registrable {
 	 */
 	public function register_attachment_post_meta(): void {
 		$post_meta = [
+			self::IS_SYNC_POSTMETA_KEY       => [
+				'show_in_rest'      => true,
+				'single'            => true,
+				'type'              => 'boolean',
+				'default'           => false,
+				'revisions_enabled' => false,
+				'description'       => __( 'Indicates if the attachment is synced to brand site or not.', 'onemedia' ),
+				'auth_callback'     => static function (): bool {
+					return current_user_can( 'edit_posts' );
+				},
+			],
 			self::SYNC_STATUS_POSTMETA_KEY   => [
 				'show_in_rest'      => [
 					'schema' => [
