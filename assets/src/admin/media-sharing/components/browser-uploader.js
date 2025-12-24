@@ -113,7 +113,12 @@ const BrowserUploaderButton = ( {
 			},
 		} );
 
-		// restrict upload type for our media modal.
+		/**
+		 * Using mine_type will restrict the upload types in media modal,
+		 * Which we don't want as we only need to restrict for OneMedia uploader frame.
+		 *
+		 * @see https://wordpress.stackexchange.com/questions/343320/restrict-file-types-in-the-uploader-of-a-wp-media-frame
+		 */
 		frame.once( 'uploader:ready', () => {
 			const uploader = frame.uploader.uploader.uploader;
 			uploader.setOption( 'filters',
@@ -124,7 +129,7 @@ const BrowserUploaderButton = ( {
 				},
 			);
 
-			//Trick to reinit field
+			// Trick to re-init field
 			uploader.setOption( 'multi_selection', false );
 		} );
 
@@ -212,7 +217,12 @@ const BrowserUploaderButton = ( {
 			},
 		} );
 
-		// restrict upload type for our media modal.
+		/**
+		 * Using mine_type will restrict the upload types in media modal,
+		 * Which we don't want as we only need to restrict for OneMedia uploader frame.
+		 *
+		 * @see https://wordpress.stackexchange.com/questions/343320/restrict-file-types-in-the-uploader-of-a-wp-media-frame
+		 */
 		frame.once( 'uploader:ready', () => {
 			const uploader = frame.uploader.uploader.uploader;
 			uploader.setOption( 'filters',
@@ -223,7 +233,7 @@ const BrowserUploaderButton = ( {
 				},
 			);
 
-			//Trick to reinit field
+			// Trick to re-init field
 			uploader.setOption( 'multi_selection', false );
 		} );
 

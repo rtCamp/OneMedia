@@ -217,7 +217,12 @@ const MediaSharingApp = ( {
 				},
 			} );
 
-			// restrict upload type for our media modal.
+			/**
+			 * Using mine_type will restrict the upload types in media modal,
+			 * Which we don't want as we only need to restrict for OneMedia uploader frame.
+			 *
+			 * @see https://wordpress.stackexchange.com/questions/343320/restrict-file-types-in-the-uploader-of-a-wp-media-frame
+			 */
 			editFrame.once( 'uploader:ready', () => {
 				const uploader = editFrame.uploader.uploader.uploader;
 				uploader.setOption( 'filters',
@@ -228,7 +233,7 @@ const MediaSharingApp = ( {
 					},
 				);
 
-				//Trick to reinit field
+				// Trick to re-init field
 				uploader.setOption( 'multi_selection', false );
 			} );
 
