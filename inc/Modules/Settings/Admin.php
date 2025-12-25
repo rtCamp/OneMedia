@@ -131,7 +131,7 @@ final class Admin implements Registrable {
 	 */
 	public function inject_site_selection_modal(): void {
 		$current_screen = get_current_screen();
-		if ( ! $current_screen || 'plugins' !== $current_screen->base ) {
+		if ( ! $current_screen || ( 'plugins' !== $current_screen->base && ! str_contains( $current_screen->id, self::MENU_SLUG ) ) ) {
 			return;
 		}
 
@@ -234,7 +234,7 @@ final class Admin implements Registrable {
 	 * @param \WP_Screen $current_screen Current screen object.
 	 */
 	private function add_body_class_for_modal( string $classes, \WP_Screen $current_screen ): string {
-		if ( 'plugins' !== $current_screen->base ) {
+		if ( 'plugins' !== $current_screen->base && ! str_contains( $current_screen->id, self::MENU_SLUG ) ) {
 			return $classes;
 		}
 
@@ -252,7 +252,7 @@ final class Admin implements Registrable {
 	/**
 	 * Add body class for missing sites.
 	 *
-	 * @param string $classes        Existing body classes.
+	 * @param string $classes Existing body classes.
 	 */
 	private function add_body_class_for_missing_sites( string $classes ): string {
 		// Bail if the shared sites are already set.
