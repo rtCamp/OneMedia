@@ -9,12 +9,12 @@ import { useState, useRef } from '@wordpress/element';
  * Internal dependencies
  */
 import { uploadMedia, updateExistingAttachment, checkIfAllSitesConnected, isSyncAttachment as isSyncAttachmentApi } from '../../../components/api';
-import { getFrameProperty, showSnackbarNotice } from '../../../js/utils';
+import { getAllowedMimeTypeExtensions, getFrameProperty, getAllowedMimeTypes, restrictMediaFrameUploadTypes, showSnackbarNotice } from '../../../js/utils';
 
 //
 const UPLOAD_NONCE = window.OneMediaMediaFrame?.uploadNonce || '';
-const ALLOWED_MIME_TYPES = window.OneMediaMediaFrame?.allowedMimeTypes !== 'undefined'
-	? Object.values( window.OneMediaMediaFrame?.allowedMimeTypes )
+const ALLOWED_MIME_TYPES_MAP = typeof window.OneMediaMediaFrame?.allowedMimeTypesMap !== 'undefined'
+	? window.OneMediaMediaFrame?.allowedMimeTypesMap
 	: [];
 
 const BrowserUploaderButton = ( {
@@ -108,9 +108,12 @@ const BrowserUploaderButton = ( {
 			},
 			multiple: false,
 			library: {
-				type: ALLOWED_MIME_TYPES,
+				type: getAllowedMimeTypes( ALLOWED_MIME_TYPES_MAP ),
+				is_onemedia_sync: false,
 			},
 		} );
+
+		restrictMediaFrameUploadTypes( frame, getAllowedMimeTypeExtensions( ALLOWED_MIME_TYPES_MAP ).join( ',' ) );
 
 		frame.on( 'open', () => {
 			const frameEl = frame.el;
@@ -191,9 +194,12 @@ const BrowserUploaderButton = ( {
 			},
 			multiple: false,
 			library: {
-				type: ALLOWED_MIME_TYPES,
+				type: getAllowedMimeTypes( ALLOWED_MIME_TYPES_MAP ),
+				is_onemedia_sync: false,
 			},
 		} );
+
+		restrictMediaFrameUploadTypes( frame, getAllowedMimeTypeExtensions( ALLOWED_MIME_TYPES_MAP ).join( ',' ) );
 
 		frame.on( 'open', () => {
 			const frameEl = frame.el;
@@ -252,8 +258,10 @@ const BrowserUploaderButton = ( {
 			return;
 		}
 
+		const mimeTypes = getAllowedMimeTypes( ALLOWED_MIME_TYPES_MAP );
+
 		// Validate file type.
-		if ( ! ALLOWED_MIME_TYPES.length > 0 || ! ALLOWED_MIME_TYPES.includes( file.type ) ) {
+		if ( ! mimeTypes.length > 0 || ! mimeTypes.includes( file.type ) ) {
 			setNotice( {
 				type: 'error',
 				message: __( 'Please select a valid image file.', 'onemedia' ),
@@ -346,7 +354,7 @@ const BrowserUploaderButton = ( {
 				<input
 					className="onemedia-hidden-file-input"
 					type="file"
-					accept={ ALLOWED_MIME_TYPES.join( ',' ) }
+					accept={ getAllowedMimeTypes( ALLOWED_MIME_TYPES_MAP ).join( ',' ) }
 					ref={ fileInputRef }
 					onChange={ handleFileSelect }
 				/>

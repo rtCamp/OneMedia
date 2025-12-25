@@ -20,7 +20,6 @@ class MediaProtection implements Registrable {
 	 * {@inheritDoc}
 	 */
 	public function register_hooks(): void {
-		add_filter( 'delete_attachment', [ $this, 'maybe_block_media_delete' ], 10, 1 );
 		add_action( 'admin_notices', [ $this, 'show_deletion_notice' ] );
 		add_action( 'add_attachment', [ $this, 'add_term_to_attachment' ] );
 
@@ -38,42 +37,28 @@ class MediaProtection implements Registrable {
 	 * @return void
 	 */
 	public function add_term_to_attachment( int $attachment_id ): void {
-		$is_onemedia_attachment = metadata_exists( 'post', $attachment_id, Attachment::IS_SYNC_POSTMETA_KEY );
-		if ( ! $attachment_id || ! taxonomy_exists( Media::TAXONOMY ) || ! $is_onemedia_attachment ) {
+		if ( ! wp_doing_ajax() ) {
 			return;
 		}
 
-		// Assign the 'onemedia' term to the attachment.
-		$success = wp_set_object_terms( $attachment_id, Media::TAXONOMY_TERM, Media::TAXONOMY, true );
-
-		if ( ! is_wp_error( $success ) ) {
+		if ( ! isset( $_POST['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( $_POST['_wpnonce'] ), 'media-form' ) ) {
 			return;
 		}
 
-		wp_send_json_error( [ 'message' => __( 'Failed to assign taxonomy term to attachment.', 'onemedia' ) ], 500 );
-	}
-
-	/**
-	 * Block deletion of media attachments assigned to the 'onemedia' term.
-	 *
-	 * This method prevents the deletion of media attachments that are assigned to the 'onemedia' term,
-	 * ensuring that important media cannot be removed unintentionally.
-	 *
-	 * @param int $attachment_id The ID of the attachment being deleted.
-	 *
-	 * @return int|\WP_Error The attachment ID if deletion is allowed, or a WP_Error if blocked.
-	 */
-	public function maybe_block_media_delete( int $attachment_id ): int|\WP_Error {
-		$terms = Attachment::get_post_terms( $attachment_id, [ 'fields' => 'slugs' ] );
-		if ( ! empty( $terms ) && isset( array_flip( $terms )[ Media::TAXONOMY_TERM ] ) ) {
-			// Set a transient to show a notice on the next admin page load.
-			set_transient( 'onemedia_delete_notice', true, 30 );
-			// Redirect back to prevent deletion.
-			$redirect_url = admin_url( 'upload.php' );
-			wp_safe_redirect( $redirect_url );
-			exit;
+		if ( ! isset( $_REQUEST['action'] ) || 'upload-attachment' !== sanitize_text_field( $_REQUEST['action'] ) ) {
+			return;
 		}
-		return $attachment_id;
+
+		// Handle boolean strings (e.g. 'false').
+		$is_onemedia_sync = isset( $_POST['is_onemedia_sync'] ) && filter_var( wp_unslash( $_POST['is_onemedia_sync'] ), FILTER_VALIDATE_BOOLEAN );
+
+		update_post_meta( $attachment_id, Attachment::IS_SYNC_POSTMETA_KEY, $is_onemedia_sync ? 1 : 0 );
+
+		if ( true !== $is_onemedia_sync ) {
+			return;
+		}
+
+		wp_set_object_terms( $attachment_id, Media::TAXONOMY_TERM, Media::TAXONOMY, true );
 	}
 
 	/**
@@ -102,10 +87,10 @@ class MediaProtection implements Registrable {
 	/**
 	 * Prevent editing or deleting of synced media attachments on brand sites.
 	 *
-	 * @param array  $caps Current user's capabilities.
-	 * @param string $cap Capability being checked.
+	 * @param array  $caps    Current user's capabilities.
+	 * @param string $cap     Capability being checked.
 	 * @param int    $user_id User ID.
-	 * @param array  $args Arguments for the capability check.
+	 * @param array  $args    Arguments for the capability check.
 	 *
 	 * @return array|string[]
 	 */

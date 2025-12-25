@@ -36,7 +36,7 @@ function isSyncAttachment( attachmentOrElement ) {
 
 	// Handle Backbone model
 	if ( typeof attachmentOrElement.get === 'function' ) {
-		return isSyncValue( attachmentOrElement.get( 'is_sync_attachment' ) );
+		return isSyncValue( attachmentOrElement.get( 'is_onemedia_sync' ) );
 	}
 
 	// Not a DOM element
@@ -55,7 +55,7 @@ function isSyncAttachment( attachmentOrElement ) {
 	if ( wpMedia && wpMedia.attachment ) {
 		const attachment = wpMedia.attachment( attachmentId );
 		if ( attachment && attachment.get ) {
-			return isSyncValue( attachment.get( 'is_sync_attachment' ) );
+			return isSyncValue( attachment.get( 'is_onemedia_sync' ) );
 		}
 	}
 
@@ -80,7 +80,7 @@ function customizeSyncMediaFrame() {
 		originalAttachmentRender.apply( this, arguments );
 
 		// Add custom class if synced.
-		if ( this.model.get( 'is_sync_attachment' ) === true ) {
+		if ( this.model.get( 'is_onemedia_sync' ) === true ) {
 			// this.el is the native DOM element
 			const element = this.el;
 

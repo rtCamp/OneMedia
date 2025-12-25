@@ -585,6 +585,9 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 			$args['s'] = sanitize_text_field( $search_term );
 		}
 
+		/**
+		 * @todo => This taxonomy approach is complete overkill we can do it using meta so need to remove this in future.
+		 */
 		// If image_type is provided, filter by onemedia_media_type taxonomy.
 		if ( ! empty( $image_type ) ) {
 			$args['tax_query'] = [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query

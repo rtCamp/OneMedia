@@ -32,13 +32,16 @@ import BrowserUploaderButton from './components/browser-uploader';
 import ShareMediaModal from './components/ShareMediaModal';
 import VersionModal from './components/VersionModal';
 import { fetchSyncedSites as fetchSyncedSitesApi, fetchMediaItems as fetchMediaItemsApi, fetchBrandSites as fetchBrandSitesApi, shareMedia as shareMediaApi, uploadMedia } from '../../components/api';
-import { getNoticeClass, trimTitle, debounce, getFrameProperty } from '../../js/utils';
+import { getNoticeClass, trimTitle, debounce, getFrameProperty, restrictMediaFrameUploadTypes, getAllowedMimeTypeExtensions } from '../../js/utils';
 import fallbackImage from '../../images/fallback-image.svg';
 
 const MEDIA_PER_PAGE = 12;
 const ONEMEDIA_PLUGIN_TAXONOMY_TERM = 'onemedia';
 const UPLOAD_NONCE = window.OneMediaMediaSharing?.uploadNonce || '';
 const ONEMEDIA_MEDIA_SHARING = window.OneMediaMediaSharing || {};
+const ALLOWED_MIME_TYPES_MAP = typeof window.OneMediaMediaFrame?.allowedMimeTypesMap !== 'undefined'
+	? window.OneMediaMediaFrame?.allowedMimeTypesMap
+	: [];
 
 const MediaSharingApp = ( {
 	imageType = '',
@@ -199,7 +202,7 @@ const MediaSharingApp = ( {
 		}
 	};
 
-	const handleEditMedia = ( mediaId, currentImageType ) => {
+	const handleEditMedia = ( mediaId ) => {
 		if ( getFrameProperty( 'wp.media' ) ) {
 			// Create edit media frame.
 			const editFrame = window.wp.media( {
@@ -210,10 +213,11 @@ const MediaSharingApp = ( {
 				multiple: false,
 				library: {
 					type: 'image',
-					onemedia_sync_media_filter:
-						ONEMEDIA_PLUGIN_TAXONOMY_TERM === currentImageType ? true : false,
+					is_onemedia_sync: true,
 				},
 			} );
+
+			restrictMediaFrameUploadTypes( editFrame, getAllowedMimeTypeExtensions( ALLOWED_MIME_TYPES_MAP ).join( ',' ), true );
 
 			editFrame.on( 'open', function() {
 				// Reset the selection state.
@@ -516,7 +520,6 @@ const MediaSharingApp = ( {
 													e.stopPropagation();
 													handleEditMedia(
 														media.id,
-														imageType,
 													);
 												} }
 												title={ __( 'Edit Media', 'onemedia' ) }
