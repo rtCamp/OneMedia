@@ -27,13 +27,13 @@ final class Utils {
 	 * @var array
 	 */
 	private const ALLOWED_MIME_TYPES = [
-		'image/jpg',
-		'image/jpeg',
-		'image/png',
-		'image/gif',
-		'image/webp',
-		'image/bmp',
-		'image/svg+xml',
+		'jpg|jpeg|jpe' => 'image/jpeg',
+		'png'          => 'image/png',
+		'gif'          => 'image/gif',
+		'bmp'          => 'image/bmp',
+		'webp'         => 'image/webp',
+		'svg'          => 'image/svg+xml',
+		'svgz'         => 'image/svg+xml',
 	];
 
 	/**
@@ -53,17 +53,14 @@ final class Utils {
 	 * @return array Array of supported mime types by the server.
 	 */
 	public static function get_supported_mime_types(): array {
-		$allowed_mimes = array_flip( self::ALLOWED_MIME_TYPES );
-		$wp_mimes      = get_allowed_mime_types();
+		$wp_mimes = get_allowed_mime_types();
 
 		/**
 		 * Filter WordPress mime list by allowed mime values.
 		 */
-		return array_filter(
+		return array_intersect_key(
 			$wp_mimes,
-			static function ( string $mime ) use ( $allowed_mimes ): bool {
-				return isset( $allowed_mimes[ $mime ] );
-			}
+			self::ALLOWED_MIME_TYPES
 		);
 	}
 
