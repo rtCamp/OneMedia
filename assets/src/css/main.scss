@@ -258,11 +258,10 @@
 	}
 
 	.media-toolbar:not(:has(.media-button-select)) {
-		height: fit-content;
 
 		.media-toolbar-secondary .attachment-filters {
-			width: 100% !important;
-			max-width: 100% !important;
+			width: fit-content !important;
+			max-width: fit-content !important;
 		}
 	}
 }
