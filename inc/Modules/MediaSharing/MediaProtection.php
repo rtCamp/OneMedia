@@ -49,7 +49,7 @@ class MediaProtection implements Registrable {
 			return;
 		}
 
-		// Check if is_onemedia_sync is set and true.
+		// Handle boolean strings (e.g. 'false').
 		$is_onemedia_sync = isset( $_POST['is_onemedia_sync'] ) && filter_var( wp_unslash( $_POST['is_onemedia_sync'] ), FILTER_VALIDATE_BOOLEAN );
 
 		update_post_meta( $attachment_id, Attachment::IS_SYNC_POSTMETA_KEY, $is_onemedia_sync ? 1 : 0 );
