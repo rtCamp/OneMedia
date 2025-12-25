@@ -114,10 +114,8 @@ final class Admin implements Registrable {
 			return;
 		}
 
-		if ( ( 'plugins.php' === $hook || str_contains( $hook, 'plugins' ) || str_contains( $hook, 'onemedia' ) ) ) {
-			// Enqueue the onboarding modal.
-			$this->enqueue_onboarding_scripts();
-		}
+		// Enqueue the onboarding modal.
+		$this->enqueue_onboarding_scripts();
 
 		if ( strpos( $hook, 'onemedia-settings' ) !== false ) {
 			$this->enqueue_settings_scripts();
@@ -130,8 +128,7 @@ final class Admin implements Registrable {
 	 * Inject site selection modal into the admin footer.
 	 */
 	public function inject_site_selection_modal(): void {
-		$current_screen = get_current_screen();
-		if ( ! $current_screen || ( 'plugins' !== $current_screen->base && ! str_contains( $current_screen->id, self::MENU_SLUG ) ) ) {
+		if ( ! $this->should_display_site_selection_modal() ) {
 			return;
 		}
 
@@ -208,8 +205,7 @@ final class Admin implements Registrable {
 	 * Enqueue scripts and styles for the onboarding modal.
 	 */
 	private function enqueue_onboarding_scripts(): void {
-		// Bail if the site type is already set.
-		if ( ! empty( Settings::get_site_type() ) ) {
+		if ( ! $this->should_display_site_selection_modal() ) {
 			return;
 		}
 
@@ -234,7 +230,7 @@ final class Admin implements Registrable {
 	 * @param \WP_Screen $current_screen Current screen object.
 	 */
 	private function add_body_class_for_modal( string $classes, \WP_Screen $current_screen ): string {
-		if ( 'plugins' !== $current_screen->base && ! str_contains( $current_screen->id, self::MENU_SLUG ) ) {
+		if ( ! $this->should_display_site_selection_modal() ) {
 			return $classes;
 		}
 
@@ -264,5 +260,18 @@ final class Admin implements Registrable {
 		$classes .= ' onemedia-missing-brand-sites ';
 
 		return $classes;
+	}
+
+	/**
+	 * Whether to display the site selection modal.
+	 */
+	private function should_display_site_selection_modal(): bool {
+		$current_screen = get_current_screen();
+		if ( ! $current_screen || ( 'plugins' !== $current_screen->base && ! str_contains( $current_screen->id, self::MENU_SLUG ) ) ) {
+			return false;
+		}
+
+		// Bail if the site type is already set.
+		return empty( Settings::get_site_type() );
 	}
 }
