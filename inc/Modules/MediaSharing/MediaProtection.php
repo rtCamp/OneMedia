@@ -20,7 +20,6 @@ class MediaProtection implements Registrable {
 	 * {@inheritDoc}
 	 */
 	public function register_hooks(): void {
-		add_filter( 'delete_attachment', [ $this, 'maybe_block_media_delete' ], 10, 1 );
 		add_action( 'admin_notices', [ $this, 'show_deletion_notice' ] );
 		add_action( 'add_attachment', [ $this, 'add_term_to_attachment' ] );
 
@@ -60,30 +59,6 @@ class MediaProtection implements Registrable {
 		}
 
 		wp_set_object_terms( $attachment_id, Media::TAXONOMY_TERM, Media::TAXONOMY, true );
-	}
-
-	/**
-	 * Block deletion of media attachments assigned to the 'onemedia' term.
-	 *
-	 * This method prevents the deletion of media attachments that are assigned to the 'onemedia' term,
-	 * ensuring that important media cannot be removed unintentionally.
-	 *
-	 * @param int $attachment_id The ID of the attachment being deleted.
-	 *
-	 * @return int|\WP_Error The attachment ID if deletion is allowed, or a WP_Error if blocked.
-	 */
-	public function maybe_block_media_delete( int $attachment_id ): int|\WP_Error {
-		$terms = Attachment::get_post_terms( $attachment_id, [ 'fields' => 'slugs' ] );
-		if ( ! empty( $terms ) && isset( array_flip( $terms )[ Media::TAXONOMY_TERM ] ) ) {
-			// Set a transient to show a notice on the next admin page load.
-			set_transient( 'onemedia_delete_notice', true, 30 );
-			// Redirect back to prevent deletion.
-			$redirect_url = admin_url( 'upload.php' );
-			wp_safe_redirect( $redirect_url );
-			exit;
-		}
-
-		return $attachment_id;
 	}
 
 	/**
