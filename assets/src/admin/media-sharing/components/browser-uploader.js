@@ -280,7 +280,7 @@ const BrowserUploaderButton = ( {
 		formData.append( 'file', file );
 		formData.append(
 			'action',
-			isReplaceMedia ? 'onemedia_replace_media' : 'onemedia_sync_media_upload',
+			'onemedia_replace_media',
 		);
 
 		// Add current media ID for replacement.
@@ -295,20 +295,12 @@ const BrowserUploaderButton = ( {
 
 		try {
 			// Upload to WordPress AJAX URL.
-			const data = await uploadMedia( formData, isSyncMediaUpload, setNotice );
+			const data = await uploadMedia( formData, setNotice );
 			if ( data && data?.success ) {
 				if ( onAddMediaSuccess ) {
 					onAddMediaSuccess();
 				}
-				if ( isSyncMediaUpload ) {
-					setNotice( {
-						type: 'success',
-						message: __(
-							'Sync media uploaded successfully!',
-							'onemedia',
-						),
-					} );
-				} else if ( isReplaceMedia ) {
+				if ( isReplaceMedia ) {
 					setNotice( {
 						type: 'success',
 						message: __(

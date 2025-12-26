@@ -315,15 +315,14 @@ export const shareMedia = async ( payload, addNotice ) => {
 /**
  * Uploads a media file to the backend.
  *
- * @param {FormData} formData          - Form data containing the file.
- * @param {boolean}  isSyncMediaUpload - Whether this is a sync media upload.
- * @param {Function} addNotice         - Function to display notices.
+ * @param {FormData} formData  - Form data containing the file.
+ * @param {Function} addNotice - Function to display notices.
  * @return {Promise<Object>} - Upload response.
  */
-export const uploadMedia = async ( formData, isSyncMediaUpload, addNotice ) => {
+export const uploadMedia = async ( formData, addNotice ) => {
 	try {
 		const url =
-			`${ SHARING_AJAX_URL }${ isSyncMediaUpload ? '?onemedia_sync_media_upload=true' : '' }`;
+			`${ SHARING_AJAX_URL }`;
 
 		const response = await fetch( url, {
 			method: 'POST',

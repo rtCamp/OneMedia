@@ -424,7 +424,7 @@ const MediaSharingApp = ( {
 
 			formData.append( 'is_version_restore', true );
 
-			const response = await uploadMedia( formData, false, setNotice );
+			const response = await uploadMedia( formData, setNotice );
 
 			if ( response && response?.success ) {
 				// Refresh media items to reflect the restored version.

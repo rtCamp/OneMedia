@@ -12,47 +12,49 @@ namespace OneMedia\Modules\MediaLibrary;
 use OneMedia\Contracts\Interfaces\Registrable;
 use OneMedia\Modules\MediaSharing\Attachment;
 use OneMedia\Modules\Settings\Settings;
-use OneMedia\Modules\Taxonomies\Media;
-use OneMedia\Utils;
 
 /**
  * Class Admin
  */
 class ConsumerAdmin implements Registrable {
 
+
+	/**
+	 * Transient key for deletion notice.
+	 *
+	 * @var string
+	 */
+	private const DELETION_NOTICE_TRANSIENT = 'onemedia_sync_delete_notice';
+
+	/**
+	 * Transient key for edit notice.
+	 *
+	 * @var string
+	 */
+	private const EDIT_NOTICE_TRANSIENT = 'onemedia_sync_edit_notice';
+
 	/**
 	 * {@inheritDoc}
 	 */
 	public function register_hooks(): void {
+
 		// Skip if not a brand site.
 		if ( Settings::is_governing_site() ) {
 			return;
 		}
 
-		// Prevent attachment deletion if onemedia_sync_status is set to 'sync'.
+		// Prevent attachment deletion if media is synced.
 		add_filter( 'delete_attachment', [ $this, 'prevent_attachment_deletion' ], 10, 2 );
 
 		// Admin notice for attachment deletion.
 		add_action( 'admin_notices', [ $this, 'show_deletion_notice' ] );
 
-		// Prevent attachment edit if onemedia_sync_status is set to 'sync'.
+		// Prevent attachment edit if media is synced.
 		add_action( 'load-post.php', [ $this, 'prevent_attachment_edit' ] );
 		add_action( 'wp_ajax_save-attachment', [ $this, 'prevent_save_attachment_ajax' ], 0 );
 
 		// Remove edit & delete links for synced attachments.
 		add_filter( 'media_row_actions', [ $this, 'remove_edit_delete_links' ], 10, 2 );
-
-		// Add column for synced attachments.
-		add_filter( 'manage_media_columns', [ $this, 'add_sync_column' ] );
-		add_action( 'manage_media_custom_column', [ $this, 'render_sync_column' ], 10, 2 );
-
-		// Add column for source identification.
-		add_filter( 'manage_media_columns', [ $this, 'add_source_column' ], 10 );
-		add_action( 'manage_media_custom_column', [ $this, 'render_source_column' ], 10, 2 );
-
-		// Create media filter for synced attachments.
-		add_action( 'restrict_manage_posts', [ $this, 'add_sync_filter' ] );
-		add_action( 'parse_query', [ $this, 'filter_sync_attachments' ] );
 	}
 
 	/**
@@ -70,11 +72,9 @@ class ConsumerAdmin implements Registrable {
 		}
 
 		// Check if attachment is synced.
-		$onemedia_sync_status = Attachment::get_sync_status( $post->ID );
-		if ( Attachment::SYNC_STATUS_SYNC === $onemedia_sync_status ) {
-			// Set transient to show admin notice.
-			set_transient( 'onemedia_sync_delete_notice', true, 30 );
-
+		$is_sync = Attachment::is_sync_attachment( $post->ID );
+		if ( $is_sync ) {
+			set_transient( self::DELETION_NOTICE_TRANSIENT, true, 30 );
 			// Redirect back to prevent deletion.
 			$redirect_url = admin_url( 'upload.php' );
 			wp_safe_redirect( $redirect_url );
@@ -91,18 +91,18 @@ class ConsumerAdmin implements Registrable {
 	 */
 	public function show_deletion_notice(): void {
 		// Check for delete notice transient.
-		if ( get_transient( 'onemedia_sync_delete_notice' ) ) {
+		if ( get_transient( self::DELETION_NOTICE_TRANSIENT ) ) {
 			?>
 			<div class="notice notice-error is-dismissible">
 				<p><?php esc_html_e( 'This file is synced from Governing Site, please delete it from there first.', 'onemedia' ); ?></p>
 			</div>
 			<?php
 			// Delete the transient so the notice only shows once.
-			delete_transient( 'onemedia_sync_delete_notice' );
+			delete_transient( self::DELETION_NOTICE_TRANSIENT );
 		}
 
 		// Check for edit notice transient.
-		if ( ! get_transient( 'onemedia_sync_edit_notice' ) ) {
+		if ( ! get_transient( self::EDIT_NOTICE_TRANSIENT ) ) {
 			return;
 		}
 
@@ -112,7 +112,7 @@ class ConsumerAdmin implements Registrable {
 		</div>
 		<?php
 		// Delete the transient so the notice only shows once.
-		delete_transient( 'onemedia_sync_edit_notice' );
+		delete_transient( self::EDIT_NOTICE_TRANSIENT );
 	}
 
 	/**
@@ -136,13 +136,13 @@ class ConsumerAdmin implements Registrable {
 		}
 
 		// Check if attachment is synced.
-		$onemedia_sync_status = Attachment::get_sync_status( $post_id );
-		if ( Attachment::SYNC_STATUS_SYNC !== $onemedia_sync_status ) {
+		$is_sync = Attachment::is_sync_attachment( $post_id );
+		if ( ! $is_sync ) {
 			return;
 		}
 
 		// Set transient to show admin notice for edit.
-		set_transient( 'onemedia_sync_edit_notice', true, 30 );
+		set_transient( self::EDIT_NOTICE_TRANSIENT, true, 30 );
 
 		// Redirect back to media library.
 		$redirect_url = admin_url( 'upload.php' );
@@ -170,12 +170,12 @@ class ConsumerAdmin implements Registrable {
 			return;
 		}
 
-		$onemedia_sync_status = Attachment::get_sync_status( $attachment_id );
-		if ( Attachment::SYNC_STATUS_SYNC !== $onemedia_sync_status ) {
+		$is_sync = Attachment::is_sync_attachment( $attachment_id );
+		if ( ! $is_sync ) {
 			return;
 		}
 
-		set_transient( 'onemedia_sync_edit_notice', true, 30 );
+		set_transient( self::EDIT_NOTICE_TRANSIENT, true, 30 );
 		wp_send_json_error(
 			[
 				'message' => __( 'This file is synced from the Governing Site, please edit it over there.', 'onemedia' ),
@@ -199,195 +199,21 @@ class ConsumerAdmin implements Registrable {
 		}
 
 		// Check if attachment is synced.
-		$onemedia_sync_status = Attachment::get_sync_status( $post->ID );
-		if ( Attachment::SYNC_STATUS_SYNC === $onemedia_sync_status ) {
-			// Remove edit links.
-			if ( isset( $actions['edit'] ) ) {
-				unset( $actions['edit'] );
-			}
+		$is_sync = Attachment::is_sync_attachment( $post->ID );
+		if ( ! $is_sync ) {
+			return $actions;
+		}
 
-			if ( isset( $actions['delete'] ) ) {
-				unset( $actions['delete'] );
-			}
+		// Remove edit links.
+		if ( isset( $actions['edit'] ) ) {
+			unset( $actions['edit'] );
+		}
+
+		// Remove delete links.
+		if ( isset( $actions['delete'] ) ) {
+			unset( $actions['delete'] );
 		}
 
 		return $actions;
-	}
-
-	/**
-	 * Add sync column to media library.
-	 *
-	 * @param array $columns Array of columns.
-	 *
-	 * @return array Modified columns.
-	 */
-	public function add_sync_column( array $columns ): array {
-		$columns['onemedia_sync_status'] = __( 'Sync Status', 'onemedia' );
-		return $columns;
-	}
-
-	/**
-	 * Render sync column in media library.
-	 *
-	 * @param string $column_name Column name.
-	 * @param int    $post_id     Post ID.
-	 *
-	 * @return void
-	 */
-	public function render_sync_column( string $column_name, int $post_id ): void {
-		if ( 'onemedia_sync_status' !== $column_name ) {
-			return;
-		}
-
-		$onemedia_sync_status = Attachment::get_sync_status( $post_id );
-		if ( Attachment::SYNC_STATUS_SYNC === $onemedia_sync_status ) {
-			echo '<span class="onemedia-sync-badge dashicons dashicons-yes"></span>';
-			return;
-		}
-
-		echo '<span class="dashicons dashicons-no"></span>';
-	}
-
-	/**
-	 * Add custom author column in media library.
-	 *
-	 * @param array $columns Array of columns.
-	 *
-	 * @return array Modified columns.
-	 */
-	public function add_source_column( array $columns ): array {
-		$columns['onemedia_source'] = __( 'Source', 'onemedia' );
-		return $columns;
-	}
-
-	/**
-	 * Render custom author column in media library.
-	 *
-	 * @param string $column_name Column name.
-	 * @param int    $post_id     Post ID.
-	 *
-	 * @return void
-	 */
-	public function render_source_column( string $column_name, int $post_id ): void {
-		if ( 'onemedia_source' !== $column_name ) {
-			return;
-		}
-
-		$terms                = Attachment::get_post_terms( $post_id, [ 'fields' => 'names' ] );
-		$onemedia_sync_status = Attachment::get_sync_status( $post_id );
-
-		if ( empty( $onemedia_sync_status ) || empty( $terms ) || ! isset( array_flip( $terms )[ Media::TAXONOMY_TERM ] ) ) {
-			printf(
-			/* translators: %s is the screen reader text. */
-				'<span aria-hidden="true">&#8212;</span><span class="screen-reader-text">%s</span>',
-				esc_html__( '(no author)', 'onemedia' )
-			);
-			return;
-		}
-
-		// Add governing_site_url link to the output.
-		$saved_governing_site_url = Settings::get_parent_site_url();
-		if ( $saved_governing_site_url ) {
-			printf(
-			/* translators: %1$s is the site URL, %2$s is the link text. */
-				'<a href="%1$s">%2$s</a>',
-				esc_url( $saved_governing_site_url ),
-				esc_html__( 'Governing Site', 'onemedia' )
-			);
-
-			return;
-		}
-
-		esc_html_e( 'Governing Site', 'onemedia' );
-	}
-
-	/**
-	 * Add filter for synced attachments.
-	 *
-	 * @return void
-	 */
-	public function add_sync_filter(): void {
-		global $pagenow;
-
-		if ( 'upload.php' !== $pagenow ) {
-			return;
-		}
-
-		// Nonce verification for filter form.
-		$nonce = filter_input( INPUT_GET, 'onemedia_sync_nonce', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
-		$nonce = isset( $nonce ) ? sanitize_text_field( wp_unslash( $nonce ) ) : '';
-
-		if ( ! $nonce ) {
-			// This means this is the first load of the page, so we don't have onemedia_sync_filter nonce yet.
-			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaping handled in the template file.
-			echo Utils::get_template_content( 'brand-site/sync-status' );
-			return;
-		}
-
-		if ( ! wp_verify_nonce( $nonce, 'onemedia_sync_filter' ) ) {
-			return;
-		}
-
-		// This means the form has been submitted, so we have a nonce to verify.
-		$sync_status = isset( $_GET[ Attachment::SYNC_STATUS_POSTMETA_KEY ] )
-			? sanitize_text_field( wp_unslash( $_GET[ Attachment::SYNC_STATUS_POSTMETA_KEY ] ) )
-			: '';
-
-		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaping handled in the template file.
-		echo Utils::get_template_content( 'brand-site/sync-status', [ 'sync_status' => $sync_status ] );
-	}
-
-	/**
-	 * Filter attachments based on sync status.
-	 *
-	 * @param \WP_Query $query A reference of the current query object.
-	 */
-	public function filter_sync_attachments( \WP_Query $query ): void {
-		global $pagenow;
-		$onemedia_sync_status = filter_input( INPUT_GET, Attachment::SYNC_STATUS_POSTMETA_KEY, FILTER_SANITIZE_FULL_SPECIAL_CHARS );
-
-		if ( 'upload.php' !== $pagenow || empty( $onemedia_sync_status ) ) {
-			return;
-		}
-
-		// Nonce verification for filter query.
-		$nonce = filter_input( INPUT_GET, 'onemedia_sync_nonce', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
-		$nonce = isset( $nonce ) ? sanitize_text_field( wp_unslash( $nonce ) ) : '';
-
-		if ( ! $nonce || ! wp_verify_nonce( $nonce, 'onemedia_sync_filter' ) ) {
-			return;
-		}
-
-		$sync_status = filter_input( INPUT_GET, Attachment::SYNC_STATUS_POSTMETA_KEY, FILTER_SANITIZE_FULL_SPECIAL_CHARS );
-		$sync_status = isset( $sync_status ) ? sanitize_text_field( wp_unslash( $sync_status ) ) : '';
-
-		if ( Attachment::SYNC_STATUS_SYNC === $sync_status ) {
-			$query->set(
-				'meta_query',
-				[
-					[
-						'key'     => Attachment::SYNC_STATUS_POSTMETA_KEY,
-						'value'   => Attachment::SYNC_STATUS_SYNC,
-						'compare' => '=',
-					],
-				]
-			);
-		} elseif ( Attachment::SYNC_STATUS_NO_SYNC === $sync_status ) {
-			$query->set(
-				'meta_query',
-				[
-					'relation' => 'OR',
-					[
-						'key'     => Attachment::SYNC_STATUS_POSTMETA_KEY,
-						'value'   => Attachment::SYNC_STATUS_NO_SYNC,
-						'compare' => '=',
-					],
-					[
-						'key'     => Attachment::SYNC_STATUS_POSTMETA_KEY,
-						'compare' => 'NOT EXISTS',
-					],
-				]
-			);
-		}
 	}
 }

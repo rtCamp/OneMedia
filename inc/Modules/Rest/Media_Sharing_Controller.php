@@ -10,7 +10,6 @@ namespace OneMedia\Modules\Rest;
 use OneMedia\Modules\MediaSharing\Attachment;
 use OneMedia\Modules\MediaSharing\MediaReplacement;
 use OneMedia\Modules\Settings\Settings;
-use OneMedia\Modules\Taxonomies\Media;
 use OneMedia\Utils;
 use WP_REST_Server;
 
@@ -553,18 +552,6 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 		// Validate search term param.
 		$image_type = isset( $image_type ) && is_string( $image_type ) ? sanitize_text_field( $image_type ) : '';
 
-		// Check if the term exists in onemedia_media_type taxonomy.
-		if ( ! empty( $image_type ) && Media::TAXONOMY_TERM !== $image_type && ! Utils::term_exists( $image_type, Media::TAXONOMY ) ) {
-			return new \WP_Error(
-				'invalid_image_type',
-				__( 'Invalid image type provided.', 'onemedia' ),
-				[
-					'status'  => 400,
-					'success' => false,
-				]
-			);
-		}
-
 		// Validate search term param.
 		$search_term = isset( $search_term ) && is_string( $search_term ) ? sanitize_text_field( $search_term ) : '';
 
@@ -585,27 +572,26 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 			$args['s'] = sanitize_text_field( $search_term );
 		}
 
-		/**
-		 * @todo => This taxonomy approach is complete overkill we can do it using meta so need to remove this in future.
-		 */
-		// If image_type is provided, filter by onemedia_media_type taxonomy.
+		// If image_type is provided, filter by sync meta.
 		if ( ! empty( $image_type ) ) {
-			$args['tax_query'] = [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
+			$args['meta_query'] = [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 				[
-					'taxonomy' => Media::TAXONOMY,
-					'field'    => 'slug',
-					'terms'    => $image_type,
-					'operator' => 'IN',
+					'key'     => Attachment::IS_SYNC_POSTMETA_KEY,
+					'value'   => '1',
+					'compare' => '=',
 				],
 			];
 		} else {
-			// Exclude onemedia_media_type taxonomy.
-			$args['tax_query'] = [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
+			$args['meta_query'] = [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+				'relation' => 'OR',
 				[
-					'taxonomy' => Media::TAXONOMY,
-					'field'    => 'slug',
-					'terms'    => [ Media::TAXONOMY_TERM ], // Exclude 'onemedia' term.
-					'operator' => 'NOT IN',
+					'key'     => Attachment::IS_SYNC_POSTMETA_KEY,
+					'value'   => '0',
+					'compare' => '=',
+				],
+				[
+					'key'     => Attachment::IS_SYNC_POSTMETA_KEY,
+					'compare' => 'NOT EXISTS',
 				],
 			];
 		}
@@ -744,7 +730,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 			}
 
 			// For each media file its sync is checked then add meta data is_onemedia_sync to be true and onemedia_sync_sites meta to array of sites where it is synced.
-			Attachment::update_is_syncing( $media['id'], 'sync' === $sync_option );
+			Attachment::set_is_sync( $media['id'], 'sync' === $sync_option );
 
 			// Share the attachment metadata with the brand sites.
 			// Get attachment metadata.
@@ -1047,7 +1033,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 					// Media already shared in the same configuration.
 
 					if ( Attachment::SYNC_STATUS_SYNC === $sync_status ) {
-						Attachment::update_sync_status( $saved_attachment_id, $sync_status );
+						Attachment::set_is_sync( (int) $attachment_id, true );
 
 						// Update the existing attachment with new metadata if any changes are present.
 						if ( 'attachment' === get_post_type( $saved_attachment_id ) ) {
@@ -1056,11 +1042,10 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 					}
 
 					$successful_uploads[] = [
-						'id'           => $saved_attachment_id,
-						'url'          => wp_get_attachment_url( $saved_attachment_id ),
-						'title'        => $media_title,
-						'parent_id'    => $parent_media_id,
-						'parent_terms' => Attachment::get_terms( $saved_attachment_id ),
+						'id'        => $saved_attachment_id,
+						'url'       => wp_get_attachment_url( $saved_attachment_id ),
+						'title'     => $media_title,
+						'parent_id' => $parent_media_id,
 					];
 				} else {
 					// Media already shared but in different configuration. Convert media from non-sync to sync.
@@ -1083,17 +1068,16 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 					}
 
 					// Add attachment metadata for sync status.
-					Attachment::update_sync_status( $attachment_id, $sync_status );
+					Attachment::set_is_sync( $attachment_id, false );
 
 					// Update the existing attachment with new metadata if any changes are present.
 					$this->add_source_metadata_to_file( $attachment_id, $attachment_metadata );
 
 					$successful_uploads[] = [
-						'id'           => $attachment_id,
-						'url'          => wp_get_attachment_url( $attachment_id ),
-						'title'        => $media_title,
-						'parent_id'    => $parent_media_id,
-						'parent_terms' => Attachment::get_terms( $attachment_id ),
+						'id'        => $attachment_id,
+						'url'       => wp_get_attachment_url( $attachment_id ),
+						'title'     => $media_title,
+						'parent_id' => $parent_media_id,
 					];
 				}
 			} else { // New media file, not shared previously.
@@ -1116,14 +1100,11 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 					continue;
 				}
 
-				// Get all terms of onemedia_media_type taxonomy from current media file.
-				$terms = [ Media::TAXONOMY_TERM ];
-
 				// Add the source attachment metadata to the media file.
 				$file_details['attachment_metadata'] = $attachment_metadata;
 
 				// Insert the attachment with the file details.
-				$attachment_id = $this->create_attachment_from_file( $file_details, $media_title, $sync_status, $terms );
+				$attachment_id = $this->create_attachment_from_file( $file_details, $media_title, $sync_status );
 
 				if ( is_wp_error( $attachment_id ) ) {
 					// Clean up temp file if one was created.
@@ -1175,11 +1156,10 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 				}
 
 				$successful_uploads[] = [
-					'id'           => $attachment_id,
-					'url'          => wp_get_attachment_url( $attachment_id ),
-					'title'        => $media_title,
-					'parent_id'    => $parent_media_id,
-					'parent_terms' => Attachment::get_terms( $attachment_id ),
+					'id'        => $attachment_id,
+					'url'       => wp_get_attachment_url( $attachment_id ),
+					'title'     => $media_title,
+					'parent_id' => $parent_media_id,
 				];
 			}
 		}
@@ -1285,21 +1265,6 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 		}
 
 		if ( 'sync' === $sync_option ) {
-			// Assign the term to the attachment.
-			if ( taxonomy_exists( Media::TAXONOMY ) ) {
-				$success = wp_set_object_terms( $attachment_id, Media::TAXONOMY_TERM, Media::TAXONOMY, true );
-
-				if ( is_wp_error( $success ) ) {
-					return new \WP_Error(
-						'error',
-						__( 'Failed to assign term to attachment.', 'onemedia' ),
-						[
-							'status'  => 500,
-							'success' => false,
-						]
-					);
-				}
-			}
 
 			// Check if the media is already marked as sync media.
 			$is_sync_media = Attachment::is_sync_attachment( $attachment_id );
@@ -1314,7 +1279,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 			}
 
 			// Assign the meta key to the attachment.
-			Attachment::update_is_syncing( $attachment_id, true );
+			Attachment::set_is_sync( $attachment_id, true );
 
 			// Convert non sync to sync media if it was previously shared as non sync.
 			// Check if the media is already shared in non-sync mode.
@@ -1514,10 +1479,10 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 					'success'              => true,
 				]
 			);
-		} else {
-			// If not syncing, set the sync status to false.
-			Attachment::update_is_syncing( $attachment_id, false );
 		}
+
+		// If not syncing, set the sync status to false.
+		Attachment::set_is_sync( $attachment_id, false );
 
 		// Return success response with attachment ID.
 		return rest_ensure_response(
@@ -1748,11 +1713,10 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 	 * @param array            $file_details File details from handle_local_url.
 	 * @param string           $title        Title for the attachment.
 	 * @param 'sync'|'no_sync' $sync_status  Sync status to be added as metadata.
-	 * @param array            $terms        Terms to be assigned to the attachment.
 	 *
 	 * @return int|\WP_Error Attachment ID or error
 	 */
-	private function create_attachment_from_file( array $file_details, string $title, string $sync_status, array $terms = [] ): int|\WP_Error {
+	private function create_attachment_from_file( array $file_details, string $title, string $sync_status ): int|\WP_Error {
 		// Get upload directory info.
 		$uploads = wp_upload_dir();
 
@@ -1809,9 +1773,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 		}
 
 		// Add attachment metadata for sync status.
-		if ( ! empty( $sync_status ) ) {
-			Attachment::update_sync_status( $attachment_id, $sync_status );
-		}
+		Attachment::set_is_sync( $attachment_id, 'sync' === $sync_status );
 
 		if ( ! function_exists( 'wp_generate_attachment_metadata' ) ) {
 			include_once ABSPATH . 'wp-admin/includes/image.php';  // phpcs:ignore WordPressVIPMinimum.Files.IncludingFile.UsingCustomConstant
@@ -1835,14 +1797,6 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 		// Update attachment metadata from source file.
 		$source_metadata = $file_details['attachment_metadata'] ?? [];
 		$this->add_source_metadata_to_file( $attachment_id, $source_metadata );
-
-		// Delete all onemedia_media_type terms for this attachment.
-		wp_set_object_terms( $attachment_id, [], Media::TAXONOMY, false );
-
-		// Set the attachment terms if provided.
-		foreach ( $terms as $term ) {
-			wp_set_object_terms( $attachment_id, $term, Media::TAXONOMY, false );
-		}
 
 		if ( ! empty( $errors ) ) {
 			return new \WP_Error(

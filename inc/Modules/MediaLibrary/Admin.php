@@ -11,6 +11,7 @@ use OneMedia\Contracts\Interfaces\Registrable;
 use OneMedia\Modules\Core\Assets;
 use OneMedia\Modules\MediaSharing\Attachment;
 use OneMedia\Modules\Settings\Settings;
+use OneMedia\Utils;
 
 /**
  * Class Admin
@@ -25,6 +26,10 @@ class Admin implements Registrable {
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_scripts' ], 20 );
 
 		add_filter( 'ajax_query_attachments_args', [ $this,'filter_ajax_query_attachments_args' ] );
+
+		// Create media filter for synced attachments.
+		add_action( 'restrict_manage_posts', [ $this, 'add_sync_filter' ] );
+		add_action( 'parse_query', [ $this, 'filter_sync_attachments' ] );
 	}
 
 	/**
@@ -99,8 +104,8 @@ class Admin implements Registrable {
 			if ( Attachment::SYNC_STATUS_SYNC === $sync_status ) {
 				$query['meta_query'] = [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 					[
-						'key'     => Attachment::SYNC_STATUS_POSTMETA_KEY,
-						'value'   => Attachment::SYNC_STATUS_SYNC,
+						'key'     => Attachment::IS_SYNC_POSTMETA_KEY,
+						'value'   => '1',
 						'compare' => '=',
 					],
 				];
@@ -108,12 +113,12 @@ class Admin implements Registrable {
 				$query['meta_query'] = [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 					'relation' => 'OR',
 					[
-						'key'     => Attachment::SYNC_STATUS_POSTMETA_KEY,
-						'value'   => Attachment::SYNC_STATUS_NO_SYNC,
+						'key'     => Attachment::IS_SYNC_POSTMETA_KEY,
+						'value'   => '0',
 						'compare' => '=',
 					],
 					[
-						'key'     => Attachment::SYNC_STATUS_POSTMETA_KEY,
+						'key'     => Attachment::IS_SYNC_POSTMETA_KEY,
 						'compare' => 'NOT EXISTS',
 					],
 				];
@@ -149,5 +154,95 @@ class Admin implements Registrable {
 		}
 
 		return $query;
+	}
+
+	/**
+	 * Add filter for synced attachments.
+	 *
+	 * @return void
+	 */
+	public function add_sync_filter(): void {
+		global $pagenow;
+
+		if ( 'upload.php' !== $pagenow ) {
+			return;
+		}
+
+		// Nonce verification for filter form.
+		$nonce = filter_input( INPUT_GET, 'onemedia_sync_nonce', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+		$nonce = isset( $nonce ) ? sanitize_text_field( wp_unslash( $nonce ) ) : '';
+
+		if ( ! $nonce ) {
+			// This means this is the first load of the page, so we don't have onemedia_sync_filter nonce yet.
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaping handled in the template file.
+			echo Utils::get_template_content( 'brand-site/sync-status' );
+			return;
+		}
+
+		if ( ! wp_verify_nonce( $nonce, 'onemedia_sync_filter' ) ) {
+			return;
+		}
+
+		// This means the form has been submitted, so we have a nonce to verify.
+		$sync_status = isset( $_GET[ Attachment::SYNC_STATUS_POSTMETA_KEY ] )
+			? sanitize_text_field( wp_unslash( $_GET[ Attachment::SYNC_STATUS_POSTMETA_KEY ] ) )
+			: '';
+
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaping handled in the template file.
+		echo Utils::get_template_content( 'brand-site/sync-status', [ 'sync_status' => $sync_status ] );
+	}
+
+	/**
+	 * Filter attachments based on sync status.
+	 *
+	 * @param \WP_Query $query A reference of the current query object.
+	 */
+	public function filter_sync_attachments( \WP_Query $query ): void {
+		global $pagenow;
+		$onemedia_sync_status = filter_input( INPUT_GET, Attachment::SYNC_STATUS_POSTMETA_KEY, FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+
+		if ( 'upload.php' !== $pagenow || empty( $onemedia_sync_status ) ) {
+			return;
+		}
+
+		// Nonce verification for filter query.
+		$nonce = filter_input( INPUT_GET, 'onemedia_sync_nonce', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+		$nonce = isset( $nonce ) ? sanitize_text_field( wp_unslash( $nonce ) ) : '';
+
+		if ( ! $nonce || ! wp_verify_nonce( $nonce, 'onemedia_sync_filter' ) ) {
+			return;
+		}
+
+		$sync_status = filter_input( INPUT_GET, Attachment::SYNC_STATUS_POSTMETA_KEY, FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+		$sync_status = isset( $sync_status ) ? sanitize_text_field( wp_unslash( $sync_status ) ) : '';
+
+		if ( Attachment::SYNC_STATUS_SYNC === $sync_status ) {
+			$query->set(
+				'meta_query',
+				[
+					[
+						'key'     => Attachment::IS_SYNC_POSTMETA_KEY,
+						'value'   => '1',
+						'compare' => '=',
+					],
+				]
+			);
+		} elseif ( Attachment::SYNC_STATUS_NO_SYNC === $sync_status ) {
+			$query->set(
+				'meta_query',
+				[
+					'relation' => 'OR',
+					[
+						'key'     => Attachment::IS_SYNC_POSTMETA_KEY,
+						'value'   => '0',
+						'compare' => '=',
+					],
+					[
+						'key'     => Attachment::IS_SYNC_POSTMETA_KEY,
+						'compare' => 'NOT EXISTS',
+					],
+				]
+			);
+		}
 	}
 }

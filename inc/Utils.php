@@ -92,21 +92,4 @@ final class Utils {
 
 		return ob_get_clean() ?: '';
 	}
-
-	/**
-	 * Wrapper for term_exists to support WPVIP.
-	 *
-	 * @param string|int $term      Term ID or slug to check.
-	 * @param string     $taxonomy  Optional. Taxonomy name. Default empty.
-	 * @param int        $parent_id Optional. Parent term ID. Default 0.
-	 *
-	 * @return ($term is 0 ? 0 : ($term is '' ? null : ($taxonomy is '' ? string|null : array{term_id: string, term_taxonomy_id: string}|null)))
-	 */
-	public static function term_exists( $term, $taxonomy = '', $parent_id = 0 ) {
-		if ( function_exists( 'wpcom_vip_term_exists' ) ) {
-			return wpcom_vip_term_exists( $term, $taxonomy, $parent_id );
-		}
-
-		return term_exists( $term, $taxonomy, $parent_id );
-	}
 }

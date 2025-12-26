@@ -30,8 +30,6 @@ final class Main {
 		Modules\Settings\Settings::class,
 		Modules\Rest\Basic_Options_Controller::class,
 		Modules\Rest\Media_Sharing_Controller::class,
-		Modules\Taxonomies\Media::class,
-		Modules\Taxonomies\Term_Restriction::class,
 		Modules\MediaLibrary\Admin::class,
 		Modules\MediaLibrary\ConsumerAdmin::class,
 		Modules\MediaSharing\Admin::class,
