@@ -8,7 +8,6 @@
 namespace OneMedia\Modules\MediaSharing;
 
 use OneMedia\Contracts\Interfaces\Registrable;
-use OneMedia\Modules\Taxonomies\Media;
 
 /**
  * Class CPT_Restriction
@@ -19,46 +18,47 @@ class UserInterface implements Registrable {
 	 * {@inheritDoc}
 	 */
 	public function register_hooks(): void {
-		add_filter( 'manage_media_columns', [ $this, 'add_media_column' ] );
-		add_action( 'manage_media_custom_column', [ $this, 'display_media_column_content' ], 10, 2 );
+
+		// Add column for synced attachments.
+		add_filter( 'manage_media_columns', [ $this, 'add_sync_column' ] );
+		add_action( 'manage_media_custom_column', [ $this, 'render_sync_column' ], 10, 2 );
+
+		// Remove delete action from sync media.
 		add_filter( 'media_row_actions', [ $this, 'filter_media_row_actions' ], 10, 2 );
 	}
 
 	/**
-	 * Add a custom column to the media library for displaying image types.
+	 * Add sync column to media library.
 	 *
-	 * @param array $columns Existing columns.
+	 * @param array $columns Array of columns.
 	 *
 	 * @return array Modified columns.
 	 */
-	public function add_media_column( array $columns ): array {
-		$columns['image_type'] = __( 'Image Type', 'onemedia' );
+	public function add_sync_column( array $columns ): array {
+		$columns['onemedia_sync_status'] = __( 'Sync Status', 'onemedia' );
 		return $columns;
 	}
 
 	/**
-	 * Display content for the custom media column.
+	 * Render sync column in media library.
 	 *
-	 * @param string $column_name   The name of the column.
-	 * @param int    $attachment_id The ID of the attachment.
+	 * @param string $column_name Column name.
+	 * @param int    $post_id     Post ID.
 	 *
 	 * @return void
 	 */
-	public function display_media_column_content( string $column_name, int $attachment_id ): void {
-		if ( 'image_type' !== $column_name ) {
+	public function render_sync_column( string $column_name, int $post_id ): void {
+		if ( 'onemedia_sync_status' !== $column_name ) {
 			return;
 		}
 
-		$is_sync = Attachment::is_sync_attachment( $attachment_id );
-		$label   = $is_sync ? __( 'OneMedia', 'onemedia' ) : __( 'Not Assigned', 'onemedia' );
-		$classes = $is_sync ? 'onemedia-media-term-label' : 'onemedia-media-term-label empty';
+		$is_sync = Attachment::is_sync_attachment( $post_id );
+		if ( $is_sync ) {
+			echo '<span class="onemedia-sync-badge dashicons dashicons-yes"></span>';
+			return;
+		}
 
-		printf(
-		/* translators: %1$s is the class attribute, %2$s is the label text. */
-			'<span class="%1$s">%2$s</span>',
-			esc_attr( $classes ),
-			esc_html( $label )
-		);
+		echo '<span class="dashicons dashicons-no"></span>';
 	}
 
 	/**
@@ -74,12 +74,13 @@ class UserInterface implements Registrable {
 			return $actions;
 		}
 
-		$terms = Attachment::get_post_terms( $post->ID, [ 'fields' => 'slugs' ] );
-		if ( ! empty( $terms ) && isset( array_flip( $terms )[ Media::TAXONOMY_TERM ] ) ) {
-			if ( isset( $actions['delete'] ) ) {
-				unset( $actions['delete'] );
-			}
+		$is_sync = Attachment::is_sync_attachment( $post->ID );
+		if ( ! $is_sync ) {
+			return $actions;
 		}
+
+		// Remove delete action for sync media.
+		unset( $actions['delete'] );
 
 		return $actions;
 	}

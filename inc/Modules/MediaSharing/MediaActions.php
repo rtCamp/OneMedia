@@ -10,7 +10,6 @@ namespace OneMedia\Modules\MediaSharing;
 use OneMedia\Contracts\Interfaces\Registrable;
 use OneMedia\Modules\Rest\Abstract_REST_Controller;
 use OneMedia\Modules\Settings\Settings;
-use OneMedia\Modules\Taxonomies\Media;
 use OneMedia\Utils;
 
 /**
@@ -49,16 +48,11 @@ class MediaActions implements Registrable {
 		// Add replace media button to media library react view.
 		add_filter( 'attachment_fields_to_edit', [ $this, 'add_replace_media_button' ], 10, 2 );
 
-		add_action( 'wp_ajax_onemedia_sync_media_upload', [ $this, 'handle_sync_media_upload' ] );
+		// Handle media replace.
 		add_action( 'wp_ajax_onemedia_replace_media', [ $this, 'handle_media_replace' ] );
 
 		// Add sync status to attachment data for JavaScript (Media Modal).
 		add_filter( 'wp_prepare_attachment_for_js', [ $this, 'add_sync_meta' ], 10, 2 );
-
-		// Clear cache when attachment sync status changes.
-		add_action( 'updated_post_meta', [ $this, 'clear_sync_cache' ], 10, 3 );
-		add_action( 'added_post_meta', [ $this, 'clear_sync_cache' ], 10, 3 );
-		add_action( 'deleted_post_meta', [ $this, 'clear_sync_cache' ], 10, 3 );
 	}
 
 	/**
@@ -338,16 +332,12 @@ class MediaActions implements Registrable {
 			$attachment_caption     = get_post_field( 'post_excerpt', $attachment_id );
 			$attachment_description = get_post_field( 'post_content', $attachment_id );
 
-			// Get attachment terms.
-			$attachment_terms = Attachment::get_terms( $attachment_id );
-			$attachment_terms = wp_list_pluck( $attachment_terms, 'slug' );
-
 			// Set attachment data.
 			$attachment_data['title']       = $attachment_title;
 			$attachment_data['alt_text']    = $attachment_alt_text;
 			$attachment_data['caption']     = $attachment_caption;
 			$attachment_data['description'] = $attachment_description;
-			$attachment_data['terms']       = $attachment_terms;
+			$attachment_data['is_sync']     = Attachment::is_sync_attachment( $attachment_id );
 
 			// Make POST request to update existing attachment on brand sites.
 			wp_safe_remote_post(
@@ -367,85 +357,6 @@ class MediaActions implements Registrable {
 				]
 			);
 		}
-	}
-
-	/**
-	 * Handle onemedia_sync upload via AJAX.
-	 *
-	 * This function will be used for fallback when WP media library is not available for handling uploads.
-	 *
-	 * @return void
-	 */
-	public function handle_sync_media_upload(): void {
-		if ( ! current_user_can( 'manage_options' ) || ! check_ajax_referer( 'onemedia_upload_media' ) ) {
-			wp_send_json_error( [ 'message' => __( 'You do not have permission to upload sync media.', 'onemedia' ) ], 403 );
-		}
-
-		if ( ! isset( $_FILES['file'] ) || empty( $_FILES['file']['name'] ) ) {
-			wp_send_json_error( [ 'message' => __( 'No file uploaded.', 'onemedia' ) ], 400 );
-		}
-
-		$file = [
-			'name'     => isset( $_FILES['file']['name'] ) ? sanitize_file_name( $_FILES['file']['name'] ) : '',
-			'type'     => isset( $_FILES['file']['type'] ) ? sanitize_mime_type( $_FILES['file']['type'] ) : '',
-			'tmp_name' => isset( $_FILES['file']['tmp_name'] ) ? sanitize_text_field( $_FILES['file']['tmp_name'] ) : '',
-			'error'    => isset( $_FILES['file']['error'] ) ? intval( $_FILES['file']['error'] ) : 0,
-			'size'     => isset( $_FILES['file']['size'] ) ? intval( $_FILES['file']['size'] ) : 0,
-		];
-
-		// Decode filename to handle special characters.
-		$file['name'] = Utils::decode_filename( $file['name'] );
-
-		// Validate file type.
-		if ( ! in_array( $file['type'], Utils::get_supported_mime_types(), true ) ) {
-			wp_send_json_error( [ 'message' => __( 'Invalid file type. Only JPG, PNG, WEBP, BMP, SVG and GIF files are allowed.', 'onemedia' ) ], 400 );
-		}
-
-		// Move the uploaded file to the uploads directory.
-		$upload_dir  = wp_upload_dir();
-		$target_path = $upload_dir['path'] . '/' . basename( $file['name'] );
-		if ( ! move_uploaded_file( $file['tmp_name'], $target_path ) ) { //phpcs:ignore Generic.PHP.ForbiddenFunctions.Found
-			wp_send_json_error( [ 'message' => __( 'Failed to move uploaded file.', 'onemedia' ) ], 500 );
-		}
-
-		// Insert the file into the media library.
-		$attachment    = [
-			'guid'           => $upload_dir['url'] . '/' . basename( $file['name'] ),
-			'post_mime_type' => $file['type'],
-			'post_title'     => sanitize_file_name( pathinfo( $file['name'], PATHINFO_FILENAME ) ),
-			'post_content'   => '',
-			'post_status'    => 'inherit',
-		];
-		$attachment_id = wp_insert_attachment( $attachment, $target_path );
-
-		if ( is_wp_error( $attachment_id ) ) {
-			wp_send_json_error( [ 'message' => __( 'Failed to insert attachment into media library.', 'onemedia' ) ], 500 );
-		}
-
-		// Generate attachment metadata and update the attachment.
-		include_once ABSPATH . 'wp-admin/includes/image.php';  // phpcs:ignore WordPressVIPMinimum.Files.IncludingFile.UsingCustomConstant
-		$metadata = wp_generate_attachment_metadata( $attachment_id, $target_path );
-
-		if ( ! $metadata ) {
-			wp_send_json_error( [ 'message' => __( 'Failed to generate attachment metadata.', 'onemedia' ) ], 500 );
-		}
-		wp_update_attachment_metadata( $attachment_id, $metadata );
-
-		$sync_status = filter_input( INPUT_GET, 'onemedia_sync_media_upload', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
-		if ( ! empty( $sync_status ) && 'true' === $sync_status ) {
-			// Assign the 'onemedia' term to the attachment.
-			if ( taxonomy_exists( Media::TAXONOMY ) ) {
-				wp_set_object_terms( $attachment_id, Media::TAXONOMY_TERM, Media::TAXONOMY, true );
-			}
-		}
-
-		// Return success response with attachment ID.
-		wp_send_json_success(
-			[
-				'attachment_id' => $attachment_id,
-				'message'       => __( 'Sync media uploaded successfully.', 'onemedia' ),
-			]
-		);
 	}
 
 	/**
@@ -687,13 +598,6 @@ class MediaActions implements Registrable {
 		// Update the attachment file path.
 		update_attached_file( $attachment_id, $target_path );
 
-		// Preserve existing taxonomy terms.
-		$current_terms = wp_get_object_terms( $attachment_id, Media::TAXONOMY, [ 'fields' => 'slugs' ] );
-
-		if ( ! is_wp_error( $current_terms ) && ! empty( $current_terms ) ) {
-			wp_set_object_terms( $attachment_id, $current_terms, Media::TAXONOMY, false );
-		}
-
 		// Update synced media on brand sites.
 		$this->update_sync_attachments( $attachment_id );
 
@@ -877,22 +781,5 @@ class MediaActions implements Registrable {
 		$response['is_onemedia_sync'] = Attachment::is_sync_attachment( $attachment->ID );
 
 		return $response;
-	}
-
-	/**
-	 * Clear sync status cache when the relevant post meta is updated.
-	 *
-	 * @param int|array $meta_id    The meta ID.
-	 * @param int       $object_id  The object ID.
-	 * @param string    $meta_key   The meta key.
-	 *
-	 * @return void -- clear cache if the meta key matches.
-	 */
-	public function clear_sync_cache( int|array $meta_id, int $object_id, string $meta_key ): void {
-		if ( Attachment::IS_SYNC_POSTMETA_KEY !== $meta_key ) {
-			return;
-		}
-
-		wp_cache_delete( "onemedia_sync_status_{$object_id}", 'onemedia' );
 	}
 }

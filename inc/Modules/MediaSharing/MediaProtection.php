@@ -9,7 +9,6 @@ namespace OneMedia\Modules\MediaSharing;
 
 use OneMedia\Contracts\Interfaces\Registrable;
 use OneMedia\Modules\Settings\Settings;
-use OneMedia\Modules\Taxonomies\Media;
 
 /**
  * Class CPT_Restriction
@@ -53,12 +52,6 @@ class MediaProtection implements Registrable {
 		$is_onemedia_sync = isset( $_POST['is_onemedia_sync'] ) && filter_var( wp_unslash( $_POST['is_onemedia_sync'] ), FILTER_VALIDATE_BOOLEAN );
 
 		update_post_meta( $attachment_id, Attachment::IS_SYNC_POSTMETA_KEY, $is_onemedia_sync ? 1 : 0 );
-
-		if ( true !== $is_onemedia_sync ) {
-			return;
-		}
-
-		wp_set_object_terms( $attachment_id, Media::TAXONOMY_TERM, Media::TAXONOMY, true );
 	}
 
 	/**
@@ -106,7 +99,7 @@ class MediaProtection implements Registrable {
 			return $caps;
 		}
 
-		if ( Attachment::SYNC_STATUS_SYNC === get_post_meta( $post_id, Attachment::SYNC_STATUS_POSTMETA_KEY, true ) ) {
+		if ( Attachment::is_sync_attachment( $post_id ) ) {
 			return [ 'do_not_allow' ];
 		}
 
