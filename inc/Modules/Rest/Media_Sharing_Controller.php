@@ -1033,7 +1033,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 					// Media already shared in the same configuration.
 
 					if ( Attachment::SYNC_STATUS_SYNC === $sync_status ) {
-						Attachment::set_is_sync( (int) $attachment_id, true );
+						Attachment::set_is_sync( (int) $saved_attachment_id, true );
 
 						// Update the existing attachment with new metadata if any changes are present.
 						if ( 'attachment' === get_post_type( $saved_attachment_id ) ) {
@@ -1068,7 +1068,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 					}
 
 					// Add attachment metadata for sync status.
-					Attachment::set_is_sync( $attachment_id, false );
+					Attachment::set_is_sync( $attachment_id, Attachment::SYNC_STATUS_SYNC === $sync_status );
 
 					// Update the existing attachment with new metadata if any changes are present.
 					$this->add_source_metadata_to_file( $attachment_id, $attachment_metadata );

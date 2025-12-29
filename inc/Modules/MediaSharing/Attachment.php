@@ -172,7 +172,7 @@ class Attachment implements Registrable {
 	}
 
 	/**
-	 * Set's meta to know if attachment is sync or not.
+	 * Sets meta to know if attachment is sync or not.
 	 *
 	 * @param int  $attachment_id The ID of the attachment.
 	 * @param bool $is_syncing    True if syncing, false otherwise.
