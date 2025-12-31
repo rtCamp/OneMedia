@@ -179,7 +179,7 @@ class Attachment implements Registrable {
 	 *
 	 * @return int|bool Meta ID if the key didn't exist, false on failure, true on success.
 	 */
-	public static function set_is_sync( int $attachment_id, bool $is_syncing ) {
+	public static function set_is_synced( int $attachment_id, bool $is_syncing ) {
 		return update_post_meta( $attachment_id, self::IS_SYNC_POSTMETA_KEY, $is_syncing );
 	}
 

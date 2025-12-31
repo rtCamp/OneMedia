@@ -53,12 +53,14 @@ class UserInterface implements Registrable {
 		}
 
 		$is_sync = Attachment::is_sync_attachment( $post_id );
-		if ( $is_sync ) {
-			echo '<span class="onemedia-sync-badge dashicons dashicons-yes"></span>';
-			return;
-		}
+		$title   = $is_sync ? __( 'Synced', 'onemedia' ) : __( 'Not synced', 'onemedia' );
+		$class   = $is_sync ? 'onemedia-sync-badge dashicons dashicons-yes' : 'dashicons dashicons-no';
 
-		echo '<span class="dashicons dashicons-no"></span>';
+		printf(
+			'<span class="%s" title="%s"></span>',
+			esc_attr( $class ),
+			esc_attr( $title )
+		);
 	}
 
 	/**

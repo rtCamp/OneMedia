@@ -730,7 +730,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 			}
 
 			// For each media file its sync is checked then add meta data is_onemedia_sync to be true and onemedia_sync_sites meta to array of sites where it is synced.
-			Attachment::set_is_sync( $media['id'], 'sync' === $sync_option );
+			Attachment::set_is_synced( $media['id'], 'sync' === $sync_option );
 
 			// Share the attachment metadata with the brand sites.
 			// Get attachment metadata.
@@ -1033,7 +1033,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 					// Media already shared in the same configuration.
 
 					if ( Attachment::SYNC_STATUS_SYNC === $sync_status ) {
-						Attachment::set_is_sync( (int) $saved_attachment_id, true );
+						Attachment::set_is_synced( (int) $saved_attachment_id, true );
 
 						// Update the existing attachment with new metadata if any changes are present.
 						if ( 'attachment' === get_post_type( $saved_attachment_id ) ) {
@@ -1068,7 +1068,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 					}
 
 					// Add attachment metadata for sync status.
-					Attachment::set_is_sync( $attachment_id, Attachment::SYNC_STATUS_SYNC === $sync_status );
+					Attachment::set_is_synced( $attachment_id, Attachment::SYNC_STATUS_SYNC === $sync_status );
 
 					// Update the existing attachment with new metadata if any changes are present.
 					$this->add_source_metadata_to_file( $attachment_id, $attachment_metadata );
@@ -1279,7 +1279,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 			}
 
 			// Assign the meta key to the attachment.
-			Attachment::set_is_sync( $attachment_id, true );
+			Attachment::set_is_synced( $attachment_id, true );
 
 			// Convert non sync to sync media if it was previously shared as non sync.
 			// Check if the media is already shared in non-sync mode.
@@ -1482,7 +1482,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 		}
 
 		// If not syncing, set the sync status to false.
-		Attachment::set_is_sync( $attachment_id, false );
+		Attachment::set_is_synced( $attachment_id, false );
 
 		// Return success response with attachment ID.
 		return rest_ensure_response(
@@ -1773,7 +1773,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 		}
 
 		// Add attachment metadata for sync status.
-		Attachment::set_is_sync( $attachment_id, 'sync' === $sync_status );
+		Attachment::set_is_synced( $attachment_id, 'sync' === $sync_status );
 
 		if ( ! function_exists( 'wp_generate_attachment_metadata' ) ) {
 			include_once ABSPATH . 'wp-admin/includes/image.php';  // phpcs:ignore WordPressVIPMinimum.Files.IncludingFile.UsingCustomConstant
