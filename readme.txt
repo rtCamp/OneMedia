@@ -124,7 +124,7 @@ Yes, all site-to-site communication uses API key authentication and validated re
 
 == Changelog ==
 
-For the full changelog, please visit <a href="https://github.com/rtCamp/OneDesign/blob/main/CHANGELOG.md" target="_blank">GitHub repository</a>.
+For the full changelog, please visit <a href="https://github.com/rtCamp/OneMedia/blob/main/CHANGELOG.md" target="_blank">GitHub repository</a>.
 
 == Upgrade Notice ==
 
