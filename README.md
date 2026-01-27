@@ -102,21 +102,6 @@ Once you have installed and configured the plugin, follow this guide to get star
 
 ---
 
-## Changelog
-
-### 1.0.0
-
--   Initial release
--   Centralized media management & governing
--   Sync and Non-Sync media sharing
--   REST API integration for secure communication
--   Site configuration and connection management
--   Sync status visibility in the Brand Site media library
-
-For a detailed list of changes, please refer to the [Changesets](./.changeset/).
-
----
-
 ## Known Issues / Limitations
 
 1.  **Supported Files:** Only JPG, PNG, WEBP, BMP, SVG, and GIF files are supported.
