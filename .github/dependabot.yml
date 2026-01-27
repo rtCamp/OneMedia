@@ -17,9 +17,6 @@ updates:
       composer-dev-major:
         dependency-type: 'development'
         update-types: [major]
-      composer-minor-patch:
-        dependency-type: 'production'
-        update-types: [minor, patch]
       # We don't bundle minor or major production assets, so they're tested individually.
       composer-patch:
         dependency-type: 'production'
