@@ -129,11 +129,10 @@ To set up locally, clone the repository into plugins directory of your WordPress
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) v20+
-- npm or yarn
-- PHP (recommended: 7.4+)
+- [Node.js](https://nodejs.org/) v22 and `npm` (NVM recommended)
+- PHP: 8.0+
 - Composer
-- WordPress (recommended: 6.8+) (local install)
+- WordPress: 6.8+
 
 ### Building OneMedia Packages
 

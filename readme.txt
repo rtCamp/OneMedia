@@ -2,10 +2,10 @@
 Contributors: Utsav Patel, Ahmar Zaidi, rtCamp
 Donate link: https://rtcamp.com/
 Tags: OneMedia, OnePress, Media Manager, WordPress, Media Manager, WordPress Automation, WordPress
-Requires at least: 6.5
+Requires at least: 6.8
 Tested up to: 6.9
-Stable tag: 1.0.0
-Requires PHP: 7.4
+Stable tag: 1.1.0
+Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -124,23 +124,12 @@ Yes, all site-to-site communication uses API key authentication and validated re
 
 == Changelog ==
 
-= 1.0.0 =
-* Initial release
-* Centralized media management & governing
-* Sync and Non-Sync media sharing
-* REST API integration for secure communication
-* Site configuration and connection management
-* Sync status on Brand Sites media library
+For the full changelog, please visit <a href="https://github.com/rtCamp/OneMedia/blob/main/CHANGELOG.md" target="_blank">GitHub repository</a>.
 
 == Upgrade Notice ==
 
 = 1.0.0 =
 Initial release of OneMedia. Perfect for enterprises managing media across multiple WordPress sites.
-
-== Requirements ==
-
-* WordPress 6.5 or higher
-* PHP 7.4 or higher
 
 == Support ==
 

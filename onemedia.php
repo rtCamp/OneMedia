@@ -10,7 +10,7 @@
  * License URI:         https://www.gnu.org/licenses/gpl-2.0.txt
  * Text Domain:         onemedia
  * Domain Path:         /languages
- * Version:             1.0.0
+ * Version:             1.1.0
  * Requires PHP:        8.0
  * Requires at least:   6.8
  * Tested up to:        6.9
@@ -32,7 +32,7 @@ function constants(): void {
 	/**
 	 * Version of the plugin.
 	 */
-	define( 'ONEMEDIA_VERSION', '0.1.0' );
+	define( 'ONEMEDIA_VERSION', '1.1.0' );
 
 	/**
 	 * Root path to the plugin directory.
