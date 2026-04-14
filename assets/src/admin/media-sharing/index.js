@@ -1,12 +1,10 @@
 /**
  * WordPress dependencies
  */
-import {
-	useState,
-	useEffect,
-	useCallback,
-	useMemo,
-} from 'react';
+/**
+ * External dependencies
+ */
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
 	Button,
@@ -31,223 +29,241 @@ import versionIcon from './components/versionIcon';
 import BrowserUploaderButton from './components/browser-uploader';
 import ShareMediaModal from './components/ShareMediaModal';
 import VersionModal from './components/VersionModal';
-import { fetchSyncedSites as fetchSyncedSitesApi, fetchMediaItems as fetchMediaItemsApi, fetchBrandSites as fetchBrandSitesApi, shareMedia as shareMediaApi, uploadMedia } from '../../components/api';
-import { getNoticeClass, trimTitle, debounce, getFrameProperty, restrictMediaFrameUploadTypes, getAllowedMimeTypeExtensions } from '../../js/utils';
+import {
+	fetchSyncedSites as fetchSyncedSitesApi,
+	fetchMediaItems as fetchMediaItemsApi,
+	fetchBrandSites as fetchBrandSitesApi,
+	shareMedia as shareMediaApi,
+	uploadMedia,
+} from '../../components/api';
+import {
+	getNoticeClass,
+	trimTitle,
+	debounce,
+	getFrameProperty,
+	restrictMediaFrameUploadTypes,
+	getAllowedMimeTypeExtensions,
+} from '../../js/utils';
 import fallbackImage from '../../images/fallback-image.svg';
 
 const MEDIA_PER_PAGE = 12;
 const ONEMEDIA_PLUGIN_TAXONOMY_TERM = 'onemedia';
 const UPLOAD_NONCE = window.OneMediaMediaSharing?.uploadNonce || '';
 const ONEMEDIA_MEDIA_SHARING = window.OneMediaMediaSharing || {};
-const ALLOWED_MIME_TYPES_MAP = typeof window.OneMediaMediaFrame?.allowedMimeTypesMap !== 'undefined'
-	? window.OneMediaMediaFrame?.allowedMimeTypesMap
-	: [];
+const ALLOWED_MIME_TYPES_MAP =
+	typeof window.OneMediaMediaFrame?.allowedMimeTypesMap !== 'undefined'
+		? window.OneMediaMediaFrame?.allowedMimeTypesMap
+		: [];
 
-const MediaSharingApp = ( {
+const MediaSharingApp = ({
 	imageType = '',
 	cardTitle = '',
 	cardDescription = '',
-} ) => {
+}) => {
 	// Media state.
-	const [ mediaItems, setMediaItems ] = useState( [] );
-	const [ selectedMedia, setSelectedMedia ] = useState( {} );
-	const [ currentPage, setCurrentPage ] = useState( 1 );
-	const [ totalPages, setTotalPages ] = useState( 1 );
-	const [ loading, setLoading ] = useState( false );
-	const [ initLoading, setInitLoading ] = useState( false );
-	const [ syncedSites, setSyncedSites ] = useState( [] );
-	const [ selectedVersionId, setSelectedVersionId ] = useState( 0 );
-	const [ currentRevision, setCurrentRevision ] = useState( [] );
+	const [mediaItems, setMediaItems] = useState([]);
+	const [selectedMedia, setSelectedMedia] = useState({});
+	const [currentPage, setCurrentPage] = useState(1);
+	const [totalPages, setTotalPages] = useState(1);
+	const [loading, setLoading] = useState(false);
+	const [initLoading, setInitLoading] = useState(false);
+	const [syncedSites, setSyncedSites] = useState([]);
+	const [selectedVersionId, setSelectedVersionId] = useState(0);
+	const [currentRevision, setCurrentRevision] = useState([]);
 
 	// Brand sites state.
-	const [ brandSites, setBrandSites ] = useState( [] );
-	const [ selectedSites, setSelectedSites ] = useState( {} );
+	const [brandSites, setBrandSites] = useState([]);
+	const [selectedSites, setSelectedSites] = useState({});
 
 	// UI state.
-	const [ searchTerm, setSearchTerm ] = useState( '' );
-	const [ debouncedSearchTerm, setDebouncedSearchTerm ] = useState( '' );
-	const [ notice, setNotice ] = useState( { type: 'success', message: '' } );
-	const [ isShareMediaModalOpen, setIsShareMediaModalOpen ] = useState( false );
-	const [ isVersionModalOpen, setIsVersionModalOpen ] = useState( false );
-	const [ syncOption, setSyncOption ] = useState( 'sync' );
+	const [searchTerm, setSearchTerm] = useState('');
+	const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+	const [notice, setNotice] = useState({ type: 'success', message: '' });
+	const [isShareMediaModalOpen, setIsShareMediaModalOpen] = useState(false);
+	const [isVersionModalOpen, setIsVersionModalOpen] = useState(false);
+	const [syncOption, setSyncOption] = useState('sync');
 
 	const perPage = MEDIA_PER_PAGE; // Show more items in grid.
 
 	const localizationError = () => {
 		throw new Error(
 			__(
-				'OneMediaMediaSharing object not found. Make sure it\'s properly localized.',
-				'onemedia',
-			),
+				"OneMediaMediaSharing object not found. Make sure it's properly localized.",
+				'onemedia'
+			)
 		);
 	};
 
 	const handleDebouncedSearch = useMemo(
 		() =>
-			debounce( ( value ) => {
-				setDebouncedSearchTerm( value );
-				setSelectedMedia( {} );
-				setCurrentPage( 1 );
-			}, 1000 ),
-		[],
+			debounce((value) => {
+				setDebouncedSearchTerm(value);
+				setSelectedMedia({});
+				setCurrentPage(1);
+			}, 1000),
+		[]
 	);
 
-	const fetchSyncedSites = useCallback( async () => {
-		const sites = await fetchSyncedSitesApi( setNotice );
+	const fetchSyncedSites = useCallback(async () => {
+		const sites = await fetchSyncedSitesApi(setNotice);
 
-		setSyncedSites( sites );
-	}, [] );
+		setSyncedSites(sites);
+	}, []);
 
 	const fetchMediaItems = useCallback(
-		async ( page, search = '' ) => {
-			setLoading( true );
-			setInitLoading( true );
-			setNotice( null );
+		async (page, search = '') => {
+			setLoading(true);
+			setInitLoading(true);
+			setNotice(null);
 
-			if ( ! ONEMEDIA_MEDIA_SHARING ) {
+			if (!ONEMEDIA_MEDIA_SHARING) {
 				localizationError();
 			}
 
-			const data = await fetchMediaItemsApi( {
+			const data = await fetchMediaItemsApi({
 				search,
 				page,
 				perPage,
 				imageType,
 				setNotice,
-			} );
+			});
 
-			setTotalPages( data?.total_pages || 1 );
-			setMediaItems( data?.media_files || [] );
+			setTotalPages(data?.total_pages || 1);
+			setMediaItems(data?.media_files || []);
 
-			setLoading( false );
-			setInitLoading( false );
+			setLoading(false);
+			setInitLoading(false);
 		},
-		[ perPage, imageType ],
+		[perPage, imageType]
 	);
 
-	const fetchBrandSites = useCallback( async () => {
-		if ( ! ONEMEDIA_MEDIA_SHARING ) {
+	const fetchBrandSites = useCallback(async () => {
+		if (!ONEMEDIA_MEDIA_SHARING) {
 			localizationError();
 		}
 
-		const sitesData = await fetchBrandSitesApi( setNotice );
+		const sitesData = await fetchBrandSitesApi(setNotice);
 
-		setBrandSites( sitesData || [] );
+		setBrandSites(sitesData || []);
 
 		// Initialize selected sites state.
 		const initialSelectedSites = {};
-		sitesData.forEach( ( site ) => {
-			initialSelectedSites[ site.url ] = false;
-		} );
-		setSelectedSites( initialSelectedSites );
-	}, [] );
+		sitesData.forEach((site) => {
+			initialSelectedSites[site.url] = false;
+		});
+		setSelectedSites(initialSelectedSites);
+	}, []);
 
 	// Initialize data fetching.
-	useEffect( () => {
+	useEffect(() => {
 		fetchBrandSites();
 		fetchSyncedSites();
-	}, [ fetchBrandSites, fetchSyncedSites ] );
+	}, [fetchBrandSites, fetchSyncedSites]);
 
 	// Fetch media items when currentPage changes.
-	useEffect( () => {
-		fetchMediaItems( currentPage, debouncedSearchTerm );
-	}, [ currentPage, debouncedSearchTerm, fetchMediaItems ] ); // eslint-disable-line react-hooks/exhaustive-deps
+	useEffect(() => {
+		fetchMediaItems(currentPage, debouncedSearchTerm);
+	}, [currentPage, debouncedSearchTerm, fetchMediaItems]); // eslint-disable-line react-hooks/exhaustive-deps
 
 	// Refresh media items when media is replaced.
-	useEffect( () => {
-		const handleMediaReplaced = ( event ) => {
+	useEffect(() => {
+		const handleMediaReplaced = (event) => {
 			const { attachmentId } = event.detail;
-			if ( attachmentId ) {
+			if (attachmentId) {
 				// Refresh media items to reflect the replaced media, respecting imageType.
-				fetchMediaItems( currentPage );
+				fetchMediaItems(currentPage);
 			}
 		};
 
-		document.addEventListener( 'mediaReplaced', handleMediaReplaced );
+		document.addEventListener('mediaReplaced', handleMediaReplaced);
 
 		// Cleanup event listener on component unmount.
 		return () => {
-			document.removeEventListener( 'mediaReplaced', handleMediaReplaced );
+			document.removeEventListener('mediaReplaced', handleMediaReplaced);
 		};
-	}, [ currentPage, imageType, fetchMediaItems ] );
+	}, [currentPage, imageType, fetchMediaItems]);
 
 	// Refresh media items when imageType changes. Set sync option based on imageType.
-	useEffect( () => {
-		if ( ONEMEDIA_PLUGIN_TAXONOMY_TERM === imageType ) {
-			setSyncOption( 'sync' );
+	useEffect(() => {
+		if (ONEMEDIA_PLUGIN_TAXONOMY_TERM === imageType) {
+			setSyncOption('sync');
 		} else {
-			setSyncOption( 'no_sync' );
+			setSyncOption('no_sync');
 		}
-		setCurrentPage( 1 );
-		setSelectedMedia( {} );
-		setSearchTerm( '' );
-		setDebouncedSearchTerm( '' );
-	}, [ imageType ] );
+		setCurrentPage(1);
+		setSelectedMedia({});
+		setSearchTerm('');
+		setDebouncedSearchTerm('');
+	}, [imageType]);
 
-	const handleMediaSelect = ( mediaId ) => {
-		setSelectedMedia( ( prev ) => ( {
+	const handleMediaSelect = (mediaId) => {
+		setSelectedMedia((prev) => ({
 			...prev,
-			[ mediaId ]: ! prev[ mediaId ],
-		} ) );
+			[mediaId]: !prev[mediaId],
+		}));
 	};
 
-	const handleSiteSelect = ( siteUrlOrObj, isBulk = false ) => {
-		if ( isBulk ) {
-			setSelectedSites( siteUrlOrObj );
+	const handleSiteSelect = (siteUrlOrObj, isBulk = false) => {
+		if (isBulk) {
+			setSelectedSites(siteUrlOrObj);
 		} else {
-			setSelectedSites( ( prev ) => ( {
+			setSelectedSites((prev) => ({
 				...prev,
-				[ siteUrlOrObj ]: ! prev[ siteUrlOrObj ],
-			} ) );
+				[siteUrlOrObj]: !prev[siteUrlOrObj],
+			}));
 		}
 	};
 
-	const handleEditMedia = ( mediaId ) => {
-		if ( getFrameProperty( 'wp.media' ) ) {
+	const handleEditMedia = (mediaId) => {
+		if (getFrameProperty('wp.media')) {
 			// Create edit media frame.
-			const editFrame = window.wp.media( {
-				title: __( 'Edit Media', 'onemedia' ),
+			const editFrame = window.wp.media({
+				title: __('Edit Media', 'onemedia'),
 				button: {
-					text: __( 'Update', 'onemedia' ),
+					text: __('Update', 'onemedia'),
 				},
 				multiple: false,
 				library: {
 					type: 'image',
 					is_onemedia_sync: true,
 				},
-			} );
+			});
 
-			restrictMediaFrameUploadTypes( editFrame, getAllowedMimeTypeExtensions( ALLOWED_MIME_TYPES_MAP ).join( ',' ), true );
+			restrictMediaFrameUploadTypes(
+				editFrame,
+				getAllowedMimeTypeExtensions(ALLOWED_MIME_TYPES_MAP).join(','),
+				true
+			);
 
-			editFrame.on( 'open', function() {
+			editFrame.on('open', function () {
 				// Reset the selection state.
-				editFrame.state().get( 'selection' ).reset();
+				editFrame.state().get('selection').reset();
 				// Get the attachment model.
-				const attachment = window.wp.media.attachment( mediaId );
+				const attachment = window.wp.media.attachment(mediaId);
 				// Fetch the attachment data and add to selection.
 				attachment
 					.fetch()
-					.then( () => {
-						editFrame.state().get( 'selection' ).add( attachment );
+					.then(() => {
+						editFrame.state().get('selection').add(attachment);
 						// Force the frame to update its view.
-						editFrame.content.mode( 'browse' );
-					} )
-					.catch( () => {
+						editFrame.content.mode('browse');
+					})
+					.catch(() => {
 						// Fallback: add without fetch.
-						editFrame.state().get( 'selection' ).add( attachment );
-					} );
+						editFrame.state().get('selection').add(attachment);
+					});
 
-				if ( editFrame.el ) {
-					editFrame.el.classList.add( 'onemedia-edit-media-frame' );
+				if (editFrame.el) {
+					editFrame.el.classList.add('onemedia-edit-media-frame');
 				}
-			} );
+			});
 
-			editFrame.on( 'close', () => {
+			editFrame.on('close', () => {
 				// Refresh media items after edit.
-				fetchMediaItems( currentPage, debouncedSearchTerm );
-				setSelectedMedia( {} );
+				fetchMediaItems(currentPage, debouncedSearchTerm);
+				setSelectedMedia({});
 				fetchSyncedSites();
-			} );
+			});
 
 			// Open the frame.
 			editFrame.open();
@@ -256,82 +272,85 @@ const MediaSharingApp = ( {
 
 	const openShareMediaModal = () => {
 		// If there are no brand sites, show a warning.
-		if ( 0 === brandSites.length ) {
-			setNotice( {
+		if (0 === brandSites.length) {
+			setNotice({
 				type: 'warning',
 				message: __(
 					'Please add at least one brand site from OneMedia Settings page',
-					'onemedia',
+					'onemedia'
 				),
-			} );
+			});
 			return;
 		}
 
 		// Check if any media is selected.
-		const hasSelectedMedia = Object.values( selectedMedia ).some(
-			( selected ) => selected,
+		const hasSelectedMedia = Object.values(selectedMedia).some(
+			(selected) => selected
 		);
 
-		if ( ! hasSelectedMedia ) {
-			setNotice( {
+		if (!hasSelectedMedia) {
+			setNotice({
 				type: 'warning',
 				message: __(
 					'Please select at least one media item.',
-					'onemedia',
+					'onemedia'
 				),
-			} );
+			});
 			return;
 		}
 
-		setIsShareMediaModalOpen( true );
+		setIsShareMediaModalOpen(true);
 	};
 
-	const checkMediaRevisionExists = ( mediaId ) => {
-		const media = mediaItems.filter( ( item ) => item.id === mediaId )?.[ 0 ] || null;
+	const checkMediaRevisionExists = (mediaId) => {
+		const media =
+			mediaItems.filter((item) => item.id === mediaId)?.[0] || null;
 		return media && media.revision && media.revision.length > 1;
 	};
 
-	const openVersionModal = async ( mediaId ) => {
-		const version = Object.values( mediaItems ).filter( ( item ) => item.id === mediaId )?.[ 0 ]?.revision || [];
+	const openVersionModal = async (mediaId) => {
+		const version =
+			Object.values(mediaItems).filter((item) => item.id === mediaId)?.[0]
+				?.revision || [];
 
-		if ( ! mediaId || version.length === 0 ) {
+		if (!mediaId || version.length === 0) {
 			return;
 		}
 
-		setSelectedVersionId( mediaId );
-		setCurrentRevision( version );
-		setIsVersionModalOpen( true );
+		setSelectedVersionId(mediaId);
+		setCurrentRevision(version);
+		setIsVersionModalOpen(true);
 	};
 
 	const handleShareMedia = async () => {
-		if ( ! ONEMEDIA_MEDIA_SHARING ) {
+		if (!ONEMEDIA_MEDIA_SHARING) {
 			localizationError();
 		}
 
 		// Get selected brand sites.
-		const selectedBrandSites = Object.entries( selectedSites )
-			.filter( ( [ , isSelected ] ) => isSelected )
-			.map( ( [ url ] ) => url );
+		const selectedBrandSites = Object.entries(selectedSites)
+			.filter(([, isSelected]) => isSelected)
+			.map(([url]) => url);
 
-		if ( 0 === selectedBrandSites.length ) {
-			setNotice( {
+		if (0 === selectedBrandSites.length) {
+			setNotice({
 				type: 'warning',
 				message: __(
 					'Please select at least one brand site.',
-					'onemedia',
+					'onemedia'
 				),
-			} );
+			});
 			return;
 		}
 
 		// Get selected media IDs.
-		const selectedMediaIds = Object.entries( selectedMedia )
-			.filter( ( [ , isSelected ] ) => isSelected )
-			.map( ( [ mediaId ] ) => parseInt( mediaId, 10 ) );
+		const selectedMediaIds = Object.entries(selectedMedia)
+			.filter(([, isSelected]) => isSelected)
+			.map(([mediaId]) => parseInt(mediaId, 10));
 
 		// Get full media details for selected media.
-		const selectedMediaDetails = mediaItems.filter( ( media ) =>
-			selectedMediaIds.includes( media.id ),
+		const selectedMediaDetails = mediaItems.filter((media) =>
+			selectedMediaIds.includes(media.id)
 		);
 
 		const payload = {
@@ -340,406 +359,436 @@ const MediaSharingApp = ( {
 			media_details: selectedMediaDetails,
 		};
 
-		setLoading( true );
-		const data = await shareMediaApi( payload, setNotice );
-		if ( data && 200 === data?.status ) {
+		setLoading(true);
+		const data = await shareMediaApi(payload, setNotice);
+		if (data && 200 === data?.status) {
 			// If imageType is 'onemedia' then message will be media synced successfully else media shared successfully.
-			if ( ONEMEDIA_PLUGIN_TAXONOMY_TERM === imageType ) {
-				setNotice( {
+			if (ONEMEDIA_PLUGIN_TAXONOMY_TERM === imageType) {
+				setNotice({
 					type: 'success',
-					message: __( 'Media synced successfully!', 'onemedia' ),
-				} );
+					message: __('Media synced successfully!', 'onemedia'),
+				});
 			} else {
-				setNotice( {
+				setNotice({
 					type: 'success',
-					message: __( 'Media shared successfully!', 'onemedia' ),
-				} );
+					message: __('Media shared successfully!', 'onemedia'),
+				});
 			}
 			fetchSyncedSites();
 		} else {
 			const failedSites = data?.data?.failed_sites || [];
-			if ( failedSites?.length > 0 ) {
-				setNotice( {
+			if (failedSites?.length > 0) {
+				setNotice({
 					type: 'warning',
 					message: (
 						<div>
-							<span>{ __( 'Failed to sync media files to some brand sites:', 'onemedia' ) }</span>
-							{ ( failedSites || [] ).map( ( site, idx ) => (
-								<div key={ idx }>
-									{ site?.is_mime_type_error ? (
-										<span>
-											{ site?.message }
-										</span>
+							<span>
+								{__(
+									'Failed to sync media files to some brand sites:',
+									'onemedia'
+								)}
+							</span>
+							{(failedSites || []).map((site, idx) => (
+								<div key={idx}>
+									{site?.is_mime_type_error ? (
+										<span>{site?.message}</span>
 									) : (
-										<span>
-											{ site?.site_name }
-										</span>
-									) }
+										<span>{site?.site_name}</span>
+									)}
 								</div>
-							) ) }
+							))}
 						</div>
 					),
-				} );
+				});
 			}
 			fetchSyncedSites();
 		}
 
 		// Reset selections.
-		setSelectedMedia( {} );
+		setSelectedMedia({});
 
 		// Reset modal states.
-		setIsShareMediaModalOpen( false );
+		setIsShareMediaModalOpen(false);
 
 		// Reset site selections.
 		const resetSites = {};
-		Object.keys( selectedSites ).forEach( ( site ) => {
-			resetSites[ site ] = false;
-		} );
-		setSelectedSites( resetSites );
-		setLoading( false );
+		Object.keys(selectedSites).forEach((site) => {
+			resetSites[site] = false;
+		});
+		setSelectedSites(resetSites);
+		setLoading(false);
 	};
 
-	const handleVersionSelect = async ( version ) => {
-		if ( ! version || ! version?.file ) {
-			setNotice( {
+	const handleVersionSelect = async (version) => {
+		if (!version || !version?.file) {
+			setNotice({
 				type: 'error',
-				message: __( 'Invalid version selected.', 'onemedia' ),
-			} );
+				message: __('Invalid version selected.', 'onemedia'),
+			});
 		}
 
 		// Upload the selected version as a new media item.
-		setLoading( true );
+		setLoading(true);
 		try {
 			const formData = new FormData();
-			formData.append( 'file', JSON.stringify( version.file ) );
-			formData.append( 'action', 'onemedia_replace_media' );
+			formData.append('file', JSON.stringify(version.file));
+			formData.append('action', 'onemedia_replace_media');
 
 			// Add current media ID for replacement.
-			formData.append( 'current_media_id', String( selectedVersionId ) );
+			formData.append('current_media_id', String(selectedVersionId));
 
 			// Add WordPress nonce for security.
-			if ( UPLOAD_NONCE ) {
-				formData.append( '_ajax_nonce', UPLOAD_NONCE );
+			if (UPLOAD_NONCE) {
+				formData.append('_ajax_nonce', UPLOAD_NONCE);
 			}
 
-			formData.append( 'is_version_restore', true );
+			formData.append('is_version_restore', true);
 
-			const response = await uploadMedia( formData, setNotice );
+			const response = await uploadMedia(formData, setNotice);
 
-			if ( response && response?.success ) {
+			if (response && response?.success) {
 				// Refresh media items to reflect the restored version.
-				setIsVersionModalOpen( false );
-				fetchMediaItems( currentPage, debouncedSearchTerm );
+				setIsVersionModalOpen(false);
+				fetchMediaItems(currentPage, debouncedSearchTerm);
 				fetchSyncedSites();
 
-				setNotice( {
+				setNotice({
 					type: 'success',
-					message: __( 'Media version restored successfully!', 'onemedia' ),
-				} );
+					message: __(
+						'Media version restored successfully!',
+						'onemedia'
+					),
+				});
 			}
-		} catch ( error ) {
-			setNotice( {
+		} catch (error) {
+			setNotice({
 				type: 'error',
-				message: __( 'An error occurred while restoring media version.', 'onemedia' ),
-			} );
+				message: __(
+					'An error occurred while restoring media version.',
+					'onemedia'
+				),
+			});
 		} finally {
-			setLoading( false );
+			setLoading(false);
 		}
 	};
 
 	const getSelectedCount = () => {
-		return Object.values( selectedMedia ).filter( Boolean ).length;
+		return Object.values(selectedMedia).filter(Boolean).length;
 	};
 
 	const getSelectedSitesCount = () => {
-		return Object.values( selectedSites ).filter( Boolean ).length;
+		return Object.values(selectedSites).filter(Boolean).length;
 	};
 
 	// Render the media grid.
 	const renderMediaGrid = () => {
-		if ( 0 === mediaItems.length ) {
+		if (0 === mediaItems.length) {
 			return (
 				<div className="onemedia-no-media">
-					{ __( 'No media items found.', 'onemedia' ) }
+					{__('No media items found.', 'onemedia')}
 				</div>
 			);
 		}
 
 		return (
 			<div className="onemedia-media-grid">
-				{ mediaItems.map( ( media ) => (
+				{mediaItems.map((media) => (
 					<div
-						key={ media.id }
-						className={ `onemedia-media-item ${ selectedMedia[ media.id ] ? 'selected' : ''
-						}` }
+						key={media.id}
+						className={`onemedia-media-item ${
+							selectedMedia[media.id] ? 'selected' : ''
+						}`}
 					>
 						<div
 							className="onemedia-media-thumbnail"
-							onClick={ () => handleMediaSelect( media.id ) }
-							onKeyDown={ ( e ) => {
-								const triggerKeys = [ 'Enter', 'Space' ];
-								if ( triggerKeys.includes( e.code ) ) {
+							onClick={() => handleMediaSelect(media.id)}
+							onKeyDown={(e) => {
+								const triggerKeys = ['Enter', 'Space'];
+								if (triggerKeys.includes(e.code)) {
 									e.preventDefault();
-									handleMediaSelect( media.id );
+									handleMediaSelect(media.id);
 								}
-							} }
+							}}
 							role="button"
-							tabIndex={ 0 }
+							tabIndex={0}
 						>
 							<div className="onemedia-media-container">
 								<img
-									data-id={ media.id }
-									src={ media.url }
-									alt={ media.title }
+									data-id={media.id}
+									src={media.url}
+									alt={media.title}
 									loading="lazy"
-									onError={ ( e ) => {
+									onError={(e) => {
 										e.target.onerror = null; // Prevent infinite loop.
 										e.target.src = fallbackImage;
 										e.target.style.width = '60%';
 										e.target.style.padding = '0px 20%';
-									} }
+									}}
 								/>
 								<div className="onemedia-media-checkbox">
 									<CheckboxControl
-										checked={ !! selectedMedia[ media.id ] }
-										onChange={ () =>
-											handleMediaSelect( media.id )
+										checked={!!selectedMedia[media.id]}
+										onChange={() =>
+											handleMediaSelect(media.id)
 										}
 										label=""
-										__nextHasNoMarginBottom={ true }
+										__nextHasNoMarginBottom
 									/>
 								</div>
-								{ ONEMEDIA_PLUGIN_TAXONOMY_TERM === imageType && (
+								{ONEMEDIA_PLUGIN_TAXONOMY_TERM ===
+									imageType && (
 									<>
 										<div className="onemedia-media-edit-button">
 											<Button
 												size="small"
 												variant="secondary"
-												icon={ pencil }
-												onClick={ ( e ) => {
+												icon={pencil}
+												onClick={(e) => {
 													e.stopPropagation();
-													handleEditMedia(
-														media.id,
-													);
-												} }
-												title={ __( 'Edit Media', 'onemedia' ) }
+													handleEditMedia(media.id);
+												}}
+												title={__(
+													'Edit Media',
+													'onemedia'
+												)}
 											>
-												{ __( 'Edit', 'onemedia' ) }
+												{__('Edit', 'onemedia')}
 											</Button>
 										</div>
-										{ checkMediaRevisionExists( media.id ) && (
+										{checkMediaRevisionExists(media.id) && (
 											<Tooltip
-												text={ sprintf(
+												text={sprintf(
 													/* translators: %d: number of previous versions */
-													__( '%d previous version(s) available', 'onemedia' ),
-													media.revision.length - 1,
-												) }
+													__(
+														'%d previous version(s) available',
+														'onemedia'
+													),
+													media.revision.length - 1
+												)}
 												placement="bottom"
 											>
 												<Button
 													className="onemedia-media-version-button"
-													onClick={ ( e ) => {
+													onClick={(e) => {
 														e.stopPropagation();
-														openVersionModal( media.id );
-													} }
+														openVersionModal(
+															media.id
+														);
+													}}
 												>
 													<Icon
-														icon={ versionIcon }
-														size={ 28 }
+														icon={versionIcon}
+														size={28}
 														fill="#fff"
 													/>
 												</Button>
 											</Tooltip>
-										) }
+										)}
 									</>
-								) }
-								{ syncedSites[ media.id ] && (
+								)}
+								{syncedSites[media.id] && (
 									<Tooltip
 										text={
 											<span>
-												{ Object.values( syncedSites[ media.id ] ).map( ( site, idx ) => (
-													<span key={ idx }>
-														{ site }
+												{Object.values(
+													syncedSites[media.id]
+												).map((site, idx) => (
+													<span key={idx}>
+														{site}
 														<br />
 													</span>
-												) ) }
+												))}
 											</span>
 										}
 										placement="bottom"
 									>
 										<div className="onemedia-media-synced-indicator">
 											<Icon
-												icon={ syncIcon }
-												size={ 28 }
+												icon={syncIcon}
+												size={28}
 												fill="#fff"
 											/>
 										</div>
 									</Tooltip>
-								) }
+								)}
 							</div>
 							<div className="onemedia-media-title">
-								{ trimTitle( media.title ) }
+								{trimTitle(media.title)}
 							</div>
 						</div>
 					</div>
-				) ) }
+				))}
 			</div>
 		);
 	};
 
+	const selectedCount = getSelectedCount();
+	const selectedCountLabel =
+		selectedCount > 0
+			? sprintf(
+					/* translators: %d: number of selected media items. */
+					__('%d items selected', 'onemedia'),
+					selectedCount
+				)
+			: null;
+
 	return (
 		<>
 			<>
-				{ /* Error notice */ }
-				{ notice?.message &&
+				{/* Error notice */}
+				{notice?.message && (
 					<Snackbar
-						status={ notice?.type ?? 'success' }
-						isDismissible={ true }
-						onRemove={ () => setNotice( null ) }
-						className={ getNoticeClass( notice?.type ) }
+						status={notice?.type ?? 'success'}
+						isDismissible
+						onRemove={() => setNotice(null)}
+						className={getNoticeClass(notice?.type)}
 					>
-						{ notice?.message }
+						{notice?.message}
 					</Snackbar>
-				}
+				)}
 			</>
 			<div className="onemedia-media-sharing-app">
 				<Card>
 					<CardHeader>
 						<div className="onemedia-card-header">
 							<div className="onemedia-card-header-content">
-								<h2 className="onemedia-card-title">{ cardTitle }</h2>
+								<h2 className="onemedia-card-title">
+									{cardTitle}
+								</h2>
 								<p className="onemedia-card-description">
-									{ cardDescription }
+									{cardDescription}
 								</p>
 							</div>
 							<div className="onemedia-card-header-actions-container">
 								<TextControl
 									className="onemedia-search-control"
-									placeholder={ __( 'Search media…', 'onemedia' ) }
-									value={ searchTerm }
-									onChange={ ( value ) => {
-										setSearchTerm( value );
-										handleDebouncedSearch( value );
-									} }
-									__next40pxDefaultSize={ true }
-									__nextHasNoMarginBottom={ true }
+									placeholder={__(
+										'Search media…',
+										'onemedia'
+									)}
+									value={searchTerm}
+									onChange={(value) => {
+										setSearchTerm(value);
+										handleDebouncedSearch(value);
+									}}
+									__next40pxDefaultSize
+									__nextHasNoMarginBottom
 								/>
 								<div className="onemedia-card-header-actions">
-									{ ONEMEDIA_PLUGIN_TAXONOMY_TERM === imageType ? (
+									{ONEMEDIA_PLUGIN_TAXONOMY_TERM ===
+									imageType ? (
 										<BrowserUploaderButton
-											onAddMediaSuccess={ () => {
+											onAddMediaSuccess={() => {
 												// Refresh media items after upload.
-												setSearchTerm( '' );
-												setDebouncedSearchTerm( '' );
-												fetchMediaItems( currentPage );
+												setSearchTerm('');
+												setDebouncedSearchTerm('');
+												fetchMediaItems(currentPage);
 												fetchSyncedSites();
-											} }
-											isSyncMediaUpload={ true }
-											addedMedia={ mediaItems }
-											setNotice={ setNotice }
+											}}
+											isSyncMediaUpload
+											addedMedia={mediaItems}
+											setNotice={setNotice}
 										/>
 									) : (
 										<BrowserUploaderButton
-											onAddMediaSuccess={ () => {
+											onAddMediaSuccess={() => {
 												// Refresh media items after upload.
-												setSearchTerm( '' );
-												setDebouncedSearchTerm( '' );
-												fetchMediaItems( currentPage );
-											} }
-											isSyncMediaUpload={ false }
-											addedMedia={ mediaItems }
-											setNotice={ setNotice }
+												setSearchTerm('');
+												setDebouncedSearchTerm('');
+												fetchMediaItems(currentPage);
+											}}
+											isSyncMediaUpload={false}
+											addedMedia={mediaItems}
+											setNotice={setNotice}
 										/>
-									) }
+									)}
 									<div className="onemedia-selection-count">
-										{ getSelectedCount() > 0 &&
-											/* translators: %d: number of selected items */
-											sprintf( __( '%d items selected', 'onemedia' ), getSelectedCount() )
-										}
+										{selectedCountLabel}
 									</div>
 								</div>
 							</div>
 						</div>
 					</CardHeader>
 					<CardBody>
-						{ initLoading ? (
+						{initLoading ? (
 							<div className="onemedia-loading">
 								<Spinner />
 							</div>
 						) : (
 							<>
-								{ renderMediaGrid() }
+								{renderMediaGrid()}
 
-								{ /* Pagination Controls */ }
+								{/* Pagination Controls */}
 								<div className="onemedia-pagination">
 									<Button
 										isSecondary
-										disabled={ 1 === currentPage }
-										onClick={ () =>
-											setCurrentPage( ( prev ) => prev - 1 )
+										disabled={1 === currentPage}
+										onClick={() =>
+											setCurrentPage((prev) => prev - 1)
 										}
 									>
-										{ __( 'Previous', 'onemedia' ) }
+										{__('Previous', 'onemedia')}
 									</Button>
 									<span className="onemedia-page-indicator">
-										{ sprintf(
+										{sprintf(
 											/* translators: %1$d: current page number, %2$d: total pages */
-											__( '%1$d of %2$d', 'onemedia' ),
+											__('%1$d of %2$d', 'onemedia'),
 											currentPage,
-											totalPages,
-										) }
+											totalPages
+										)}
 									</span>
 									<Button
 										isSecondary
-										disabled={ currentPage >= totalPages }
-										onClick={ () =>
-											setCurrentPage( ( prev ) => prev + 1 )
+										disabled={currentPage >= totalPages}
+										onClick={() =>
+											setCurrentPage((prev) => prev + 1)
 										}
 									>
-										{ __( 'Next', 'onemedia' ) }
+										{__('Next', 'onemedia')}
 									</Button>
 								</div>
 
-								{ /* Share Button */ }
+								{/* Share Button */}
 								<div className="onemedia-actions">
 									<Button
 										variant="primary"
-										onClick={ openShareMediaModal }
-										disabled={ 0 === getSelectedCount() }
+										onClick={openShareMediaModal}
+										disabled={0 === getSelectedCount()}
 									>
-										{ __( 'Share Selected Media', 'onemedia' ) }
+										{__('Share Selected Media', 'onemedia')}
 									</Button>
 								</div>
 							</>
-						) }
+						)}
 					</CardBody>
 				</Card>
 
-				{ /* Brand Sites Modal */ }
-				{ isShareMediaModalOpen && (
+				{/* Brand Sites Modal */}
+				{isShareMediaModalOpen && (
 					<ShareMediaModal
-						setIsShareMediaModalOpen={ setIsShareMediaModalOpen }
-						getSelectedCount={ getSelectedCount }
-						syncOption={ syncOption }
-						brandSites={ brandSites }
-						selectedSites={ selectedSites }
-						handleSiteSelect={ handleSiteSelect }
-						handleShareMedia={ handleShareMedia }
-						getSelectedSitesCount={ getSelectedSitesCount }
-						loading={ loading }
-						setNotice={ setNotice }
+						setIsShareMediaModalOpen={setIsShareMediaModalOpen}
+						getSelectedCount={getSelectedCount}
+						syncOption={syncOption}
+						brandSites={brandSites}
+						selectedSites={selectedSites}
+						handleSiteSelect={handleSiteSelect}
+						handleShareMedia={handleShareMedia}
+						getSelectedSitesCount={getSelectedSitesCount}
+						loading={loading}
+						setNotice={setNotice}
 					/>
-				) }
+				)}
 
-				{ /* Version Modal */ }
-				{ isVersionModalOpen && (
+				{/* Version Modal */}
+				{isVersionModalOpen && (
 					<VersionModal
-						setIsVersionModalOpen={ setIsVersionModalOpen }
-						attachmentVersions={ currentRevision }
-						handleVersionSelect={ handleVersionSelect }
-						loading={ loading }
+						setIsVersionModalOpen={setIsVersionModalOpen}
+						attachmentVersions={currentRevision}
+						handleVersionSelect={handleVersionSelect}
+						loading={loading}
 					/>
-				) }
+				)}
 			</div>
 		</>
 	);
@@ -749,22 +798,22 @@ const MediaLibraryTabs = () => {
 	const tabs = [
 		{
 			name: 'media',
-			title: __( 'Non-Sync Media', 'onemedia' ),
+			title: __('Non-Sync Media', 'onemedia'),
 			imageType: '',
-			cardTitle: __( 'Non-Sync Media', 'onemedia' ),
+			cardTitle: __('Non-Sync Media', 'onemedia'),
 			cardDescription: __(
 				'This media will be shared in non synced mode.',
-				'onemedia',
+				'onemedia'
 			),
 		},
 		{
 			name: ONEMEDIA_PLUGIN_TAXONOMY_TERM,
-			title: __( 'Sync Media', 'onemedia' ),
+			title: __('Sync Media', 'onemedia'),
 			imageType: ONEMEDIA_PLUGIN_TAXONOMY_TERM,
-			cardTitle: __( 'Sync Media', 'onemedia' ),
+			cardTitle: __('Sync Media', 'onemedia'),
 			cardDescription: __(
 				'This media will be shared in synced mode.',
-				'onemedia',
+				'onemedia'
 			),
 		},
 	];
@@ -773,24 +822,24 @@ const MediaLibraryTabs = () => {
 		<TabPanel
 			className="onemedia-media-library-tabs"
 			activeClass="is-active"
-			tabs={ tabs }
+			tabs={tabs}
 			initialTabName="media"
 		>
-			{ ( tab ) => {
+			{(tab) => {
 				return (
 					<MediaSharingApp
-						imageType={ tab.imageType }
-						cardTitle={ tab.cardTitle }
-						cardDescription={ tab.cardDescription }
+						imageType={tab.imageType}
+						cardTitle={tab.cardTitle}
+						cardDescription={tab.cardDescription}
 					/>
 				);
-			} }
+			}}
 		</TabPanel>
 	);
 };
 
-const root = document.getElementById( 'onemedia-media-sharing' );
-if ( root ) {
-	const mediaSharingApp = createRoot( root );
-	mediaSharingApp.render( <MediaLibraryTabs /> );
+const root = document.getElementById('onemedia-media-sharing');
+if (root) {
+	const mediaSharingApp = createRoot(root);
+	mediaSharingApp.render(<MediaLibraryTabs />);
 }

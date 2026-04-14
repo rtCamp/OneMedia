@@ -1,13 +1,13 @@
 /**
  * WordPress dependencies
  */
-const defaultConfig = require( '@wordpress/babel-preset-default' );
+const defaultConfig = require('@wordpress/babel-preset-default');
 
 /**
  * @param {import('@babel/core').ConfigAPI} api
  */
-module.exports = function( api ) {
-	const config = defaultConfig( api );
+module.exports = function (api) {
+	const config = defaultConfig(api);
 
 	return {
 		...config,

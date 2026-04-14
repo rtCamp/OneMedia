@@ -1,0 +1,33 @@
+{
+	"$schema": "https://playground.wordpress.net/blueprint-schema.json",
+	"meta": {
+		"title": "OneMedia Demo",
+		"description": "Centralized media sharing and synchronization across a multi-site WordPress network.",
+		"author": "rtCamp",
+		"categories": ["plugin", "media", "multisite", "enterprise"]
+	},
+	"landingPage": "/wp-admin/admin.php?page=onemedia-settings",
+	"preferredVersions": {
+		"php": "8.4",
+		"wp": "latest"
+	},
+	"features": {
+		"networking": true
+	},
+	"steps": [
+		{
+			"step": "login",
+			"username": "admin"
+		},
+		{
+			"step": "installPlugin",
+			"pluginData": {
+				"resource": "url",
+				"url": "https://github.com/rtCamp/OneMedia/releases/latest/download/onemedia.zip"
+			},
+			"options": {
+				"activate": true
+			}
+		}
+	]
+}

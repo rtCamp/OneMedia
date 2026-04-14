@@ -1,7 +1,7 @@
 module.exports = {
 	root: true,
-	extends: [ 'plugin:@wordpress/eslint-plugin/recommended' ],
-	plugins: [ 'import', 'jest' ],
+	extends: ['plugin:@wordpress/eslint-plugin/recommended'],
+	plugins: ['import', 'jest'],
 	parserOptions: {
 		sourceType: 'module',
 		ecmaFeatures: {
@@ -100,7 +100,7 @@ module.exports = {
 	},
 	overrides: [
 		{
-			files: [ '**/*.ts?(x)' ],
+			files: ['**/*.ts?(x)'],
 			rules: {
 				'@typescript-eslint/consistent-type-imports': [
 					'error',
@@ -126,7 +126,10 @@ module.exports = {
 			env: {
 				jest: true,
 			},
-			extends: [ 'plugin:jest/recommended' ],
+			extends: ['plugin:jest/recommended'],
+			parserOptions: {
+				project: './tests/js/tsconfig.json',
+			},
 			rules: {
 				'jest/expect-expect': 'error',
 				'jest/no-commented-out-tests': 'warn',
@@ -135,6 +138,15 @@ module.exports = {
 				'jest/no-identical-title': 'error',
 				'jest/prefer-to-have-length': 'warn',
 				'jest/valid-expect': 'error',
+			},
+		},
+		{
+			files: ['tests/e2e/**/*.{ts,tsx}'],
+			parserOptions: {
+				project: null,
+			},
+			rules: {
+				'jsdoc/no-undefined-types': 'off',
 			},
 		},
 	],

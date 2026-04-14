@@ -72,7 +72,8 @@ table.media {
 		}
 	}
 
-	.components-notice__content { // stylelint-disable-line -- WordPress generates classnames with underscores
+	.components-notice__content {
+		// stylelint-disable-line -- WordPress generates classnames with underscores
 		white-space: pre-line !important;
 	}
 
@@ -90,7 +91,7 @@ table.media {
 		width: 36px;
 		height: 36px;
 		border-radius: 50%;
-		background: linear-gradient(135deg, #2196F3, #1976D2);
+		background: linear-gradient(135deg, #2196f3, #1976d2);
 		color: rgb(255, 255, 255);
 		font-weight: 600;
 		display: flex;
@@ -100,7 +101,6 @@ table.media {
 		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 	}
-
 }
 
 body {

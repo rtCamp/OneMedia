@@ -3,24 +3,29 @@
  */
 
 /**
- * Internal dependencies
+ * WordPress dependencies
  */
 import domReady from '@wordpress/dom-ready';
+
+/**
+ * Internal dependencies
+ */
 import { getFrameProperty } from './utils';
 
 function SyncMediaFilter() {
-	const media = getFrameProperty( 'wp.media' );
-	const originalAttachmentsBrowser = getFrameProperty( 'wp.media.view.AttachmentsBrowser' );
+	const media = getFrameProperty('wp.media');
+	const originalAttachmentsBrowser = getFrameProperty(
+		'wp.media.view.AttachmentsBrowser'
+	);
 
-	if ( ! media || ! originalAttachmentsBrowser ) {
+	if (!media || !originalAttachmentsBrowser) {
 		return;
 	}
 
-	const ONEMEDIA_MEDIA_UPLOAD = typeof OneMediaMediaUpload !== 'undefined'
-		? OneMediaMediaUpload
-		: '';
+	const ONEMEDIA_MEDIA_UPLOAD =
+		typeof OneMediaMediaUpload !== 'undefined' ? OneMediaMediaUpload : '';
 
-	if ( ! ONEMEDIA_MEDIA_UPLOAD ) {
+	if (!ONEMEDIA_MEDIA_UPLOAD) {
 		return;
 	}
 
@@ -31,92 +36,92 @@ function SyncMediaFilter() {
 	const SYNC_STATUS = ONEMEDIA_MEDIA_UPLOAD?.syncStatus ?? '';
 
 	// Create a custom filter view.
-	const SyncFilterView = wp.media.View.extend( {
+	const SyncFilterView = wp.media.View.extend({
 		tagName: 'label',
 		className: 'attachment-filters onemedia-sync-filter-wrapper',
 
 		initialize() {
 			this.createSelect();
-			this.listenTo( this.model, 'change', this.updateSelect );
+			this.listenTo(this.model, 'change', this.updateSelect);
 		},
 
 		createSelect() {
-			this.$el.html( '' );
+			this.$el.html('');
 
 			// Create select element.
-			this.select = document.createElement( 'select' );
+			this.select = document.createElement('select');
 			this.select.className = 'attachment-filters onemedia-sync-filter';
 			this.select.innerHTML = `
-				<option value="">${ ALL_LABEL }</option>
-				<option value="sync">${ SYNC_LABEL }</option>
-				<option value="no_sync">${ NOT_SYNC_LABEL }</option>
+				<option value="">${ALL_LABEL}</option>
+				<option value="sync">${SYNC_LABEL}</option>
+				<option value="no_sync">${NOT_SYNC_LABEL}</option>
 			`;
 
 			// Get saved value from URL or previous state.
-			const urlParams = new URLSearchParams( window?.location?.search );
-			const savedFilter = urlParams?.get( SYNC_STATUS ) || '';
+			const urlParams = new URLSearchParams(window?.location?.search);
+			const savedFilter = urlParams?.get(SYNC_STATUS) || '';
 			this.select.value = savedFilter;
 
 			// Set initial model value.
-			if ( savedFilter ) {
-				this.model.set( SYNC_STATUS, savedFilter );
+			if (savedFilter) {
+				this.model.set(SYNC_STATUS, savedFilter);
 			}
 
-			this.$el.append( this.select );
+			this.$el.append(this.select);
 
 			// Add event listener.
-			this.select.addEventListener( 'change', () => {
+			this.select.addEventListener('change', () => {
 				const value = this.select.value;
-				this.model.set( SYNC_STATUS, value );
+				this.model.set(SYNC_STATUS, value);
 
 				// Update URL.
-				if ( window?.history?.replaceState ) {
-					const url = new URL( window?.location );
-					if ( value ) {
-						url.searchParams.set( SYNC_STATUS, value );
+				if (window?.history?.replaceState) {
+					const url = new URL(window?.location);
+					if (value) {
+						url.searchParams.set(SYNC_STATUS, value);
 					} else {
-						url.searchParams.delete( SYNC_STATUS );
+						url.searchParams.delete(SYNC_STATUS);
 					}
-					window?.history.replaceState( {}, '', url );
+					window?.history.replaceState({}, '', url);
 				}
-			} );
+			});
 		},
 
 		updateSelect() {
-			const value = this.model.get( SYNC_STATUS ) || '';
+			const value = this.model.get(SYNC_STATUS) || '';
 			this.select.value = value;
 		},
-	} );
+	});
 
 	// Extend the AttachmentsBrowser to include our filter.
-	media.view.AttachmentsBrowser = originalAttachmentsBrowser.extend( {
+	media.view.AttachmentsBrowser = originalAttachmentsBrowser.extend({
 		createToolbar() {
 			// Call original method.
-			originalAttachmentsBrowser.prototype.createToolbar.call( this );
+			originalAttachmentsBrowser.prototype.createToolbar.call(this);
 
 			// Add our filter to the toolbar.
 			this.toolbar.set(
 				'onemediaSyncFilter',
-				new SyncFilterView( {
+				new SyncFilterView({
 					controller: this.controller,
 					model: this.collection.props,
 					priority: -75,
-				} ),
+				})
 			);
 		},
-	} );
+	});
 
 	// Modify the query to handle our filter.
 	const originalAjax = media.ajax;
-	media.ajax = function( action, options ) {
-		if ( 'query-attachments' === action ) {
+	media.ajax = function (action, options) {
+		if ('query-attachments' === action) {
 			const syncStatus = options.data.query.onemedia_sync_status;
 
 			// Add nonce to the request.
 			options.data._ajax_nonce = NONCE;
 
 			// Convert our filter parameter to WordPress meta_query format.
-			if ( 'sync' === syncStatus ) {
+			if ('sync' === syncStatus) {
 				options.data.query.meta_query = [
 					{
 						key: SYNC_STATUS,
@@ -124,7 +129,7 @@ function SyncMediaFilter() {
 						compare: '=',
 					},
 				];
-			} else if ( 'no_sync' === syncStatus ) {
+			} else if ('no_sync' === syncStatus) {
 				// We need to send a properly formatted meta_query.
 				options.data.query.meta_query = {
 					relation: 'OR',
@@ -145,22 +150,22 @@ function SyncMediaFilter() {
 		}
 
 		// Call the original Ajax method.
-		return originalAjax.call( this, action, options );
+		return originalAjax.call(this, action, options);
 	};
 
 	// Make sure filters are applied on initial load.
-	const urlParams = new URLSearchParams( window?.location?.search );
-	const initialFilter = urlParams?.get( SYNC_STATUS );
-	const frameContentProperty = getFrameProperty( 'wp.media.frame.content' );
-	if ( initialFilter && frameContentProperty?.get() ) {
+	const urlParams = new URLSearchParams(window?.location?.search);
+	const initialFilter = urlParams?.get(SYNC_STATUS);
+	const frameContentProperty = getFrameProperty('wp.media.frame.content');
+	if (initialFilter && frameContentProperty?.get()) {
 		const library = frameContentProperty.get().collection;
-		if ( library ) {
-			library.props.set( SYNC_STATUS, initialFilter );
+		if (library) {
+			library.props.set(SYNC_STATUS, initialFilter);
 		}
 	}
 }
 
 // Initialize the filter.
-domReady( () => {
+domReady(() => {
 	SyncMediaFilter();
-} );
+});

@@ -1,6 +1,8 @@
 {
 	"name": "rtcamp/onemedia",
 	"type": "wordpress-plugin",
+	"description": "A unified, scalable and centralized media library plugin for WordPress multisite environments.",
+	"license": "GPL-2.0-or-later",
 	"authors": [
 		{
 			"name": "rtCamp",
@@ -18,7 +20,9 @@
 			"php": "8.0"
 		},
 		"sort-packages": true,
-		"preferred-install": "dist"
+		"preferred-install": "dist",
+		"process-timeout": 0,
+		"optimize-autoloader": true
 	},
 	"minimum-stability": "dev",
 	"prefer-stable": true,
@@ -41,7 +45,8 @@
 	],
 	"autoload": {
 		"psr-4": {
-			"OneMedia\\": "inc/"
+			"OneMedia\\": "inc/",
+			"OneMedia\\Tests\\": "tests/php/"
 		}
 	},
 	"require": {

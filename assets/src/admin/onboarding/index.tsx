@@ -1,6 +1,9 @@
 /**
  * WordPress dependencies
  */
+/**
+ * External dependencies
+ */
 import { createRoot } from 'react-dom/client';
 
 /**
@@ -21,8 +24,8 @@ declare global {
 }
 
 // Render to the target element.
-const target = document.getElementById( 'onemedia-site-selection-modal' );
-if ( target ) {
-	const root = createRoot( target );
-	root.render( <OnboardingScreen /> );
+const target = document.getElementById('onemedia-site-selection-modal');
+if (target) {
+	const root = createRoot(target);
+	root.render(<OnboardingScreen />);
 }

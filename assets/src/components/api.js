@@ -9,7 +9,8 @@ import { __ } from '@wordpress/i18n';
 import { removeTrailingSlash } from '../js/utils';
 const ONEMEDIA_REST_API_NAMESPACE = 'onemedia';
 const ONEMEDIA_REST_API_VERSION = 'v1';
-const ONEMEDIA_REST_API_BASE = '/wp-json/' + ONEMEDIA_REST_API_NAMESPACE + '/' + ONEMEDIA_REST_API_VERSION;
+const ONEMEDIA_REST_API_BASE =
+	'/wp-json/' + ONEMEDIA_REST_API_NAMESPACE + '/' + ONEMEDIA_REST_API_VERSION;
 const {
 	restUrl: REST_URL,
 	restNonce: NONCE,
@@ -32,7 +33,7 @@ const {
  * @param {Object}   [options.params={}]        - Query parameters.
  * @return {Promise<Object|null>} - API response data or null on error.
  */
-export const apiFetch = async ( {
+export const apiFetch = async ({
 	baseurl = REST_URL,
 	endpoint,
 	method = 'GET',
@@ -42,51 +43,60 @@ export const apiFetch = async ( {
 	addNotice,
 	errorMsg,
 	params = {},
-} ) => {
+}) => {
 	try {
-		let url = `${ baseurl }/onemedia/v1/${ endpoint }`;
+		let url = `${baseurl}/onemedia/v1/${endpoint}`;
 		// Add params to URL if provided.
-		if ( params && Object.keys( params ).length > 0 ) {
-			const searchParams = new URLSearchParams( params ).toString();
-			url += `?${ searchParams }`;
+		if (params && Object.keys(params).length > 0) {
+			const searchParams = new URLSearchParams(params).toString();
+			url += `?${searchParams}`;
 		}
 		const headers = {
 			'Content-Type': 'application/json',
 			'X-OneMedia-Token': apiKey,
 		};
 
-		if ( '' !== nonce ) {
-			headers[ 'X-WP-Nonce' ] = nonce;
+		if ('' !== nonce) {
+			headers['X-WP-Nonce'] = nonce;
 		}
 
-		const response = await fetch( url, {
+		const response = await fetch(url, {
 			method,
 			headers,
-			body: body ? JSON.stringify( body ) : undefined,
-		} );
+			body: body ? JSON.stringify(body) : undefined,
+		});
 		const responseData = await response.json();
-		if ( ! response.ok || ! 200 === response.status ) {
-			let message = responseData?.message || response?.message || errorMsg || __( 'An unexpected error occurred', 'onemedia' );
-			if ( 404 === response.status ) {
-				message = __( 'Resource not found', 'onemedia' );
+		if (!response.ok || !200 === response.status) {
+			let message =
+				responseData?.message ||
+				response?.message ||
+				errorMsg ||
+				__('An unexpected error occurred', 'onemedia');
+			if (404 === response.status) {
+				message = __('Resource not found', 'onemedia');
 			}
-			if ( addNotice ) {
-				addNotice( {
+			if (addNotice) {
+				addNotice({
 					type: 'error',
 					message,
-				} );
+				});
 			}
 			// Return the error response for handling in the caller.
-			return { ...responseData, message, success: responseData?.data?.success || false };
+			return {
+				...responseData,
+				message,
+				success: responseData?.data?.success || false,
+			};
 		}
 		return await responseData;
-	} catch ( error ) {
-		const message = errorMsg || error.message || __( 'An error occurred', 'onemedia' );
-		if ( addNotice ) {
-			addNotice( {
+	} catch (error) {
+		const message =
+			errorMsg || error.message || __('An error occurred', 'onemedia');
+		if (addNotice) {
+			addNotice({
 				type: 'error',
 				message,
-			} );
+			});
 		}
 		return { message, success: false };
 	}
@@ -98,16 +108,16 @@ export const apiFetch = async ( {
  * @param {Function} addNotice - Function to display notices.
  * @return {Promise<Array>} - Array of brand site objects.
  */
-export const fetchBrandSites = async ( addNotice ) => {
-	const data = await apiFetch( {
+export const fetchBrandSites = async (addNotice) => {
+	const data = await apiFetch({
 		endpoint: 'shared-sites',
 		addNotice,
-		errorMsg: __( 'Error fetching brand sites.', 'onemedia' ),
-	} );
-	const sites = ( data?.shared_sites || [] ).map( ( site ) => ( {
+		errorMsg: __('Error fetching brand sites.', 'onemedia'),
+	});
+	const sites = (data?.shared_sites || []).map((site) => ({
 		...site,
-		id: String( site.id ),
-	} ) );
+		id: String(site.id),
+	}));
 	return sites;
 };
 
@@ -119,16 +129,19 @@ export const fetchBrandSites = async ( addNotice ) => {
  * @param {Function} addNotice - Function to display notices.
  * @return {Promise<Object|null>} - Health check result or null on error.
  */
-export const checkBrandSiteHealth = async ( url, apiKey, addNotice ) => {
-	const response = await apiFetch( {
-		baseurl: removeTrailingSlash( url ) + ONEMEDIA_REST_API_BASE,
+export const checkBrandSiteHealth = async (url, apiKey, addNotice) => {
+	const response = await apiFetch({
+		baseurl: removeTrailingSlash(url) + ONEMEDIA_REST_API_BASE,
 		endpoint: 'health-check',
 		method: 'GET',
 		nonce: '', // No nonce for cross-site requests.
 		apiKey,
 		addNotice,
-		errorMsg: __( 'Health check failed. Please ensure the site is accessible.', 'onemedia' ),
-	} );
+		errorMsg: __(
+			'Health check failed. Please ensure the site is accessible.',
+			'onemedia'
+		),
+	});
 	return response;
 };
 
@@ -138,15 +151,15 @@ export const checkBrandSiteHealth = async ( url, apiKey, addNotice ) => {
  * @param {number} attachmentId - Attachment ID to check.
  * @return {Promise<boolean>} - True if all sites are connected, false otherwise.
  */
-export const checkIfAllSitesConnected = async ( attachmentId ) => {
-	const response = await apiFetch( {
+export const checkIfAllSitesConnected = async (attachmentId) => {
+	const response = await apiFetch({
 		endpoint: 'check-sites-connected',
 		method: 'POST',
 		body: {
 			attachment_id: attachmentId,
 		},
-		errorMsg: __( 'Failed to check connected sites.', 'onemedia' ),
-	} );
+		errorMsg: __('Failed to check connected sites.', 'onemedia'),
+	});
 	return response;
 };
 
@@ -156,11 +169,11 @@ export const checkIfAllSitesConnected = async ( attachmentId ) => {
  * @return {Promise<string>} - Multisite type string (single, subdomain or subdirectory).
  */
 export const fetchMultisiteType = async () => {
-	const response = await apiFetch( {
+	const response = await apiFetch({
 		endpoint: 'multisite-type',
 		method: 'GET',
-		errorMsg: __( 'Failed to fetch multisite type.', 'onemedia' ),
-	} );
+		errorMsg: __('Failed to fetch multisite type.', 'onemedia'),
+	});
 	return response?.multisite_type || '';
 };
 
@@ -170,12 +183,12 @@ export const fetchMultisiteType = async () => {
  * @param {Function} addNotice - Function to display notices.
  * @return {Promise<string>} - Site type string.
  */
-export const fetchSiteType = async ( addNotice ) => {
-	const data = await apiFetch( {
+export const fetchSiteType = async (addNotice) => {
+	const data = await apiFetch({
 		endpoint: 'site-type',
 		addNotice,
-		errorMsg: __( 'Error fetching site types.', 'onemedia' ),
-	} );
+		errorMsg: __('Error fetching site types.', 'onemedia'),
+	});
 	return data?.site_type || '';
 };
 
@@ -186,15 +199,15 @@ export const fetchSiteType = async ( addNotice ) => {
  * @param {Function} addNotice - Function to display notices.
  * @return {Promise<boolean>} - True if saved successfully.
  */
-export const saveSiteType = async ( siteType, addNotice ) => {
-	const result = await apiFetch( {
+export const saveSiteType = async (siteType, addNotice) => {
+	const result = await apiFetch({
 		endpoint: 'site-type',
 		method: 'POST',
 		body: { site_type: siteType },
 		addNotice,
-		errorMsg: __( 'Error saving site type.', 'onemedia' ),
-	} );
-	return !! result;
+		errorMsg: __('Error saving site type.', 'onemedia'),
+	});
+	return !!result;
 };
 
 /**
@@ -204,16 +217,16 @@ export const saveSiteType = async ( siteType, addNotice ) => {
  * @param {Function} addNotice - Function to display notices.
  * @return {Promise<Object>} - API response.
  */
-export const saveBrandSites = async ( sites, addNotice ) => {
-	const result = await apiFetch( {
+export const saveBrandSites = async (sites, addNotice) => {
+	const result = await apiFetch({
 		endpoint: 'brand-sites',
 		method: 'POST',
 		body: {
 			sites,
 		},
 		addNotice,
-		errorMsg: __( 'Error saving Brand sites.', 'onemedia' ),
-	} );
+		errorMsg: __('Error saving Brand sites.', 'onemedia'),
+	});
 	return result;
 };
 
@@ -223,11 +236,11 @@ export const saveBrandSites = async ( sites, addNotice ) => {
  * @return {Promise<string|null>} - API key string or null on error.
  */
 export const fetchBrandSiteApiKey = async () => {
-	const data = await apiFetch( {
+	const data = await apiFetch({
 		endpoint: 'secret-key',
 		method: 'GET',
-		errorMsg: __( 'Failed to fetch api key.', 'onemedia' ),
-	} );
+		errorMsg: __('Failed to fetch api key.', 'onemedia'),
+	});
 	return data?.secret_key || null;
 };
 
@@ -237,11 +250,11 @@ export const fetchBrandSiteApiKey = async () => {
  * @return {Promise<string|null>} - New API key string or null on error.
  */
 export const regenerateBrandSiteApiKey = async () => {
-	const data = await apiFetch( {
+	const data = await apiFetch({
 		endpoint: 'secret-key',
 		method: 'POST',
-		errorMsg: __( 'Failed to regenerate API key.', 'onemedia' ),
-	} );
+		errorMsg: __('Failed to regenerate API key.', 'onemedia'),
+	});
 	return data?.secret_key || null;
 };
 
@@ -251,13 +264,13 @@ export const regenerateBrandSiteApiKey = async () => {
  * @param {Function} addNotice - Function to display notices.
  * @return {Promise<Array>} - Array of synced site objects.
  */
-export const fetchSyncedSites = async ( addNotice ) => {
-	const data = await apiFetch( {
+export const fetchSyncedSites = async (addNotice) => {
+	const data = await apiFetch({
 		endpoint: 'brand-sites-synced-media',
 		addNotice,
-		errorMsg: __( 'Failed to fetch synced sites.', 'onemedia' ),
-	} );
-	const sites = ( data?.data || [] );
+		errorMsg: __('Failed to fetch synced sites.', 'onemedia'),
+	});
+	const sites = data?.data || [];
 	return sites;
 };
 
@@ -272,27 +285,33 @@ export const fetchSyncedSites = async ( addNotice ) => {
  * @param {Function} [options.addNotice] - Function to display notices.
  * @return {Promise<Object>} - Media items response.
  */
-export const fetchMediaItems = async ( { search, page, perPage, imageType, addNotice } ) => {
+export const fetchMediaItems = async ({
+	search,
+	page,
+	perPage,
+	imageType,
+	addNotice,
+}) => {
 	const params = {};
-	if ( page ) {
+	if (page) {
 		params.page = page;
 	}
-	if ( perPage ) {
+	if (perPage) {
 		params.per_page = perPage;
 	}
-	if ( imageType ) {
+	if (imageType) {
 		params.image_type = imageType;
 	}
-	if ( search ) {
+	if (search) {
 		params.search_term = search;
 	}
 
-	return await apiFetch( {
+	return await apiFetch({
 		endpoint: 'media',
 		params,
 		addNotice,
-		errorMsg: __( 'Failed to fetch media items.', 'onemedia' ),
-	} );
+		errorMsg: __('Failed to fetch media items.', 'onemedia'),
+	});
 };
 
 /**
@@ -302,14 +321,14 @@ export const fetchMediaItems = async ( { search, page, perPage, imageType, addNo
  * @param {Function} addNotice - Function to display notices.
  * @return {Promise<Object>} - API response.
  */
-export const shareMedia = async ( payload, addNotice ) => {
-	return await apiFetch( {
+export const shareMedia = async (payload, addNotice) => {
+	return await apiFetch({
 		endpoint: 'sync-media',
 		method: 'POST',
 		body: payload,
 		addNotice,
-		errorMsg: __( 'Failed to sync media.', 'onemedia' ),
-	} );
+		errorMsg: __('Failed to sync media.', 'onemedia'),
+	});
 };
 
 /**
@@ -319,34 +338,35 @@ export const shareMedia = async ( payload, addNotice ) => {
  * @param {Function} addNotice - Function to display notices.
  * @return {Promise<Object>} - Upload response.
  */
-export const uploadMedia = async ( formData, addNotice ) => {
+export const uploadMedia = async (formData, addNotice) => {
 	try {
-		const url =
-			`${ SHARING_AJAX_URL }`;
+		const url = `${SHARING_AJAX_URL}`;
 
-		const response = await fetch( url, {
+		const response = await fetch(url, {
 			method: 'POST',
 			headers: {
 				'X-OneMedia-Token': API_KEY,
 			},
 			credentials: 'same-origin',
 			body: formData,
-		} );
+		});
 
 		const data = await response.json();
 
-		if ( ! response.ok || 404 === response?.status ) {
-			if ( data?.data?.message ) {
-				throw new Error( data.data.message );
+		if (!response.ok || 404 === response?.status) {
+			if (data?.data?.message) {
+				throw new Error(data.data.message);
 			}
 		}
 		return data;
-	} catch ( error ) {
-		if ( addNotice ) {
-			addNotice( {
+	} catch (error) {
+		if (addNotice) {
+			addNotice({
 				type: 'error',
-				message: error.message || __( 'An error occurred during media upload', 'onemedia' ),
-			} );
+				message:
+					error.message ||
+					__('An error occurred during media upload', 'onemedia'),
+			});
 		}
 		return null;
 	}
@@ -360,8 +380,12 @@ export const uploadMedia = async ( formData, addNotice ) => {
  * @param {Function} addNotice         - Function to display notices.
  * @return {Promise<Object>} - API response.
  */
-export const updateExistingAttachment = async ( attachmentId, isSyncMediaUpload, addNotice ) => {
-	return await apiFetch( {
+export const updateExistingAttachment = async (
+	attachmentId,
+	isSyncMediaUpload,
+	addNotice
+) => {
+	return await apiFetch({
 		endpoint: 'update-existing-attachment',
 		method: 'POST',
 		body: {
@@ -369,8 +393,8 @@ export const updateExistingAttachment = async ( attachmentId, isSyncMediaUpload,
 			sync_option: isSyncMediaUpload ? 'sync' : 'no_sync',
 		},
 		addNotice,
-		errorMsg: __( 'Failed to update existing attachment.', 'onemedia' ),
-	} );
+		errorMsg: __('Failed to update existing attachment.', 'onemedia'),
+	});
 };
 
 /**
@@ -379,10 +403,10 @@ export const updateExistingAttachment = async ( attachmentId, isSyncMediaUpload,
  * @return {Promise<string|null>} - Governing site URL or null on error.
  */
 export const fetchGoverningSite = async () => {
-	const data = await apiFetch( {
+	const data = await apiFetch({
 		endpoint: 'governing-site',
 		method: 'GET',
-	} );
+	});
 	return data?.governing_site_url || null;
 };
 
@@ -392,11 +416,11 @@ export const fetchGoverningSite = async () => {
  * @return {Promise<boolean>} - True if disconnected successfully, false otherwise.
  */
 export const removeGoverningSite = async () => {
-	const data = await apiFetch( {
+	const data = await apiFetch({
 		endpoint: 'governing-site',
 		method: 'DELETE',
-	} );
-	return !! data;
+	});
+	return !!data;
 };
 
 /**
@@ -406,16 +430,16 @@ export const removeGoverningSite = async () => {
  * @param {Function} addNotice    - Function to display notices.
  * @return {Promise<boolean>} - True if sync attachment, false otherwise.
  */
-export const isSyncAttachment = async ( attachmentId, addNotice ) => {
-	const data = await apiFetch( {
+export const isSyncAttachment = async (attachmentId, addNotice) => {
+	const data = await apiFetch({
 		endpoint: `is-sync-attachment`,
 		method: 'POST',
 		body: {
-			attachment_id: Number( attachmentId ),
+			attachment_id: Number(attachmentId),
 		},
 		addNotice,
-		errorMsg: __( 'Failed to check sync status.', 'onemedia' ),
-	} );
+		errorMsg: __('Failed to check sync status.', 'onemedia'),
+	});
 	return data?.is_sync || false;
 };
 
@@ -425,14 +449,14 @@ export const isSyncAttachment = async ( attachmentId, addNotice ) => {
  * @param {number} attachmentId - Attachment ID to fetch versions for.
  * @return {Promise<Array>} - Array of version objects.
  */
-export const fetchSyncAttachmentVersions = async ( attachmentId ) => {
-	const data = await apiFetch( {
+export const fetchSyncAttachmentVersions = async (attachmentId) => {
+	const data = await apiFetch({
 		endpoint: `sync-attachment-versions`,
 		method: 'POST',
 		body: {
-			attachment_id: Number( attachmentId ),
+			attachment_id: Number(attachmentId),
 		},
-		errorMsg: __( 'Failed to fetch attachment versions.', 'onemedia' ),
-	} );
+		errorMsg: __('Failed to fetch attachment versions.', 'onemedia'),
+	});
 	return data || [];
 };

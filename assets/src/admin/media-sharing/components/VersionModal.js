@@ -24,164 +24,172 @@ import fallbackImage from '../../../images/fallback-image.svg';
  * @param {number} timestamp - The Unix timestamp (in seconds).
  * @return {string} Formatted string like "12:45 PM on 15 Oct 2025".
  */
-const formatLastUsedDate = ( timestamp ) => {
-	if ( ! timestamp ) {
+const formatLastUsedDate = (timestamp) => {
+	if (!timestamp) {
 		return '';
 	}
 
-	const date = new Date( timestamp * 1000 );
-	const timePart = date.toLocaleTimeString( 'en-US', {
+	const date = new Date(timestamp * 1000);
+	const timePart = date.toLocaleTimeString('en-US', {
 		hour: 'numeric',
 		minute: '2-digit',
 		hour12: true,
-	} );
+	});
 
-	const datePart = date.toLocaleDateString( 'en-GB', {
+	const datePart = date.toLocaleDateString('en-GB', {
 		day: '2-digit',
 		month: 'short',
 		year: 'numeric',
-	} );
-	return `${ timePart } on ${ datePart }`;
+	});
+	return `${timePart} on ${datePart}`;
 };
 
-const VersionModal = ( {
+const VersionModal = ({
 	setIsVersionModalOpen,
 	attachmentVersions = [],
 	handleVersionSelect,
 	loading,
-} ) => {
-	const [ selectedVersion, setSelectedVersion ] = useState( null );
+}) => {
+	const [selectedVersion, setSelectedVersion] = useState(null);
 
 	const toggleSelect = useCallback(
-		( idx ) => setSelectedVersion( ( prev ) => ( prev === idx ? null : idx ) ),
-		[],
+		(idx) => setSelectedVersion((prev) => (prev === idx ? null : idx)),
+		[]
 	);
 
-	const renderMediaGrid = useCallback( () => {
-		if ( 0 === attachmentVersions.length ) {
-			return <p>{ __( 'No versions available.', 'onemedia' ) }</p>;
+	const renderMediaGrid = useCallback(() => {
+		if (0 === attachmentVersions.length) {
+			return <p>{__('No versions available.', 'onemedia')}</p>;
 		}
 
 		return (
 			<div className="onemedia-media-grid">
-				{ attachmentVersions.map( ( version, index ) => {
+				{attachmentVersions.map((version, index) => {
 					const isCurrent = index === 0;
 					const isSelected = selectedVersion === index;
 
 					const itemProps = isCurrent
 						? {
-							className: 'onemedia-media-item in-use',
-							role: 'group',
-							tabIndex: -1,
-							'aria-disabled': true,
-						}
+								className: 'onemedia-media-item in-use',
+								role: 'group',
+								tabIndex: -1,
+								'aria-disabled': true,
+							}
 						: {
-							className: `onemedia-media-item ${ isSelected ? 'selected' : '' }`,
-							role: 'button',
-							tabIndex: 0,
-							onKeyDown: ( e ) => {
-								if ( e.key === 'Enter' || e.key === ' ' ) {
-									e.preventDefault();
-									toggleSelect( index );
-								}
-							},
-							'aria-pressed': isSelected,
-							onClick: () => toggleSelect( index ),
-						};
+								className: `onemedia-media-item ${isSelected ? 'selected' : ''}`,
+								role: 'button',
+								tabIndex: 0,
+								onKeyDown: (e) => {
+									if (e.key === 'Enter' || e.key === ' ') {
+										e.preventDefault();
+										toggleSelect(index);
+									}
+								},
+								'aria-pressed': isSelected,
+								onClick: () => toggleSelect(index),
+							};
 
 					const lastUsedText = version?.last_used
 						? sprintf(
-							/* translators: %s: date */
-							__( 'Last used: %s', 'onemedia' ),
-							formatLastUsedDate( version?.last_used ),
-						)
-						: __( 'No usage data', 'onemedia' );
+								/* translators: %s: date */
+								__('Last used: %s', 'onemedia'),
+								formatLastUsedDate(version?.last_used)
+							)
+						: __('No usage data', 'onemedia');
 
 					const media = (
 						<div className="onemedia-media-container">
 							<div className="onemedia-version-thumbnail">
 								<img
-									data-id={ version?.file?.attachment_id }
-									src={ version?.file?.url }
-									alt={ version?.file?.alt }
+									data-id={version?.file?.attachment_id}
+									src={version?.file?.url}
+									alt={version?.file?.alt}
 									loading="lazy"
-									onError={ ( e ) => {
+									onError={(e) => {
 										e.target.onerror = null; // Prevent infinite loop.
 										e.target.src = fallbackImage;
 										e.target.style.padding = '0px 20%';
-									} }
+									}}
 								/>
-								{ isCurrent && (
+								{isCurrent && (
 									<div className="onemedia-in-use-overlay">
-										<span>{ __( 'In Use', 'onemedia' ) }</span>
+										<span>{__('In Use', 'onemedia')}</span>
 									</div>
-								) }
+								)}
 							</div>
 
-							{ ! isCurrent && (
+							{!isCurrent && (
 								<div className="onemedia-version-checkbox">
 									<CheckboxControl
-										checked={ isSelected }
-										onChange={ () => toggleSelect( index ) }
+										checked={isSelected}
+										onChange={() => toggleSelect(index)}
 										label=""
-										__nextHasNoMarginBottom={ true }
+										__nextHasNoMarginBottom
 									/>
 								</div>
-							) }
+							)}
 
 							<div className="onemedia-version-last-used">
-								{ lastUsedText }
+								{lastUsedText}
 							</div>
 						</div>
 					);
 
 					return (
-						<div key={ index } { ...itemProps }>
-							{ media }
+						<div key={index} {...itemProps}>
+							{media}
 							<div className="onemedia-media-title">
-								{ trimTitle( version?.file?.name ) }
+								{trimTitle(version?.file?.name)}
 							</div>
 						</div>
 					);
-				} ) }
+				})}
 			</div>
 		);
-	}, [ attachmentVersions, selectedVersion ] ); // eslint-disable-line react-hooks/exhaustive-deps
+	}, [attachmentVersions, selectedVersion]); // eslint-disable-line react-hooks/exhaustive-deps
 
 	return (
 		<Modal
-			title={ __( 'Attachment Version', 'onemedia' ) }
-			onRequestClose={ () => setIsVersionModalOpen( false ) }
-			shouldCloseOnClickOutside={ true }
+			title={__('Attachment Version', 'onemedia')}
+			onRequestClose={() => setIsVersionModalOpen(false)}
+			shouldCloseOnClickOutside
 			size="medium"
 			className="onemedia-version-modal"
 		>
 			<VStack spacing="4">
 				<div className="onemedia-selected-media">
 					<h3 className="onemedia-selected-media-heading">
-						{ __( 'Select a version to restore', 'onemedia' ) }
+						{__('Select a version to restore', 'onemedia')}
 					</h3>
 					<p className="onemedia-selected-media-description">
-						{ __( 'Choose from the list of available versions below.', 'onemedia' ) }
+						{__(
+							'Choose from the list of available versions below.',
+							'onemedia'
+						)}
 					</p>
 				</div>
 
-				{ renderMediaGrid() }
+				{renderMediaGrid()}
 
 				<HStack justify="flex-end" spacing="3">
 					<Button
 						variant="secondary"
-						onClick={ () => setIsVersionModalOpen( false ) }
+						onClick={() => setIsVersionModalOpen(false)}
 					>
-						{ __( 'Cancel', 'onemedia' ) }
+						{__('Cancel', 'onemedia')}
 					</Button>
 					<Button
 						variant="primary"
-						onClick={ () => selectedVersion !== null && handleVersionSelect( attachmentVersions[ selectedVersion ] ) }
-						isBusy={ loading }
-						disabled={ null === selectedVersion || loading }
+						onClick={() =>
+							selectedVersion !== null &&
+							handleVersionSelect(
+								attachmentVersions[selectedVersion]
+							)
+						}
+						isBusy={loading}
+						disabled={null === selectedVersion || loading}
 					>
-						{ loading ? <Spinner /> : __( 'Restore', 'onemedia' ) }
+						{loading ? <Spinner /> : __('Restore', 'onemedia')}
 					</Button>
 				</HStack>
 			</VStack>
