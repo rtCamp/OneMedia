@@ -2,10 +2,21 @@
  * External dependencies
  */
 import { defineConfig, type PlaywrightTestConfig } from '@playwright/test';
+import fs from 'fs';
 import path from 'path';
 
 const artifactsPath = path.join(process.cwd(), 'tests/_output/e2e');
+const wpEnvTestConfigPath = path.join(process.cwd(), '.wp-env.test.json');
+const wpEnvTestConfig = JSON.parse(
+	fs.readFileSync(wpEnvTestConfigPath, 'utf8')
+) as {
+	port?: number;
+};
+const wpBaseUrl =
+	process.env.WP_BASE_URL ||
+	`http://localhost:${String(wpEnvTestConfig.port ?? 8889)}`;
 
+process.env.WP_BASE_URL = wpBaseUrl;
 process.env.WP_ARTIFACTS_PATH = artifactsPath;
 process.env.STORAGE_STATE_PATH = path.join(
 	artifactsPath,
