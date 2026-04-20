@@ -24,19 +24,24 @@ interface ErrorsType {
 	message: string;
 }
 
-const SiteModal = (
-	{ formData, setFormData, onSubmit, onClose, editing, sites, originalData } :
-	{
-		formData: typeof defaultBrandSite;
-		setFormData: ( data: typeof defaultBrandSite ) => void;
-		onSubmit: () => Promise< boolean >;
-		onClose: () => void;
-		editing: boolean;
-		sites: typeof defaultBrandSite[];
-		originalData: typeof defaultBrandSite | undefined;
-	},
-) => {
-	const [ errors, setErrors ] = useState< ErrorsType >( {
+const SiteModal = ( {
+	formData,
+	setFormData,
+	onSubmit,
+	onClose,
+	editing,
+	sites,
+	originalData,
+}: {
+	formData: typeof defaultBrandSite;
+	setFormData: ( data: typeof defaultBrandSite ) => void;
+	onSubmit: () => Promise<boolean>;
+	onClose: () => void;
+	editing: boolean;
+	sites: ( typeof defaultBrandSite )[];
+	originalData: typeof defaultBrandSite | undefined;
+} ) => {
+	const [ errors, setErrors ] = useState<ErrorsType>( {
 		name: '',
 		url: '',
 		api_key: '',
@@ -58,25 +63,35 @@ const SiteModal = (
 		);
 	}, [ editing, formData, originalData ] );
 
-	const handleSubmit = async ():Promise<void> => {
+	const handleSubmit = async (): Promise<void> => {
 		// Validate inputs
 		let urlError = '';
 		if ( ! formData.url.trim() ) {
 			urlError = __( 'Site URL is required.', 'onemedia' );
 		} else if ( ! isValidUrl( formData.url ) ) {
-			urlError = __( 'Enter a valid URL (must start with http or https).', 'onemedia' );
+			urlError = __(
+				'Enter a valid URL (must start with http or https).',
+				'onemedia',
+			);
 		}
 
 		const newErrors = {
-			name: ! formData.name.trim() ? __( 'Site Name is required.', 'onemedia' ) : '',
+			name: ! formData.name.trim()
+				? __( 'Site Name is required.', 'onemedia' )
+				: '',
 			url: urlError,
-			api_key: ! formData.api_key.trim() ? __( 'API Key is required.', 'onemedia' ) : '',
+			api_key: ! formData.api_key.trim()
+				? __( 'API Key is required.', 'onemedia' )
+				: '',
 			message: '',
 		};
 
 		// make sure site name is under 20 characters
 		if ( formData.name.length > 20 ) {
-			newErrors.name = __( 'Site Name must be under 20 characters.', 'onemedia' );
+			newErrors.name = __(
+				'Site Name must be under 20 characters.',
+				'onemedia',
+			);
 		}
 
 		setErrors( newErrors );
@@ -108,7 +123,10 @@ const SiteModal = (
 			if ( ! healthCheckData.success ) {
 				setErrors( {
 					...newErrors,
-					message: __( 'Health check failed, please verify API key and make sure there\'s no governing site connected.', 'onemedia' ),
+					message: __(
+						"Health check failed, please verify API key and make sure there's no governing site connected.",
+						'onemedia',
+					),
 				} );
 				setShowNotice( true );
 				setIsProcessing( false );
@@ -136,7 +154,10 @@ const SiteModal = (
 			if ( isAlreadyExists ) {
 				setErrors( {
 					...newErrors,
-					message: __( 'Site URL already exists. Please use a different URL.', 'onemedia' ),
+					message: __(
+						'Site URL already exists. Please use a different URL.',
+						'onemedia',
+					),
 				} );
 				setShowNotice( true );
 				setIsProcessing( false );
@@ -149,14 +170,20 @@ const SiteModal = (
 			if ( ! submitResponse ) {
 				setErrors( {
 					...newErrors,
-					message: __( 'An error occurred while saving the site. Please try again.', 'onemedia' ),
+					message: __(
+						'An error occurred while saving the site. Please try again.',
+						'onemedia',
+					),
 				} );
 				setShowNotice( true );
 			}
-		} catch ( error ) {
+		} catch {
 			setErrors( {
 				...newErrors,
-				message: __( 'An unexpected error occurred. Please try again.', 'onemedia' ),
+				message: __(
+					'An unexpected error occurred. Please try again.',
+					'onemedia',
+				),
 			} );
 			setShowNotice( true );
 			setIsProcessing( false );
@@ -170,7 +197,8 @@ const SiteModal = (
 	// 1. Currently processing, OR
 	// 2. Required fields are empty, OR
 	// 3. In editing mode and no changes have been made
-	const isButtonDisabled = isProcessing ||
+	const isButtonDisabled =
+		isProcessing ||
 		! formData.name ||
 		! formData.url ||
 		! formData.api_key ||
@@ -178,7 +206,11 @@ const SiteModal = (
 
 	return (
 		<Modal
-			title={ editing ? __( 'Edit Brand Site', 'onemedia' ) : __( 'Add Brand Site', 'onemedia' ) }
+			title={
+				editing
+					? __( 'Edit Brand Site', 'onemedia' )
+					: __( 'Add Brand Site', 'onemedia' )
+			}
 			onRequestClose={ onClose }
 			size="medium"
 			shouldCloseOnClickOutside={ true }
@@ -189,7 +221,10 @@ const SiteModal = (
 					isDismissible={ true }
 					onRemove={ () => setShowNotice( false ) }
 				>
-					{ errors.message || errors.name || errors.url || errors.api_key }
+					{ errors.message ||
+						errors.name ||
+						errors.url ||
+						errors.api_key }
 				</Notice>
 			) }
 
@@ -197,7 +232,10 @@ const SiteModal = (
 				label={ __( 'Site Name*', 'onemedia' ) }
 				value={ formData.name }
 				onChange={ ( value ) => setFormData( { ...formData, name: value } ) }
-				help={ __( 'This is the name of the site that will be registered.', 'onemedia' ) }
+				help={ __(
+					'This is the name of the site that will be registered.',
+					'onemedia',
+				) }
 				__next40pxDefaultSize
 				__nextHasNoMarginBottom
 			/>
@@ -205,15 +243,23 @@ const SiteModal = (
 				label={ __( 'Site URL*', 'onemedia' ) }
 				value={ formData.url }
 				onChange={ ( value ) => setFormData( { ...formData, url: value } ) }
-				help={ __( 'It must start with http or https and end with /, like: https://rtcamp.com/', 'onemedia' ) }
+				help={ __(
+					'It must start with http or https and end with /, like: https://rtcamp.com/',
+					'onemedia',
+				) }
 				__next40pxDefaultSize
 				__nextHasNoMarginBottom
 			/>
 			<TextareaControl
 				label={ __( 'API Key*', 'onemedia' ) }
 				value={ formData.api_key }
-				onChange={ ( value ) => setFormData( { ...formData, api_key: value } ) }
-				help={ __( 'This is the API key that will be used to authenticate the site for OneMedia.', 'onemedia' ) }
+				onChange={ ( value ) =>
+					setFormData( { ...formData, api_key: value } )
+				}
+				help={ __(
+					'This is the API key that will be used to authenticate the site for OneMedia.',
+					'onemedia',
+				) }
 				__nextHasNoMarginBottom
 			/>
 
@@ -224,9 +270,9 @@ const SiteModal = (
 				disabled={ isButtonDisabled }
 				style={ { marginTop: '12px' } }
 			>
-				{ (
-					editing ? __( 'Update Site', 'onemedia' ) : __( 'Add Site', 'onemedia' )
-				) }
+				{ editing
+					? __( 'Update Site', 'onemedia' )
+					: __( 'Add Site', 'onemedia' ) }
 			</Button>
 		</Modal>
 	);

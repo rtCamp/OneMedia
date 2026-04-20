@@ -25,7 +25,8 @@ const ShareMediaModal = ( {
 	loading,
 	setNotice,
 } ) => {
-	const allSelected = brandSites.length > 0 && getSelectedSitesCount() === brandSites.length;
+	const allSelected =
+		brandSites.length > 0 && getSelectedSitesCount() === brandSites.length;
 
 	const brandSitesPresent = brandSites.length > 0;
 	if ( ! brandSitesPresent ) {
@@ -48,13 +49,21 @@ const ShareMediaModal = ( {
 					<h3 className="onemedia-selected-media-heading">
 						{ sprintf(
 							/* translators: %1$d: number of selected media items, %2$s: sync or non-sync mode */
-							__( 'Selected Media: %1$d items (%2$s Mode)', 'onemedia' ),
+							__(
+								'Selected Media: %1$d items (%2$s Mode)',
+								'onemedia',
+							),
 							getSelectedCount(),
-							'sync' === syncOption ? __( 'Sync', 'onemedia' ) : __( 'Non Sync', 'onemedia' ),
+							'sync' === syncOption
+								? __( 'Sync', 'onemedia' )
+								: __( 'Non Sync', 'onemedia' ),
 						) }
 					</h3>
 					<p className="onemedia-selected-media-description">
-						{ __( 'Select the sites where you want to share these media assets.', 'onemedia' ) }
+						{ __(
+							'Select the sites where you want to share these media assets.',
+							'onemedia',
+						) }
 					</p>
 				</div>
 
@@ -110,7 +119,10 @@ const ShareMediaModal = ( {
 										role="button"
 										tabIndex={ 0 }
 										onKeyDown={ ( e ) => {
-											if ( e.key === 'Enter' || e.key === ' ' ) {
+											if (
+												e.key === 'Enter' ||
+												e.key === ' '
+											) {
 												e.preventDefault();
 												handleSiteSelect( site.url );
 											}
@@ -127,7 +139,11 @@ const ShareMediaModal = ( {
 												// Adding an onclick on label to handle checkbox event.
 												// eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
 												<div
-													onClick={ () => handleSiteSelect( site.url ) }
+													onClick={ () =>
+														handleSiteSelect(
+															site.url,
+														)
+													}
 												>
 													<div className="onemedia-site-checkbox-item-name">
 														{ site.name }

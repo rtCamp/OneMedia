@@ -32,7 +32,10 @@ const { nonce, setup_url, site_type } = window.OneMediaOnboarding;
  */
 apiFetch.use( apiFetch.createNonceMiddleware( nonce ) );
 
-const SiteTypeSelector = ( { value, setSiteType }: {
+const SiteTypeSelector = ( {
+	value,
+	setSiteType,
+}: {
 	value: SiteType | '';
 	setSiteType: ( v: SiteType | '' ) => void;
 } ) => (
@@ -123,10 +126,7 @@ const OnboardingScreen = () => {
 			</CardHeader>
 
 			<CardBody className="onemedia-onboarding-page">
-				<SiteTypeSelector
-					value={ siteType }
-					setSiteType={ setSiteType }
-				/>
+				<SiteTypeSelector value={ siteType } setSiteType={ setSiteType } />
 				<Button
 					variant="primary"
 					onClick={ () => handleSiteTypeChange( siteType ) }

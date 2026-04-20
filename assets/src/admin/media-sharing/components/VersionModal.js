@@ -162,7 +162,10 @@ const VersionModal = ( {
 						{ __( 'Select a version to restore', 'onemedia' ) }
 					</h3>
 					<p className="onemedia-selected-media-description">
-						{ __( 'Choose from the list of available versions below.', 'onemedia' ) }
+						{ __(
+							'Choose from the list of available versions below.',
+							'onemedia',
+						) }
 					</p>
 				</div>
 
@@ -177,7 +180,12 @@ const VersionModal = ( {
 					</Button>
 					<Button
 						variant="primary"
-						onClick={ () => selectedVersion !== null && handleVersionSelect( attachmentVersions[ selectedVersion ] ) }
+						onClick={ () =>
+							selectedVersion !== null &&
+							handleVersionSelect(
+								attachmentVersions[ selectedVersion ],
+							)
+						}
 						isBusy={ loading }
 						disabled={ null === selectedVersion || loading }
 					>

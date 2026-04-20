@@ -10,15 +10,16 @@ import { getFrameProperty } from './utils';
 
 function SyncMediaFilter() {
 	const media = getFrameProperty( 'wp.media' );
-	const originalAttachmentsBrowser = getFrameProperty( 'wp.media.view.AttachmentsBrowser' );
+	const originalAttachmentsBrowser = getFrameProperty(
+		'wp.media.view.AttachmentsBrowser',
+	);
 
 	if ( ! media || ! originalAttachmentsBrowser ) {
 		return;
 	}
 
-	const ONEMEDIA_MEDIA_UPLOAD = typeof OneMediaMediaUpload !== 'undefined'
-		? OneMediaMediaUpload
-		: '';
+	const ONEMEDIA_MEDIA_UPLOAD =
+		typeof OneMediaMediaUpload !== 'undefined' ? OneMediaMediaUpload : '';
 
 	if ( ! ONEMEDIA_MEDIA_UPLOAD ) {
 		return;

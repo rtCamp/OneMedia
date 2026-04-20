@@ -19,16 +19,15 @@ const sharedConfig = {
 		filename: '[name].js',
 		chunkFilename: '[name].js',
 	},
-	plugins: [
-		...defaultConfig.plugins,
-		new RemoveEmptyScriptsPlugin(),
-	],
+	plugins: [ ...defaultConfig.plugins, new RemoveEmptyScriptsPlugin() ],
 	optimization: {
 		...defaultConfig.optimization,
 		splitChunks: {
 			...defaultConfig.optimization.splitChunks,
 		},
-		minimizer: defaultConfig.optimization.minimizer.concat( [ new CssMinimizerPlugin() ] ),
+		minimizer: defaultConfig.optimization.minimizer.concat( [
+			new CssMinimizerPlugin(),
+		] ),
 	},
 };
 
@@ -47,7 +46,10 @@ const styles = {
 		const dir = './assets/src/css';
 		fs.readdirSync( dir ).forEach( ( fileName ) => {
 			const fullPath = `${ dir }/${ fileName }`;
-			if ( ! fs.lstatSync( fullPath ).isDirectory() && fileName.match( /\.(scss|css)$/ ) ) {
+			if (
+				! fs.lstatSync( fullPath ).isDirectory() &&
+				fileName.match( /\.(scss|css)$/ )
+			) {
 				entries[ fileName.replace( /\.[^/.]+$/, '' ) ] = fullPath;
 			}
 		} );
@@ -56,7 +58,8 @@ const styles = {
 	},
 	plugins: [
 		...sharedConfig.plugins.filter(
-			( plugin ) => plugin.constructor.name !== 'DependencyExtractionWebpackPlugin',
+			( plugin ) =>
+				plugin.constructor.name !== 'DependencyExtractionWebpackPlugin',
 		),
 	],
 };
@@ -64,19 +67,54 @@ const styles = {
 const scripts = {
 	...sharedConfig,
 	entry: {
-		'media-sharing': path.resolve( process.cwd(), 'assets', 'src', 'admin/media-sharing', 'index.js' ),
-		settings: path.resolve( process.cwd(), 'assets', 'src', 'admin', 'settings', 'index.tsx' ),
-		onboarding: path.resolve( process.cwd(), 'assets', 'src', 'admin', 'onboarding', 'index.tsx' ),
-		'media-sync-filter': path.resolve( process.cwd(), 'assets', 'src', 'js', 'media-sync-filter.js' ),
-		'media-frame': path.resolve( process.cwd(), 'assets', 'src', 'js', 'media-frame.js' ),
+		'media-sharing': path.resolve(
+			process.cwd(),
+			'assets',
+			'src',
+			'admin/media-sharing',
+			'index.js',
+		),
+		settings: path.resolve(
+			process.cwd(),
+			'assets',
+			'src',
+			'admin',
+			'settings',
+			'index.tsx',
+		),
+		onboarding: path.resolve(
+			process.cwd(),
+			'assets',
+			'src',
+			'admin',
+			'onboarding',
+			'index.tsx',
+		),
+		'media-sync-filter': path.resolve(
+			process.cwd(),
+			'assets',
+			'src',
+			'js',
+			'media-sync-filter.js',
+		),
+		'media-frame': path.resolve(
+			process.cwd(),
+			'assets',
+			'src',
+			'js',
+			'media-frame.js',
+		),
 	},
 	module: {
-		rules: sharedConfig?.module?.rules?.filter(
-			( rule ) => {
+		rules:
+			sharedConfig?.module?.rules?.filter( ( rule ) => {
 				// Only keep JS/TS/JSX/TSX rules for scripts config, exclude CSS/SCSS
-				return ! rule.test || ( ! rule.test.toString().includes( 'scss' ) && ! rule.test.toString().includes( 'css' ) );
-			},
-		) || [],
+				return (
+					! rule.test ||
+					( ! rule.test.toString().includes( 'scss' ) &&
+						! rule.test.toString().includes( 'css' ) )
+				);
+			} ) || [],
 	},
 	resolve: {
 		...sharedConfig.resolve,

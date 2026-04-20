@@ -35,7 +35,7 @@ export const defaultBrandSite: BrandSite = {
 export type EditingIndex = number | null;
 
 const NONCE = window.OneMediaSettings.restNonce;
-const SITE_TYPE = window.OneMediaSettings.siteType as SiteType || '';
+const SITE_TYPE = ( window.OneMediaSettings.siteType as SiteType ) || '';
 const SHARED_SITES_ENDPOINT = '/onemedia/v1/shared-sites';
 
 /**
@@ -45,10 +45,10 @@ apiFetch.use( apiFetch.createNonceMiddleware( NONCE ) );
 
 const SettingsPage = () => {
 	const [ showModal, setShowModal ] = useState( false );
-	const [ editingIndex, setEditingIndex ] = useState< EditingIndex >( null );
-	const [ sites, setSites ] = useState< BrandSite[] >( [] );
-	const [ formData, setFormData ] = useState< BrandSite >( defaultBrandSite );
-	const [ notice, setNotice ] = useState< NoticeType | null >( null );
+	const [ editingIndex, setEditingIndex ] = useState<EditingIndex>( null );
+	const [ sites, setSites ] = useState<BrandSite[]>( [] );
+	const [ formData, setFormData ] = useState<BrandSite>( defaultBrandSite );
+	const [ notice, setNotice ] = useState<NoticeType | null>( null );
 
 	useEffect( () => {
 		apiFetch<{ shared_sites?: BrandSite[] }>( {
@@ -73,88 +73,104 @@ const SettingsPage = () => {
 		}
 	}, [ sites ] );
 
-	const handleFormSubmit = async () : Promise< boolean > => {
-		const updated : BrandSite[] = editingIndex !== null
-			? sites.map( ( item, i ) => ( i === editingIndex ? formData : item ) )
-			: [ ...sites, formData ];
+	const handleFormSubmit = async (): Promise<boolean> => {
+		const updated: BrandSite[] =
+			editingIndex !== null
+				? sites.map( ( item, i ) => ( i === editingIndex ? formData : item ) )
+				: [ ...sites, formData ];
 
 		return apiFetch<{ shared_sites?: BrandSite[] }>( {
 			path: SHARED_SITES_ENDPOINT,
 			method: 'POST',
 			data: { shared_sites: updated },
-		} ).then( ( data ) => {
-			if ( ! data?.shared_sites ) {
-				throw new Error( 'No shared sites in response' );
-			}
+		} )
+			.then( ( data ) => {
+				if ( ! data?.shared_sites ) {
+					throw new Error( 'No shared sites in response' );
+				}
 
-			if ( data.shared_sites.length === 1 && sites.length === 0 ) {
-				// Reloading causes the menus etc to reflect the missing sites.
-				window.location.reload();
-			}
+				if ( data.shared_sites.length === 1 && sites.length === 0 ) {
+					// Reloading causes the menus etc to reflect the missing sites.
+					window.location.reload();
+				}
 
-			setSites( data.shared_sites );
+				setSites( data.shared_sites );
 
-			setNotice( {
-				type: 'success',
-				message: __( 'Brand Site saved successfully.', 'onemedia' ),
+				setNotice( {
+					type: 'success',
+					message: __( 'Brand Site saved successfully.', 'onemedia' ),
+				} );
+				return true;
+			} )
+			.catch( () => {
+				setNotice( {
+					type: 'error',
+					message: __( 'Failed to update shared sites', 'onemedia' ),
+				} );
+				return false;
+			} )
+			.finally( () => {
+				setFormData( defaultBrandSite );
+				setShowModal( false );
+				setEditingIndex( null );
 			} );
-			return true;
-		} ).catch( () => {
-			setNotice( {
-				type: 'error',
-				message: __( 'Failed to update shared sites', 'onemedia' ),
-			} );
-			return false;
-		} ).finally( () => {
-			setFormData( defaultBrandSite );
-			setShowModal( false );
-			setEditingIndex( null );
-		} );
 	};
 
-	const handleDelete = async ( index : number|null ) : Promise<void> => {
-		const updated : BrandSite[] = sites.filter( ( _, i ) => i !== index );
+	const handleDelete = async ( index: number | null ): Promise<void> => {
+		const updated: BrandSite[] = sites.filter( ( _, i ) => i !== index );
 
 		apiFetch<{ shared_sites?: BrandSite[] }>( {
 			path: SHARED_SITES_ENDPOINT,
 			method: 'POST',
 			data: { shared_sites: updated },
-		} ).then( ( data ) => {
-			if ( ! data?.shared_sites ) {
-				throw new Error( 'No shared sites in response' );
-			}
-			setSites( data.shared_sites );
+		} )
+			.then( ( data ) => {
+				if ( ! data?.shared_sites ) {
+					throw new Error( 'No shared sites in response' );
+				}
+				setSites( data.shared_sites );
 
-			if ( data.shared_sites.length === 0 ) {
-				// Reloading causes the menus etc to reflect the missing sites.
-				window.location.reload();
-			} else {
-				document.body.classList.remove( 'onemedia-missing-brand-sites' );
-			}
-		} ).catch( () => {
-			throw new Error( 'Failed to update shared sites' );
-		} );
+				if ( data.shared_sites.length === 0 ) {
+					// Reloading causes the menus etc to reflect the missing sites.
+					window.location.reload();
+				} else {
+					document.body.classList.remove(
+						'onemedia-missing-brand-sites',
+					);
+				}
+			} )
+			.catch( () => {
+				throw new Error( 'Failed to update shared sites' );
+			} );
 	};
 
 	return (
 		<>
-			{ !! notice && notice?.message?.length > 0 &&
+			{ !! notice && notice?.message?.length > 0 && (
 				<Snackbar
 					explicitDismiss={ false }
 					onRemove={ () => setNotice( null ) }
-					className={ notice?.type === 'error' ? 'onemedia-error-notice' : 'onemedia-success-notice' }
+					className={
+						notice?.type === 'error'
+							? 'onemedia-error-notice'
+							: 'onemedia-success-notice'
+					}
 				>
 					{ notice?.message }
 				</Snackbar>
-			}
-
-			{ SITE_TYPE === 'brand-site' && (
-				<SiteSettings />
 			) }
+
+			{ SITE_TYPE === 'brand-site' && <SiteSettings /> }
 
 			{ SITE_TYPE === 'governing-site' && (
 				<>
-					<SiteTable sites={ sites } onEdit={ setEditingIndex } onDelete={ handleDelete } setFormData={ setFormData } setShowModal={ setShowModal } />
+					<SiteTable
+						sites={ sites }
+						onEdit={ setEditingIndex }
+						onDelete={ handleDelete }
+						setFormData={ setFormData }
+						setShowModal={ setShowModal }
+					/>
 				</>
 			) }
 
@@ -170,7 +186,9 @@ const SettingsPage = () => {
 					} }
 					editing={ editingIndex !== null }
 					sites={ sites }
-					originalData={ editingIndex !== null ? sites[ editingIndex ] : undefined }
+					originalData={
+						editingIndex !== null ? sites[ editingIndex ] : undefined
+					}
 				/>
 			) }
 		</>

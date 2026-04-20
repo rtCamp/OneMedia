@@ -2,24 +2,33 @@
  * WordPress dependencies
  */
 import { useState } from 'react';
-import { Button, Card, CardHeader, CardBody, Modal } from '@wordpress/components';
+import {
+	Button,
+	Card,
+	CardHeader,
+	CardBody,
+	Modal,
+} from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import type { BrandSite, EditingIndex } from '../admin/settings/page';
 
-const SiteTable = (
-	{ sites, onEdit, onDelete, setFormData, setShowModal } :
-	{
-		sites: BrandSite[];
-		onEdit: ( index: number ) => void;
-		onDelete: ( index: number|null ) => void;
-		setFormData: ( data: BrandSite ) => void;
-		setShowModal: ( show: boolean ) => void;
-	},
-) => {
+const SiteTable = ( {
+	sites,
+	onEdit,
+	onDelete,
+	setFormData,
+	setShowModal,
+}: {
+	sites: BrandSite[];
+	onEdit: ( index: number ) => void;
+	onDelete: ( index: number | null ) => void;
+	setFormData: ( data: BrandSite ) => void;
+	setShowModal: ( show: boolean ) => void;
+} ) => {
 	const [ showDeleteModal, setShowDeleteModal ] = useState( false );
-	const [ deleteIndex, setDeleteIndex ] = useState< EditingIndex >( null );
+	const [ deleteIndex, setDeleteIndex ] = useState<EditingIndex>( null );
 
-	const handleDeleteClick = ( index:number ) => {
+	const handleDeleteClick = ( index: number ) => {
 		setDeleteIndex( index );
 		setShowDeleteModal( true );
 	};
@@ -48,7 +57,10 @@ const SiteTable = (
 				</Button>
 			</CardHeader>
 			<CardBody>
-				<table className="wp-list-table widefat fixed striped " style={ { marginTop: '16px' } }>
+				<table
+					className="wp-list-table widefat fixed striped "
+					style={ { marginTop: '16px' } }
+				>
 					<thead>
 						<tr>
 							<th>{ __( 'Site Name', 'onemedia' ) }</th>
@@ -69,7 +81,11 @@ const SiteTable = (
 							<tr key={ index }>
 								<td>{ site?.name }</td>
 								<td>{ site?.url }</td>
-								<td><code>{ site?.api_key?.substring( 0, 10 ) }...</code></td>
+								<td>
+									<code>
+										{ site?.api_key?.substring( 0, 10 ) }...
+									</code>
+								</td>
 								<td>
 									<Button
 										variant="secondary"
@@ -105,29 +121,37 @@ const SiteTable = (
 	);
 };
 
-const DeleteConfirmationModal = (
-	{ onConfirm, onCancel }
-	: { onConfirm: () => void; onCancel: () => void },
-) => (
+const DeleteConfirmationModal = ( {
+	onConfirm,
+	onCancel,
+}: {
+	onConfirm: () => void;
+	onCancel: () => void;
+} ) => (
 	<Modal
 		title={ __( 'Delete Brand Site', 'onemedia' ) }
 		onRequestClose={ onCancel }
 		isDismissible={ true }
 		shouldCloseOnClickOutside={ true }
 	>
-		<p>{ __( 'Are you sure you want to delete this Brand Site? This action cannot be undone.', 'onemedia' ) }</p>
-		<div style={ { display: 'flex', justifyContent: 'flex-end', marginTop: '20px', gap: '16px' } }>
-			<Button
-				variant="secondary"
-				onClick={ onCancel }
-			>
+		<p>
+			{ __(
+				'Are you sure you want to delete this Brand Site? This action cannot be undone.',
+				'onemedia',
+			) }
+		</p>
+		<div
+			style={ {
+				display: 'flex',
+				justifyContent: 'flex-end',
+				marginTop: '20px',
+				gap: '16px',
+			} }
+		>
+			<Button variant="secondary" onClick={ onCancel }>
 				{ __( 'Cancel', 'onemedia' ) }
 			</Button>
-			<Button
-				variant="primary"
-				isDestructive
-				onClick={ onConfirm }
-			>
+			<Button variant="primary" isDestructive onClick={ onConfirm }>
 				{ __( 'Delete', 'onemedia' ) }
 			</Button>
 		</div>

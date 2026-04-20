@@ -5,14 +5,24 @@
 /**
  * WordPress dependencies
  */
-import { createRoot, createElement, useState, useEffect } from '@wordpress/element';
+import {
+	createRoot,
+	createElement,
+	useState,
+	useEffect,
+} from '@wordpress/element';
 import { Snackbar } from '@wordpress/components';
 import domReady from '@wordpress/dom-ready';
 
 /**
  * Internal dependencies
  */
-import { observeElement, getFrameProperty, getNoticeClass, showSnackbarNotice } from './utils';
+import {
+	observeElement,
+	getFrameProperty,
+	getNoticeClass,
+	showSnackbarNotice,
+} from './utils';
 import BrowserUploaderButton from '../admin/media-sharing/components/browser-uploader';
 
 const isBrandSite = window.OneMediaMediaFrame.siteType === 'brand-site';
@@ -32,7 +42,8 @@ function isSyncAttachment( attachmentOrElement ) {
 	}
 
 	// Helper to check sync status value
-	const isSyncValue = ( value ) => value === true || value === 1 || value === '1';
+	const isSyncValue = ( value ) =>
+		value === true || value === 1 || value === '1';
 
 	// Handle Backbone model
 	if ( typeof attachmentOrElement.get === 'function' ) {
@@ -45,7 +56,9 @@ function isSyncAttachment( attachmentOrElement ) {
 	}
 
 	// No attachment ID
-	const attachmentId = attachmentOrElement.dataset.id || attachmentOrElement.dataset.attachmentId;
+	const attachmentId =
+		attachmentOrElement.dataset.id ||
+		attachmentOrElement.dataset.attachmentId;
 	if ( ! attachmentId ) {
 		return false;
 	}
@@ -73,7 +86,8 @@ function customizeSyncMediaFrame() {
 		return;
 	}
 
-	const originalAttachmentRender = window.wp.media.view.Attachment.prototype.render;
+	const originalAttachmentRender =
+		window.wp.media.view.Attachment.prototype.render;
 
 	window.wp.media.view.Attachment.prototype.render = function() {
 		// Call original render.
@@ -112,7 +126,9 @@ async function customizeMediaFrame() {
  * Customize media details to add replace media button and remove delete permanently link.
  */
 async function customizeMediaDetails() {
-	const containers = document.querySelectorAll( '.replace-media-react-container' );
+	const containers = document.querySelectorAll(
+		'.replace-media-react-container',
+	);
 
 	// Process attachments on governing site.
 	processAttachments(
@@ -128,8 +144,13 @@ async function customizeMediaDetails() {
 				return createElement( BrowserUploaderButton, {
 					onAddMediaSuccess: () => {
 						// Handle success - refresh attachment.
-						const attachmentProperty = getFrameProperty( 'wp.media.attachment' );
-						if ( attachmentProperty && typeof attachmentProperty === 'function' ) {
+						const attachmentProperty = getFrameProperty(
+							'wp.media.attachment',
+						);
+						if (
+							attachmentProperty &&
+							typeof attachmentProperty === 'function'
+						) {
 							const attachment = attachmentProperty( attachmentId );
 							if ( attachment ) {
 								attachment.fetch();
@@ -200,7 +221,13 @@ function removeDeleteLinks() {
  * @param {boolean}  processedNonSync   - Whether to process non-sync elements or not.
  * @param {Function} processFn          - The function to process each attachment element.
  */
-function processAttachments( attachmentElements, processedAttr, processedSync, processedNonSync, processFn ) {
+function processAttachments(
+	attachmentElements,
+	processedAttr,
+	processedSync,
+	processedNonSync,
+	processFn,
+) {
 	attachmentElements.forEach( ( element ) => {
 		const attachmentId = element.dataset.id || element.dataset.attachmentId;
 
@@ -264,7 +291,10 @@ function initSnackBarNotice() {
 			document.addEventListener( 'onemediaNotice', handleNoticeEvent );
 
 			return () => {
-				document.removeEventListener( 'onemediaNotice', handleNoticeEvent );
+				document.removeEventListener(
+					'onemediaNotice',
+					handleNoticeEvent,
+				);
 			};
 		}, [] );
 

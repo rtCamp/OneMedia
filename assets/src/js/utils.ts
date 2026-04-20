@@ -11,9 +11,9 @@ declare global {
 				queue: unknown;
 			};
 			media: {
-				attachment( id: number ): {
-					get( key: string ): unknown;
-				} | undefined;
+				attachment(
+					id: number
+				): { get( key: string ): unknown } | undefined;
 			};
 		};
 	}
@@ -22,10 +22,10 @@ declare global {
 type WPMediaUploader = {
 	settings: {
 		multipart_params: Record<string, unknown>;
-	}
+	};
 	setOption(
 		key: 'filters' | 'multi_selection' | string,
-		value: string | object | boolean,
+		value: string | object | boolean
 	): void;
 };
 
@@ -38,9 +38,9 @@ type WPMediaFrame = {
 	};
 	on( event: 'ready' | string, cb: () => void ): void;
 	state(): {
-		get( key: 'library' | string ): {
-			observe( queue: unknown ): void;
-		} | undefined;
+		get(
+			key: 'library' | string
+		): { observe( queue: unknown ): void } | undefined;
 	};
 };
 
@@ -71,7 +71,7 @@ const isValidUrl = ( url: string ): boolean => {
 	try {
 		const parsedUrl = new URL( url );
 		return isURL( parsedUrl.href );
-	} catch ( e ) {
+	} catch {
 		return false;
 	}
 };
@@ -192,10 +192,18 @@ function getFrameProperty<T = object>( propertyPath: string ): T | undefined {
 
 	try {
 		const keys = propertyPath.split( '.' );
-		let current: Record<string, unknown> = window as unknown as Record<string, unknown>;
+		let current: Record<string, unknown> = window as unknown as Record<
+			string,
+			unknown
+		>;
 
 		for ( const key of keys ) {
-			if ( current && ( typeof current === 'object' || typeof current === 'function' ) && key in current ) {
+			if (
+				current &&
+				( typeof current === 'object' ||
+					typeof current === 'function' ) &&
+				key in current
+			) {
 				current = current[ key ] as Record<string, unknown>;
 			} else {
 				return undefined;
@@ -203,7 +211,7 @@ function getFrameProperty<T = object>( propertyPath: string ): T | undefined {
 		}
 
 		return current as T;
-	} catch ( error ) {
+	} catch {
 		return undefined;
 	}
 }
@@ -243,7 +251,11 @@ const showSnackbarNotice = ( detail: NoticeType ): void => {
  *
  * @return {void}
  */
-const restrictMediaFrameUploadTypes = ( frame : WPMediaFrame, allowedTypes: string, is_sync:boolean = false ) => {
+const restrictMediaFrameUploadTypes = (
+	frame: WPMediaFrame,
+	allowedTypes: string,
+	is_sync: boolean = false,
+) => {
 	/**
 	 * Using mime_type will restrict the upload types in media modal,
 	 * Which we don't want as we only need to restrict for OneMedia uploader frame.
@@ -256,13 +268,9 @@ const restrictMediaFrameUploadTypes = ( frame : WPMediaFrame, allowedTypes: stri
 		// Get existing multipart_params first
 		const existingParams = uploader.settings.multipart_params || {};
 
-		uploader.setOption( 'filters',
-			{
-				mime_types: [
-					{ extensions: allowedTypes },
-				],
-			},
-		);
+		uploader.setOption( 'filters', {
+			mime_types: [ { extensions: allowedTypes } ],
+		} );
 
 		// Trick to re-init field
 		uploader.setOption( 'multi_selection', false );
@@ -291,7 +299,7 @@ const restrictMediaFrameUploadTypes = ( frame : WPMediaFrame, allowedTypes: stri
  * Get MIME types from a MIME map.
  * @param {Object} mimeMap
  */
-function getAllowedMimeTypes( mimeMap : Object ) : string[]|undefined {
+function getAllowedMimeTypes( mimeMap: Object ): string[] | undefined {
 	return [ ...new Set( Object.values( mimeMap ) ) ];
 }
 
@@ -299,9 +307,8 @@ function getAllowedMimeTypes( mimeMap : Object ) : string[]|undefined {
  * Get extensions from a MIME map.
  * @param {Object} mimeMap
  */
-function getAllowedMimeTypeExtensions( mimeMap : Object ) : string[] {
-	return Object.keys( mimeMap )
-		.flatMap( ( key ) => key.split( '|' ) );
+function getAllowedMimeTypeExtensions( mimeMap: Object ): string[] {
+	return Object.keys( mimeMap ).flatMap( ( key ) => key.split( '|' ) );
 }
 
 export {
