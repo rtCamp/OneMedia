@@ -21,8 +21,6 @@ parameters:
 		max: 80500
 	bootstrapFiles:
 		- onemedia.php
-	stubFiles:
-		- phpstan/stubs/wordpress-extended.php
 	paths:
 		- onemedia.php
 		- uninstall.php
