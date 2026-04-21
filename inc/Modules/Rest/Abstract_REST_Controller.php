@@ -49,7 +49,6 @@ abstract class Abstract_REST_Controller extends \WP_REST_Controller implements R
 	 * @todo this should be on a hook.
 	 *
 	 * @param \WP_REST_Request<array{}> $request Request.
-	 * @return bool
 	 */
 	public function check_api_permissions( $request ): bool {
 		// If it's the same domain, check if the current user can manage options.

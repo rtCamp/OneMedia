@@ -40,7 +40,7 @@ const ShareMediaModal = ( {
 		<Modal
 			title={ __( 'Select Sites for Sharing Media', 'onemedia' ) }
 			onRequestClose={ () => setIsShareMediaModalOpen( false ) }
-			shouldCloseOnClickOutside={ true }
+			shouldCloseOnClickOutside
 			size="medium"
 			className="onemedia-sites-modal"
 		>
@@ -51,18 +51,18 @@ const ShareMediaModal = ( {
 							/* translators: %1$d: number of selected media items, %2$s: sync or non-sync mode */
 							__(
 								'Selected Media: %1$d items (%2$s Mode)',
-								'onemedia',
+								'onemedia'
 							),
 							getSelectedCount(),
 							'sync' === syncOption
 								? __( 'Sync', 'onemedia' )
-								: __( 'Non Sync', 'onemedia' ),
+								: __( 'Non Sync', 'onemedia' )
 						) }
 					</h3>
 					<p className="onemedia-selected-media-description">
 						{ __(
 							'Select the sites where you want to share these media assets.',
-							'onemedia',
+							'onemedia'
 						) }
 					</p>
 				</div>
@@ -89,7 +89,7 @@ const ShareMediaModal = ( {
 									handleSiteSelect( selectAll, true );
 								}
 							} }
-							__nextHasNoMarginBottom={ true }
+							__nextHasNoMarginBottom
 						/>
 						<Button
 							className="onemedia-clear-selection-button"
@@ -127,7 +127,9 @@ const ShareMediaModal = ( {
 												handleSiteSelect( site.url );
 											}
 										} }
-										aria-pressed={ !! selectedSites[ site.url ] }
+										aria-pressed={
+											!! selectedSites[ site.url ]
+										}
 										onClick={ ( event ) => {
 											event.stopPropagation();
 											handleSiteSelect( site.url );
@@ -141,7 +143,7 @@ const ShareMediaModal = ( {
 												<div
 													onClick={ () =>
 														handleSiteSelect(
-															site.url,
+															site.url
 														)
 													}
 												>
@@ -153,11 +155,13 @@ const ShareMediaModal = ( {
 													</div>
 												</div>
 											}
-											checked={ !! selectedSites[ site.url ] }
+											checked={
+												!! selectedSites[ site.url ]
+											}
 											onChange={ () => {
 												// Already handled in parent div's onClick.
 											} }
-											__nextHasNoMarginBottom={ true }
+											__nextHasNoMarginBottom
 										/>
 									</div>
 								) ) }
@@ -179,7 +183,11 @@ const ShareMediaModal = ( {
 						disabled={ getSelectedSitesCount() === 0 || loading }
 						isBusy={ loading }
 					>
-						{ loading ? <Spinner /> : __( 'Share Media', 'onemedia' ) }
+						{ loading ? (
+							<Spinner />
+						) : (
+							__( 'Share Media', 'onemedia' )
+						) }
 					</Button>
 				</HStack>
 			</VStack>

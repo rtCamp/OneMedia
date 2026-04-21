@@ -7,6 +7,8 @@
  * @package OneMedia\Modules\Post_Types;
  */
 
+declare(strict_types = 1);
+
 namespace OneMedia\Modules\MediaLibrary;
 
 use OneMedia\Contracts\Interfaces\Registrable;
@@ -17,8 +19,6 @@ use OneMedia\Modules\Settings\Settings;
  * Class Admin
  */
 class ConsumerAdmin implements Registrable {
-
-
 	/**
 	 * Transient key for deletion notice.
 	 *
@@ -86,8 +86,6 @@ class ConsumerAdmin implements Registrable {
 
 	/**
 	 * Show admin notice for attachment deletion.
-	 *
-	 * @return void
 	 */
 	public function show_deletion_notice(): void {
 		// Check for delete notice transient.
@@ -117,8 +115,6 @@ class ConsumerAdmin implements Registrable {
 
 	/**
 	 * Prevent attachment edit.
-	 *
-	 * @return void
 	 */
 	public function prevent_attachment_edit(): void {
 		$post_id = filter_input( INPUT_GET, 'post', FILTER_VALIDATE_INT );
@@ -152,8 +148,6 @@ class ConsumerAdmin implements Registrable {
 
 	/**
 	 * Prevent save_attachment AJAX and block editing for synced attachments.
-	 *
-	 * @return void
 	 */
 	public function prevent_save_attachment_ajax(): void {
 		$attachment_id = isset( $_REQUEST['id'] ) ? intval( $_REQUEST['id'] ) : 0;

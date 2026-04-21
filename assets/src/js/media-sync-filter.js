@@ -5,13 +5,16 @@
 /**
  * Internal dependencies
  */
+/**
+ * WordPress dependencies
+ */
 import domReady from '@wordpress/dom-ready';
 import { getFrameProperty } from './utils';
 
 function SyncMediaFilter() {
 	const media = getFrameProperty( 'wp.media' );
 	const originalAttachmentsBrowser = getFrameProperty(
-		'wp.media.view.AttachmentsBrowser',
+		'wp.media.view.AttachmentsBrowser'
 	);
 
 	if ( ! media || ! originalAttachmentsBrowser ) {
@@ -102,14 +105,14 @@ function SyncMediaFilter() {
 					controller: this.controller,
 					model: this.collection.props,
 					priority: -75,
-				} ),
+				} )
 			);
 		},
 	} );
 
 	// Modify the query to handle our filter.
 	const originalAjax = media.ajax;
-	media.ajax = function( action, options ) {
+	media.ajax = function ( action, options ) {
 		if ( 'query-attachments' === action ) {
 			const syncStatus = options.data.query.onemedia_sync_status;
 

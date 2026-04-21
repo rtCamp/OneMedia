@@ -89,7 +89,7 @@ function customizeSyncMediaFrame() {
 	const originalAttachmentRender =
 		window.wp.media.view.Attachment.prototype.render;
 
-	window.wp.media.view.Attachment.prototype.render = function() {
+	window.wp.media.view.Attachment.prototype.render = function () {
 		// Call original render.
 		originalAttachmentRender.apply( this, arguments );
 
@@ -127,7 +127,7 @@ async function customizeMediaFrame() {
  */
 async function customizeMediaDetails() {
 	const containers = document.querySelectorAll(
-		'.replace-media-react-container',
+		'.replace-media-react-container'
 	);
 
 	// Process attachments on governing site.
@@ -145,13 +145,14 @@ async function customizeMediaDetails() {
 					onAddMediaSuccess: () => {
 						// Handle success - refresh attachment.
 						const attachmentProperty = getFrameProperty(
-							'wp.media.attachment',
+							'wp.media.attachment'
 						);
 						if (
 							attachmentProperty &&
 							typeof attachmentProperty === 'function'
 						) {
-							const attachment = attachmentProperty( attachmentId );
+							const attachment =
+								attachmentProperty( attachmentId );
 							if ( attachment ) {
 								attachment.fetch();
 							}
@@ -173,7 +174,7 @@ async function customizeMediaDetails() {
 
 			const root = createRoot( container );
 			root.render( createElement( MediaReplaceComponent ) );
-		},
+		}
 	);
 
 	// Process attachments on brand site.
@@ -204,7 +205,7 @@ async function customizeMediaDetails() {
 function removeDeleteLinks() {
 	// Remove the delete button link.
 	const deleteLinks = document.querySelectorAll(
-		'.button-link.delete-attachment',
+		'.button-link.delete-attachment'
 	);
 
 	Array.from( deleteLinks ).forEach( ( deleteLink ) => {
@@ -226,7 +227,7 @@ function processAttachments(
 	processedAttr,
 	processedSync,
 	processedNonSync,
-	processFn,
+	processFn
 ) {
 	attachmentElements.forEach( ( element ) => {
 		const attachmentId = element.dataset.id || element.dataset.attachmentId;
@@ -293,7 +294,7 @@ function initSnackBarNotice() {
 			return () => {
 				document.removeEventListener(
 					'onemediaNotice',
-					handleNoticeEvent,
+					handleNoticeEvent
 				);
 			};
 		}, [] );
@@ -304,7 +305,7 @@ function initSnackBarNotice() {
 		return (
 			<Snackbar
 				status={ notice?.type ?? 'error' }
-				isDismissible={ true }
+				isDismissible
 				onRemove={ () => setNotice( null ) }
 				className={ getNoticeClass( notice?.type ) }
 			>
@@ -323,22 +324,22 @@ function initSnackBarNotice() {
 async function interceptAjaxErrors() {
 	const OriginalXHR = window?.XMLHttpRequest;
 
-	window.XMLHttpRequest = function() {
+	window.XMLHttpRequest = function () {
 		const xhr = new OriginalXHR();
 
 		let requestUrl = '';
 		let requestBody = '';
 
 		const originalOpen = xhr.open;
-		xhr.open = function( method, url, ...rest ) {
+		xhr.open = function ( method, url, ...rest ) {
 			requestUrl = url || '';
 			originalOpen.apply( this, [ method, url, ...rest ] );
 		};
 
 		const originalSend = xhr.send;
-		xhr.send = function( body ) {
+		xhr.send = function ( body ) {
 			requestBody = body || '';
-			this.addEventListener( 'load', function() {
+			this.addEventListener( 'load', function () {
 				try {
 					const isSaveAttachment =
 						requestUrl.includes( 'admin-ajax.php' ) &&

@@ -1,6 +1,9 @@
 /**
  * WordPress dependencies
  */
+/**
+ * External dependencies
+ */
 import { useState, useEffect } from 'react';
 import apiFetch from '@wordpress/api-fetch';
 import { __ } from '@wordpress/i18n';
@@ -44,7 +47,7 @@ const SiteTypeSelector = ( {
 		value={ value }
 		help={ __(
 			"Choose your site's primary purpose. This setting cannot be changed later and affects available features and configurations.",
-			'onemedia',
+			'onemedia'
 		) }
 		onChange={ ( v: string ) => {
 			setSiteType( v as SiteType | '' );
@@ -52,18 +55,25 @@ const SiteTypeSelector = ( {
 		options={ [
 			{ label: __( 'Select…', 'onemedia' ), value: '' },
 			{ label: __( 'Brand Site', 'onemedia' ), value: BRAND_SITE },
-			{ label: __( 'Governing site', 'onemedia' ), value: GOVERNING_SITE },
+			{
+				label: __( 'Governing site', 'onemedia' ),
+				value: GOVERNING_SITE,
+			},
 		] }
 	/>
 );
 
 const OnboardingScreen = () => {
-	const [ siteType, setSiteType ] = useState<SiteType | ''>( site_type || '' );
-	const [ notice, setNotice ] = useState<NoticeState | null>( null );
+	const [ siteType, setSiteType ] = useState< SiteType | '' >(
+		site_type || ''
+	);
+	const [ notice, setNotice ] = useState< NoticeState | null >( null );
 	const [ isSaving, setIsSaving ] = useState( false );
 
 	useEffect( () => {
-		apiFetch<{ onemedia_site_type?: SiteType }>( { path: '/wp/v2/settings' } )
+		apiFetch< { onemedia_site_type?: SiteType } >( {
+			path: '/wp/v2/settings',
+		} )
 			.then( ( settings ) => {
 				if ( settings?.onemedia_site_type ) {
 					setSiteType( settings.onemedia_site_type );
@@ -83,7 +93,7 @@ const OnboardingScreen = () => {
 		setIsSaving( true );
 
 		try {
-			await apiFetch<{ onemedia_site_type?: SiteType }>( {
+			await apiFetch< { onemedia_site_type?: SiteType } >( {
 				path: '/wp/v2/settings',
 				method: 'POST',
 				data: { onemedia_site_type: value },
@@ -114,7 +124,7 @@ const OnboardingScreen = () => {
 			{ !! notice?.message && (
 				<Notice
 					status={ notice?.type ?? 'success' }
-					isDismissible={ true }
+					isDismissible
 					onRemove={ () => setNotice( null ) }
 				>
 					{ notice?.message }
@@ -126,7 +136,10 @@ const OnboardingScreen = () => {
 			</CardHeader>
 
 			<CardBody className="onemedia-onboarding-page">
-				<SiteTypeSelector value={ siteType } setSiteType={ setSiteType } />
+				<SiteTypeSelector
+					value={ siteType }
+					setSiteType={ setSiteType }
+				/>
 				<Button
 					variant="primary"
 					onClick={ () => handleSiteTypeChange( siteType ) }

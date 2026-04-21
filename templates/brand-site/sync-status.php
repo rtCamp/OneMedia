@@ -1,11 +1,14 @@
 <?php
+
+declare(strict_types = 1);
+
 /**
  * This file contains the markup for onemedia sync status column on the upload screen on brand sites.
  *
  * @package OneMedia
  */
 
-$sync_status = isset( $vars['sync_status'] ) ? $vars['sync_status'] : '';
+$sync_status = $vars['sync_status'] ?? '';
 ?>
 
 <select name="onemedia_sync_status" id="onemedia_sync_status">

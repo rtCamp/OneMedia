@@ -5,6 +5,8 @@
  * @package OneMedia\Modules\Post_Types;
  */
 
+declare(strict_types = 1);
+
 namespace OneMedia\Modules\MediaSharing;
 
 use OneMedia\Contracts\Interfaces\Registrable;
@@ -16,7 +18,6 @@ use OneMedia\Utils;
  * Class Admin
  */
 class MediaActions implements Registrable {
-
 	/**
 	 * Number of attachment versions to keep.
 	 *
@@ -92,8 +93,6 @@ class MediaActions implements Registrable {
 	 * Remove sync meta when attachment is deleted.
 	 *
 	 * @param int $attachment_id Attachment ID.
-	 *
-	 * @return void
 	 */
 	public function remove_sync_meta( int $attachment_id ): void {
 		// On Governing Site.
@@ -186,8 +185,6 @@ class MediaActions implements Registrable {
 	 * Prevent updating attachment if connected sites are not available.
 	 *
 	 * @param int $post_id Post ID.
-	 *
-	 * @return void
 	 */
 	public function pre_update_sync_attachments( int $post_id ): void {
 		// Check if post type is attachment.
@@ -204,7 +201,7 @@ class MediaActions implements Registrable {
 		}
 
 		$health_check_connected_sites = Attachment::health_check_attachment_brand_sites( $post_id );
-		$success                      = isset( $health_check_connected_sites['success'] ) ? $health_check_connected_sites['success'] : false;
+		$success                      = $health_check_connected_sites['success'] ?? false;
 
 		// If any of the connected brand sites are not reachable, prevent updating the attachment.
 		if ( $success ) {
@@ -226,8 +223,6 @@ class MediaActions implements Registrable {
 
 	/**
 	 * Prevent saving attachment if connected sites are not available.
-	 *
-	 * @return void
 	 */
 	public function pre_update_sync_attachments_ajax(): void {
 		$attachment_id = isset( $_REQUEST['id'] ) ? intval( $_REQUEST['id'] ) : 0;
@@ -257,7 +252,7 @@ class MediaActions implements Registrable {
 		}
 
 		$health_check_connected_sites = Attachment::health_check_attachment_brand_sites( $attachment_id );
-		$success                      = isset( $health_check_connected_sites['success'] ) ? $health_check_connected_sites['success'] : false;
+		$success                      = $health_check_connected_sites['success'] ?? false;
 
 		// If any of the connected brand sites are not reachable, prevent updating the attachment.
 		if ( $success ) {
@@ -281,8 +276,6 @@ class MediaActions implements Registrable {
 	 * Update sync attachments on brand sites.
 	 *
 	 * @param int $attachment_id Attachment ID.
-	 *
-	 * @return void
 	 */
 	public function update_sync_attachments( int $attachment_id ): void {
 		// Check post is_onemedia_sync is set to be true.
@@ -361,8 +354,6 @@ class MediaActions implements Registrable {
 
 	/**
 	 * Handle media replacement via AJAX on governing site.
-	 *
-	 * @return void
 	 */
 	public function handle_media_replace(): void {
 		if ( ! current_user_can( 'manage_options' ) || ! check_ajax_referer( 'onemedia_upload_media' ) ) {
@@ -681,7 +672,6 @@ class MediaActions implements Registrable {
 	 * @param array $file The file data.
 	 * @param array $update_result The result from update_attachment function.
 	 * @param array $original_data The original file information.
-	 * @return void
 	 */
 	public function update_attachment_versions( int $attachment_id, array $file, array $update_result, array $original_data ): void {
 		// Get existing versions.

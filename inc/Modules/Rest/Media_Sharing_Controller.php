@@ -5,6 +5,8 @@
  * @package OneMedia
  */
 
+declare(strict_types = 1);
+
 namespace OneMedia\Modules\Rest;
 
 use OneMedia\Modules\MediaSharing\Attachment;
@@ -17,7 +19,6 @@ use WP_REST_Server;
  * Class Media_Sharing
  */
 class Media_Sharing_Controller extends Abstract_REST_Controller {
-
 	/**
 	 * Sync media request timeout.
 	 *
@@ -41,8 +42,6 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 
 	/**
 	 * Register REST API routes.
-	 *
-	 * @return void
 	 */
 	public function register_routes(): void {
 		/**
@@ -832,7 +831,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 			// Successful response from the brand site, the media files were synced.
 			$success_response[] = $response_body;
 
-			$media_response_list = isset( $response_body['media'] ) ? $response_body['media'] : [];
+			$media_response_list = $response_body['media'] ?? [];
 
 			// In case of error response, media list is in data key.
 			if ( empty( $media_response_list ) && isset( $response_body['data']['media'] ) ) {
@@ -979,9 +978,9 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 		foreach ( $media_files as $media_file ) {
 			$media_url       = isset( $media_file['url'] ) ? esc_url_raw( trim( $media_file['url'] ) ) : '';
 			$parent_media_id = isset( $media_file['id'] ) ? intval( $media_file['id'] ) : 0;
-			$media_title     = isset( $media_file['title'] ) ? $media_file['title'] : basename( $media_url );
+			$media_title     = $media_file['title'] ?? basename( $media_url );
 			$media_mime_type = isset( $media_file['mime_type'] ) ? sanitize_text_field( $media_file['mime_type'] ) : '';
-			$attachment_data = isset( $media_file['attachment_data'] ) ? $media_file['attachment_data'] : [];
+			$attachment_data = $media_file['attachment_data'] ?? [];
 
 			// Validate each media.
 			if (
@@ -1405,7 +1404,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 				// Successful response from the brand site, the media files were synced.
 				$success_response[] = $response_body;
 
-				$media_response_list = isset( $response_body['media'] ) ? $response_body['media'] : [];
+				$media_response_list = $response_body['media'] ?? [];
 
 				// In case of error response, media list is in data key.
 				if ( empty( $media_response_list ) && isset( $response_body['data']['media'] ) ) {
@@ -1819,8 +1818,6 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 	 *
 	 * @param int   $attachment_id   Attachment ID to update.
 	 * @param array $source_metadata Source metadata from the original media.
-	 *
-	 * @return void
 	 */
 	private function add_source_metadata_to_file( int $attachment_id, array $source_metadata ): void {
 		if ( empty( $source_metadata ) || empty( $attachment_id ) || 'attachment' !== get_post_type( $attachment_id ) ) {
@@ -1888,7 +1885,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 			return '';
 		}
 		$parts = explode( '/', $mime_type );
-		$type  = isset( $parts[1] ) ? $parts[1] : '';
+		$type  = $parts[1] ?? '';
 
 		// Handle cases like 'svg+xml'.
 		$type = explode( '+', $type )[0];

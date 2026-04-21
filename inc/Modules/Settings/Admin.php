@@ -6,6 +6,8 @@
  * @package OneMedia
  */
 
+declare(strict_types = 1);
+
 namespace OneMedia\Modules\Settings;
 
 use OneMedia\Contracts\Interfaces\Registrable;
@@ -51,8 +53,6 @@ final class Admin implements Registrable {
 
 	/**
 	 * Add a settings page.
-	 *
-	 * @return void
 	 */
 	public function add_admin_menu(): void {
 		add_menu_page(

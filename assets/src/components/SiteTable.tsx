@@ -1,6 +1,9 @@
 /**
  * WordPress dependencies
  */
+/**
+ * External dependencies
+ */
 import { useState } from 'react';
 import {
 	Button,
@@ -10,6 +13,9 @@ import {
 	Modal,
 } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
+/**
+ * Internal dependencies
+ */
 import type { BrandSite, EditingIndex } from '../admin/settings/page';
 
 const SiteTable = ( {
@@ -26,7 +32,7 @@ const SiteTable = ( {
 	setShowModal: ( show: boolean ) => void;
 } ) => {
 	const [ showDeleteModal, setShowDeleteModal ] = useState( false );
-	const [ deleteIndex, setDeleteIndex ] = useState<EditingIndex>( null );
+	const [ deleteIndex, setDeleteIndex ] = useState< EditingIndex >( null );
 
 	const handleDeleteClick = ( index: number ) => {
 		setDeleteIndex( index );
@@ -72,8 +78,14 @@ const SiteTable = ( {
 					<tbody>
 						{ sites.length === 0 && (
 							<tr>
-								<td colSpan={ 4 } style={ { textAlign: 'center' } }>
-									{ __( 'No Brand Sites found.', 'onemedia' ) }
+								<td
+									colSpan={ 4 }
+									style={ { textAlign: 'center' } }
+								>
+									{ __(
+										'No Brand Sites found.',
+										'onemedia'
+									) }
 								</td>
 							</tr>
 						) }
@@ -101,7 +113,9 @@ const SiteTable = ( {
 									<Button
 										variant="secondary"
 										isDestructive
-										onClick={ () => handleDeleteClick( index ) }
+										onClick={ () =>
+											handleDeleteClick( index )
+										}
 									>
 										{ __( 'Delete', 'onemedia' ) }
 									</Button>
@@ -131,13 +145,13 @@ const DeleteConfirmationModal = ( {
 	<Modal
 		title={ __( 'Delete Brand Site', 'onemedia' ) }
 		onRequestClose={ onCancel }
-		isDismissible={ true }
-		shouldCloseOnClickOutside={ true }
+		isDismissible
+		shouldCloseOnClickOutside
 	>
 		<p>
 			{ __(
 				'Are you sure you want to delete this Brand Site? This action cannot be undone.',
-				'onemedia',
+				'onemedia'
 			) }
 		</p>
 		<div

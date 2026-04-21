@@ -1,6 +1,9 @@
 /**
  * WordPress dependencies
  */
+/**
+ * External dependencies
+ */
 import { useState, useMemo } from 'react';
 import {
 	Modal,
@@ -35,13 +38,13 @@ const SiteModal = ( {
 }: {
 	formData: typeof defaultBrandSite;
 	setFormData: ( data: typeof defaultBrandSite ) => void;
-	onSubmit: () => Promise<boolean>;
+	onSubmit: () => Promise< boolean >;
 	onClose: () => void;
 	editing: boolean;
 	sites: ( typeof defaultBrandSite )[];
 	originalData: typeof defaultBrandSite | undefined;
 } ) => {
-	const [ errors, setErrors ] = useState<ErrorsType>( {
+	const [ errors, setErrors ] = useState< ErrorsType >( {
 		name: '',
 		url: '',
 		api_key: '',
@@ -63,7 +66,7 @@ const SiteModal = ( {
 		);
 	}, [ editing, formData, originalData ] );
 
-	const handleSubmit = async (): Promise<void> => {
+	const handleSubmit = async (): Promise< void > => {
 		// Validate inputs
 		let urlError = '';
 		if ( ! formData.url.trim() ) {
@@ -71,7 +74,7 @@ const SiteModal = ( {
 		} else if ( ! isValidUrl( formData.url ) ) {
 			urlError = __(
 				'Enter a valid URL (must start with http or https).',
-				'onemedia',
+				'onemedia'
 			);
 		}
 
@@ -90,7 +93,7 @@ const SiteModal = ( {
 		if ( formData.name.length > 20 ) {
 			newErrors.name = __(
 				'Site Name must be under 20 characters.',
-				'onemedia',
+				'onemedia'
 			);
 		}
 
@@ -116,7 +119,7 @@ const SiteModal = ( {
 						'Content-Type': 'application/json',
 						'X-OneMedia-Token': formData.api_key,
 					},
-				},
+				}
 			);
 
 			const healthCheckData = await healthCheck.json();
@@ -125,7 +128,7 @@ const SiteModal = ( {
 					...newErrors,
 					message: __(
 						"Health check failed, please verify API key and make sure there's no governing site connected.",
-						'onemedia',
+						'onemedia'
 					),
 				} );
 				setShowNotice( true );
@@ -156,7 +159,7 @@ const SiteModal = ( {
 					...newErrors,
 					message: __(
 						'Site URL already exists. Please use a different URL.',
-						'onemedia',
+						'onemedia'
 					),
 				} );
 				setShowNotice( true );
@@ -172,7 +175,7 @@ const SiteModal = ( {
 					...newErrors,
 					message: __(
 						'An error occurred while saving the site. Please try again.',
-						'onemedia',
+						'onemedia'
 					),
 				} );
 				setShowNotice( true );
@@ -182,7 +185,7 @@ const SiteModal = ( {
 				...newErrors,
 				message: __(
 					'An unexpected error occurred. Please try again.',
-					'onemedia',
+					'onemedia'
 				),
 			} );
 			setShowNotice( true );
@@ -213,12 +216,12 @@ const SiteModal = ( {
 			}
 			onRequestClose={ onClose }
 			size="medium"
-			shouldCloseOnClickOutside={ true }
+			shouldCloseOnClickOutside
 		>
 			{ showNotice && (
 				<Notice
 					status="error"
-					isDismissible={ true }
+					isDismissible
 					onRemove={ () => setShowNotice( false ) }
 				>
 					{ errors.message ||
@@ -231,10 +234,12 @@ const SiteModal = ( {
 			<TextControl
 				label={ __( 'Site Name*', 'onemedia' ) }
 				value={ formData.name }
-				onChange={ ( value ) => setFormData( { ...formData, name: value } ) }
+				onChange={ ( value ) =>
+					setFormData( { ...formData, name: value } )
+				}
 				help={ __(
 					'This is the name of the site that will be registered.',
-					'onemedia',
+					'onemedia'
 				) }
 				__next40pxDefaultSize
 				__nextHasNoMarginBottom
@@ -242,10 +247,12 @@ const SiteModal = ( {
 			<TextControl
 				label={ __( 'Site URL*', 'onemedia' ) }
 				value={ formData.url }
-				onChange={ ( value ) => setFormData( { ...formData, url: value } ) }
+				onChange={ ( value ) =>
+					setFormData( { ...formData, url: value } )
+				}
 				help={ __(
 					'It must start with http or https and end with /, like: https://rtcamp.com/',
-					'onemedia',
+					'onemedia'
 				) }
 				__next40pxDefaultSize
 				__nextHasNoMarginBottom
@@ -258,7 +265,7 @@ const SiteModal = ( {
 				}
 				help={ __(
 					'This is the API key that will be used to authenticate the site for OneMedia.',
-					'onemedia',
+					'onemedia'
 				) }
 				__nextHasNoMarginBottom
 			/>

@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types = 1);
+
 /**
  * Admin class to handle all the admin functionalities related to Media Sharing.
  *
@@ -17,6 +20,7 @@ use OneMedia\Utils;
  * Class Admin
  */
 class Admin implements Registrable {
+	declare(strict_types = 1);
 
 	/**
 	 * {@inheritDoc}
@@ -103,8 +107,6 @@ class Admin implements Registrable {
 
 	/**
 	 * Add help tabs to the media sharing page.
-	 *
-	 * @return void
 	 */
 	public function add_help_tabs(): void {
 		$screen = get_current_screen();

@@ -5,6 +5,8 @@
  * @package OneMedia
  */
 
+declare(strict_types = 1);
+
 namespace OneMedia\Modules\MediaSharing;
 
 use OneMedia\Contracts\Interfaces\Registrable;
@@ -14,7 +16,6 @@ use OneMedia\Modules\Settings\Settings;
  * Class CPT_Restriction
  */
 class MediaProtection implements Registrable {
-
 	/**
 	 * {@inheritDoc}
 	 */
@@ -32,8 +33,6 @@ class MediaProtection implements Registrable {
 	 * Add onemedia term to the attachment when added via the "Add Sync Media" button.
 	 *
 	 * @param int $attachment_id The ID of the attachment being added.
-	 *
-	 * @return void
 	 */
 	public function add_term_to_attachment( int $attachment_id ): void {
 		if ( ! wp_doing_ajax() ) {
@@ -59,8 +58,6 @@ class MediaProtection implements Registrable {
 	 *
 	 * This method displays an admin notice when a user attempts to delete media
 	 * that is assigned to the 'onemedia' term, informing them that deletion is not allowed.
-	 *
-	 * @return void
 	 */
 	public function show_deletion_notice(): void {
 		$onemedia_delete_transient = get_transient( 'onemedia_delete_notice' );

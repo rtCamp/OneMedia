@@ -5,6 +5,8 @@
  * @package OneMedia
  */
 
+declare(strict_types = 1);
+
 namespace OneMedia\Modules\MediaSharing;
 
 use OneMedia\Contracts\Interfaces\Registrable;
@@ -13,7 +15,6 @@ use OneMedia\Contracts\Interfaces\Registrable;
  * Class CPT_Restriction
  */
 class UserInterface implements Registrable {
-
 	/**
 	 * {@inheritDoc}
 	 */
@@ -44,8 +45,6 @@ class UserInterface implements Registrable {
 	 *
 	 * @param string $column_name Column name.
 	 * @param int    $post_id     Post ID.
-	 *
-	 * @return void
 	 */
 	public function render_sync_column( string $column_name, int $post_id ): void {
 		if ( 'onemedia_sync_status' !== $column_name ) {

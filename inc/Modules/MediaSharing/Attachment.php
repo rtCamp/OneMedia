@@ -5,6 +5,8 @@
  * @package OneMedia\Modules\MediaSharing;
  */
 
+declare(strict_types = 1);
+
 namespace OneMedia\Modules\MediaSharing;
 
 use OneMedia\Contracts\Interfaces\Registrable;

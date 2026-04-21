@@ -1,6 +1,9 @@
 /**
  * WordPress dependencies
  */
+/**
+ * External dependencies
+ */
 import { useState, useEffect } from 'react';
 import { __ } from '@wordpress/i18n';
 import { Snackbar } from '@wordpress/components';
@@ -45,13 +48,13 @@ apiFetch.use( apiFetch.createNonceMiddleware( NONCE ) );
 
 const SettingsPage = () => {
 	const [ showModal, setShowModal ] = useState( false );
-	const [ editingIndex, setEditingIndex ] = useState<EditingIndex>( null );
-	const [ sites, setSites ] = useState<BrandSite[]>( [] );
-	const [ formData, setFormData ] = useState<BrandSite>( defaultBrandSite );
-	const [ notice, setNotice ] = useState<NoticeType | null>( null );
+	const [ editingIndex, setEditingIndex ] = useState< EditingIndex >( null );
+	const [ sites, setSites ] = useState< BrandSite[] >( [] );
+	const [ formData, setFormData ] = useState< BrandSite >( defaultBrandSite );
+	const [ notice, setNotice ] = useState< NoticeType | null >( null );
 
 	useEffect( () => {
-		apiFetch<{ shared_sites?: BrandSite[] }>( {
+		apiFetch< { shared_sites?: BrandSite[] } >( {
 			path: SHARED_SITES_ENDPOINT,
 		} )
 			.then( ( data ) => {
@@ -73,13 +76,15 @@ const SettingsPage = () => {
 		}
 	}, [ sites ] );
 
-	const handleFormSubmit = async (): Promise<boolean> => {
+	const handleFormSubmit = async (): Promise< boolean > => {
 		const updated: BrandSite[] =
 			editingIndex !== null
-				? sites.map( ( item, i ) => ( i === editingIndex ? formData : item ) )
+				? sites.map( ( item, i ) =>
+						i === editingIndex ? formData : item
+				  )
 				: [ ...sites, formData ];
 
-		return apiFetch<{ shared_sites?: BrandSite[] }>( {
+		return apiFetch< { shared_sites?: BrandSite[] } >( {
 			path: SHARED_SITES_ENDPOINT,
 			method: 'POST',
 			data: { shared_sites: updated },
@@ -116,10 +121,10 @@ const SettingsPage = () => {
 			} );
 	};
 
-	const handleDelete = async ( index: number | null ): Promise<void> => {
+	const handleDelete = async ( index: number | null ): Promise< void > => {
 		const updated: BrandSite[] = sites.filter( ( _, i ) => i !== index );
 
-		apiFetch<{ shared_sites?: BrandSite[] }>( {
+		apiFetch< { shared_sites?: BrandSite[] } >( {
 			path: SHARED_SITES_ENDPOINT,
 			method: 'POST',
 			data: { shared_sites: updated },
@@ -135,7 +140,7 @@ const SettingsPage = () => {
 					window.location.reload();
 				} else {
 					document.body.classList.remove(
-						'onemedia-missing-brand-sites',
+						'onemedia-missing-brand-sites'
 					);
 				}
 			} )
@@ -187,7 +192,9 @@ const SettingsPage = () => {
 					editing={ editingIndex !== null }
 					sites={ sites }
 					originalData={
-						editingIndex !== null ? sites[ editingIndex ] : undefined
+						editingIndex !== null
+							? sites[ editingIndex ]
+							: undefined
 					}
 				/>
 			) }

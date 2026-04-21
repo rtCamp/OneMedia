@@ -2,6 +2,9 @@
  * Utility functions
  */
 
+/**
+ * Internal dependencies
+ */
 import type { NoticeType } from '../admin/settings/page';
 
 declare global {
@@ -21,26 +24,26 @@ declare global {
 
 type WPMediaUploader = {
 	settings: {
-		multipart_params: Record<string, unknown>;
+		multipart_params: Record< string, unknown >;
 	};
-	setOption(
+	setOption: (
 		key: 'filters' | 'multi_selection' | string,
 		value: string | object | boolean
-	): void;
+	) => void;
 };
 
 type WPMediaFrame = {
-	once( event: 'uploader:ready' | string, cb: () => void ): void;
+	once: ( event: 'uploader:ready' | string, cb: () => void ) => void;
 	uploader: {
 		uploader: {
 			uploader: WPMediaUploader;
 		};
 	};
-	on( event: 'ready' | string, cb: () => void ): void;
-	state(): {
-		get(
+	on: ( event: 'ready' | string, cb: () => void ) => void;
+	state: () => {
+		get: (
 			key: 'library' | string
-		): { observe( queue: unknown ): void } | undefined;
+		) => { observe: ( queue: unknown ) => void } | undefined;
 	};
 };
 
@@ -82,7 +85,8 @@ const isValidUrl = ( url: string ): boolean => {
  * @param {string} url - The URL to process.
  * @return {string} The URL without trailing slashes.
  */
-const removeTrailingSlash = ( url: string ): string => url.replace( /\/+$/, '' );
+const removeTrailingSlash = ( url: string ): string =>
+	url.replace( /\/+$/, '' );
 
 /**
  * Returns the appropriate CSS class for a notice based on its type.
@@ -90,7 +94,7 @@ const removeTrailingSlash = ( url: string ): string => url.replace( /\/+$/, '' )
  * @param {string} type - The type of notice ('error', 'warning', 'success').
  * @return {string} The corresponding CSS class.
  */
-const getNoticeClass = ( type: NoticeType['type'] ): string => {
+const getNoticeClass = ( type: NoticeType[ 'type' ] ): string => {
 	if ( type === 'error' ) {
 		return 'onemedia-error-notice';
 	}
@@ -125,11 +129,11 @@ const trimTitle = ( title: string, maxLength: number = 25 ): string => {
  *
  * @return {Function} A debounced version of the provided function.
  */
-const debounce = <TArgs extends Array<string | number | boolean | object>>(
+const debounce = < TArgs extends Array< string | number | boolean | object > >(
 	func: ( ...args: TArgs ) => void,
-	wait: number,
+	wait: number
 ): ( ( ...args: TArgs ) => void ) => {
-	let timeout: ReturnType<typeof setTimeout> | undefined;
+	let timeout: ReturnType< typeof setTimeout > | undefined;
 	return function executedFunction( ...args: TArgs ) {
 		const later = () => {
 			clearTimeout( timeout );
@@ -150,8 +154,8 @@ const debounce = <TArgs extends Array<string | number | boolean | object>>(
  */
 const observeElement = (
 	selector: string,
-	onFound: ( elements: NodeListOf<Element> ) => void,
-	debounceDelay: number = 200,
+	onFound: ( elements: NodeListOf< Element > ) => void,
+	debounceDelay: number = 200
 ): MutationObserver => {
 	const debouncedOnFound = debounce( () => {
 		const elements = document.querySelectorAll( selector );
@@ -185,14 +189,14 @@ const observeElement = (
  * @param {string} propertyPath - Dot-separated path to the property, e.g. 'wp.media.view.AttachmentsBrowser'
  * @return {T | undefined} The value of the nested property, or undefined if not found.
  */
-function getFrameProperty<T = object>( propertyPath: string ): T | undefined {
+function getFrameProperty< T = object >( propertyPath: string ): T | undefined {
 	if ( typeof propertyPath !== 'string' || ! propertyPath ) {
 		return undefined;
 	}
 
 	try {
 		const keys = propertyPath.split( '.' );
-		let current: Record<string, unknown> = window as unknown as Record<
+		let current: Record< string, unknown > = window as unknown as Record<
 			string,
 			unknown
 		>;
@@ -204,7 +208,7 @@ function getFrameProperty<T = object>( propertyPath: string ): T | undefined {
 					typeof current === 'function' ) &&
 				key in current
 			) {
-				current = current[ key ] as Record<string, unknown>;
+				current = current[ key ] as Record< string, unknown >;
 			} else {
 				return undefined;
 			}
@@ -254,7 +258,7 @@ const showSnackbarNotice = ( detail: NoticeType ): void => {
 const restrictMediaFrameUploadTypes = (
 	frame: WPMediaFrame,
 	allowedTypes: string,
-	is_sync: boolean = false,
+	is_sync: boolean = false
 ) => {
 	/**
 	 * Using mime_type will restrict the upload types in media modal,
@@ -287,7 +291,7 @@ const restrictMediaFrameUploadTypes = (
 	 *
 	 * @see https://core.trac.wordpress.org/ticket/34465
 	 */
-	frame.on( 'ready', function() {
+	frame.on( 'ready', function () {
 		const library = frame.state().get( 'library' );
 		if ( library && window.wp.Uploader && window.wp.Uploader.queue ) {
 			library.observe( window.wp.Uploader.queue );

@@ -139,7 +139,7 @@ export const checkBrandSiteHealth = async ( url, apiKey, addNotice ) => {
 		addNotice,
 		errorMsg: __(
 			'Health check failed. Please ensure the site is accessible.',
-			'onemedia',
+			'onemedia'
 		),
 	} );
 	return response;
@@ -383,7 +383,7 @@ export const uploadMedia = async ( formData, addNotice ) => {
 export const updateExistingAttachment = async (
 	attachmentId,
 	isSyncMediaUpload,
-	addNotice,
+	addNotice
 ) => {
 	return await apiFetch( {
 		endpoint: 'update-existing-attachment',

@@ -1,6 +1,9 @@
 /**
  * WordPress dependencies
  */
+/**
+ * External dependencies
+ */
 import { useEffect, useState, useCallback } from 'react';
 import {
 	TextareaControl,
@@ -27,9 +30,10 @@ const API_KEY = window.OneMediaSettings.api_key;
 const SiteSettings = () => {
 	const [ api_key, setApiKey ] = useState( '' );
 	const [ isLoading, setIsLoading ] = useState( false );
-	const [ notice, setNotice ] = useState<NoticeType | null>( null );
+	const [ notice, setNotice ] = useState< NoticeType | null >( null );
 	const [ governingSite, setGoverningSite ] = useState( '' );
-	const [ showDisconnectionModal, setShowDisconnectionModal ] = useState( false );
+	const [ showDisconnectionModal, setShowDisconnectionModal ] =
+		useState( false );
 
 	const fetchApiKey = useCallback( async () => {
 		setIsLoading( true );
@@ -52,7 +56,7 @@ const SiteSettings = () => {
 				type: 'error',
 				message: __(
 					'Failed to fetch API key. Please try again later.',
-					'onemedia',
+					'onemedia'
 				),
 			} );
 		} finally {
@@ -80,7 +84,7 @@ const SiteSettings = () => {
 					type: 'warning',
 					message: __(
 						'API key regenerated successfully. Please update your old key with this newly generated key to make sure plugin works properly.',
-						'onemedia',
+						'onemedia'
 					),
 				} );
 			} else {
@@ -88,7 +92,7 @@ const SiteSettings = () => {
 					type: 'error',
 					message: __(
 						'Failed to regenerate API key. Please try again later.',
-						'onemedia',
+						'onemedia'
 					),
 				} );
 			}
@@ -97,7 +101,7 @@ const SiteSettings = () => {
 				type: 'error',
 				message: __(
 					'Error regenerating API key. Please try again later.',
-					'onemedia',
+					'onemedia'
 				),
 			} );
 		}
@@ -115,7 +119,7 @@ const SiteSettings = () => {
 						'X-WP-Nonce': NONCE,
 						'X-OneMedia-Token': api_key,
 					},
-				},
+				}
 			);
 			if ( ! response.ok ) {
 				throw new Error( 'Network response was not ok' );
@@ -127,7 +131,7 @@ const SiteSettings = () => {
 				type: 'error',
 				message: __(
 					'Failed to fetch governing site. Please try again later.',
-					'onemedia',
+					'onemedia'
 				),
 			} );
 		} finally {
@@ -153,7 +157,7 @@ const SiteSettings = () => {
 				type: 'success',
 				message: __(
 					'Governing site disconnected successfully.',
-					'onemedia',
+					'onemedia'
 				),
 			} );
 		} catch {
@@ -161,7 +165,7 @@ const SiteSettings = () => {
 				type: 'error',
 				message: __(
 					'Failed to disconnect governing site. Please try again later.',
-					'onemedia',
+					'onemedia'
 				),
 			} );
 		} finally {
@@ -187,7 +191,7 @@ const SiteSettings = () => {
 			{ notice && (
 				<Notice
 					status={ notice.type }
-					isDismissible={ true }
+					isDismissible
 					onRemove={ () => setNotice( null ) }
 				>
 					{ notice.message }
@@ -209,7 +213,7 @@ const SiteSettings = () => {
 											type: 'success',
 											message: __(
 												'API key copied to clipboard.',
-												'onemedia',
+												'onemedia'
 											),
 										} );
 									} )
@@ -219,7 +223,7 @@ const SiteSettings = () => {
 											message:
 												__(
 													'Failed to copy api key. Please try again.',
-													'onemedia',
+													'onemedia'
 												) +
 												' ' +
 												error,
@@ -243,10 +247,10 @@ const SiteSettings = () => {
 					<div>
 						<TextareaControl
 							value={ api_key }
-							disabled={ true }
+							disabled
 							help={ __(
 								'This key is used for secure communication with the Governing site.',
-								'onemedia',
+								'onemedia'
 							) }
 							__nextHasNoMarginBottom
 							onChange={ () => {} } // to avoid ts warning
@@ -275,10 +279,10 @@ const SiteSettings = () => {
 					<TextControl
 						label={ __( 'Governing Site URL', 'onemedia' ) }
 						value={ governingSite }
-						disabled={ true }
+						disabled
 						help={ __(
 							'This is the URL of the Governing site this Brand site is connected to.',
-							'onemedia',
+							'onemedia'
 						) }
 						__next40pxDefaultSize
 						__nextHasNoMarginBottom
@@ -291,12 +295,12 @@ const SiteSettings = () => {
 				<Modal
 					title={ __( 'Disconnect Governing Site', 'onemedia' ) }
 					onRequestClose={ () => setShowDisconnectionModal( false ) }
-					shouldCloseOnClickOutside={ true }
+					shouldCloseOnClickOutside
 				>
 					<p>
 						{ __(
 							'Are you sure you want to disconnect from the governing site? This action cannot be undone.',
-							'onemedia',
+							'onemedia'
 						) }
 					</p>
 					<div

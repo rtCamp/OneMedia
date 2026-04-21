@@ -5,6 +5,8 @@
  * @package OneMedia\Modules\Post_Types;
  */
 
+declare(strict_types = 1);
+
 namespace OneMedia\Modules\MediaLibrary;
 
 use OneMedia\Contracts\Interfaces\Registrable;
@@ -17,7 +19,6 @@ use OneMedia\Utils;
  * Class Admin
  */
 class Admin implements Registrable {
-
 	/**
 	 * {@inheritDoc}
 	 */
@@ -158,8 +159,6 @@ class Admin implements Registrable {
 
 	/**
 	 * Add filter for synced attachments.
-	 *
-	 * @return void
 	 */
 	public function add_sync_filter(): void {
 		global $pagenow;
