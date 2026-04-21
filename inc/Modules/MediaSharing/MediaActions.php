@@ -59,10 +59,10 @@ class MediaActions implements Registrable {
 	/**
 	 * Add replace media button to media library react view.
 	 *
-	 * @param array    $form_fields Form fields.
-	 * @param \WP_Post $post        The WP_Post attachment object.
+	 * @param array<string, mixed> $form_fields Form fields.
+	 * @param \WP_Post             $post        The WP_Post attachment object.
 	 *
-	 * @return array Modified form fields.
+	 * @return array<string, mixed> Modified form fields.
 	 */
 	public function add_replace_media_button( array $form_fields, \WP_Post $post ): array {
 		if ( Settings::is_consumer_site() ) {
@@ -432,9 +432,9 @@ class MediaActions implements Registrable {
 	/**
 	 * Process and sanitize file data from either $_FILES or $_POST.
 	 *
-	 * @param array|null $input_file The raw input file data.
+	 * @param array<string, mixed>|null $input_file The raw input file data.
 	 *
-	 * @return array|\WP_Error Sanitized file array or WP_Error on failure.
+	 * @return array<string, mixed>|\WP_Error Sanitized file array or WP_Error on failure.
 	 */
 	public function sanitize_file_input( $input_file ): array|\WP_Error {
 		// Verify file input exists.
@@ -502,12 +502,12 @@ class MediaActions implements Registrable {
 	/**
 	 * Update attachment with new file.
 	 *
-	 * @param int   $attachment_id    The attachment ID.
-	 * @param array $file             The file data.
-	 * @param bool  $is_version_restore Whether this is a version restore operation.
-	 * @param array $version_data     Version data for restore operations.
+	 * @param int                  $attachment_id     The attachment ID.
+	 * @param array<string, mixed> $file              The file data.
+	 * @param bool                 $is_version_restore Whether this is a version restore operation.
+	 * @param array<string, mixed> $version_data      Version data for restore operations.
 	 *
-	 * @return array|\WP_Error Result data or WP_Error on failure.
+	 * @return array<string, mixed>|\WP_Error Result data or WP_Error on failure.
 	 */
 	public function update_attachment( int $attachment_id, array $file, bool $is_version_restore = false, array $version_data = [] ): array|\WP_Error {
 		// Get existing attachment data.
@@ -603,10 +603,10 @@ class MediaActions implements Registrable {
 	/**
 	 * Restore a specific version of an attachment.
 	 *
-	 * @param int   $attachment_id The attachment ID.
-	 * @param array $version_file  The version file data to restore.
+	 * @param int                  $attachment_id The attachment ID.
+	 * @param array<string, mixed> $version_file  The version file data to restore.
 	 *
-	 * @return array|\WP_Error Result data or WP_Error on failure.
+	 * @return array<string, mixed>|\WP_Error Result data or WP_Error on failure.
 	 */
 	public function restore_attachment_version( int $attachment_id, array $version_file ): array|\WP_Error {
 		// Get existing versions.
@@ -668,10 +668,10 @@ class MediaActions implements Registrable {
 	/**
 	 * Update attachment version history.
 	 *
-	 * @param int   $attachment_id The attachment ID.
-	 * @param array $file The file data.
-	 * @param array $update_result The result from update_attachment function.
-	 * @param array $original_data The original file information.
+	 * @param int                  $attachment_id The attachment ID.
+	 * @param array<string, mixed> $file          The file data.
+	 * @param array<string, mixed> $update_result The result from update_attachment function.
+	 * @param array<string, mixed> $original_data The original file information.
 	 */
 	public function update_attachment_versions( int $attachment_id, array $file, array $update_result, array $original_data ): void {
 		// Get existing versions.
@@ -756,10 +756,10 @@ class MediaActions implements Registrable {
 	/**
 	 * Add sync status meta to attachment data for JavaScript.
 	 *
-	 * @param array    $response   The prepared attachment data.
-	 * @param \WP_Post $attachment The attachment post object.
+	 * @param array<string, mixed> $response   The prepared attachment data.
+	 * @param \WP_Post             $attachment The attachment post object.
 	 *
-	 * @return array Modified attachment data with sync status.
+	 * @return array<string, mixed> Modified attachment data with sync status.
 	 */
 	public function add_sync_meta( $response, $attachment ) {
 		// If attachment ID is not set, return original response.

@@ -64,6 +64,8 @@ final class Assets implements Registrable {
 
 	/**
 	 * Prepare localized data.
+	 *
+	 * @return array<string, mixed> Localized data passed to JavaScript.
 	 */
 	public static function get_localized_data(): array {
 		if ( empty( self::$localized_data ) ) {
@@ -102,6 +104,7 @@ final class Assets implements Registrable {
 	 */
 	public function register_hooks(): void {
 		add_action( 'admin_enqueue_scripts', [ $this, 'register_assets' ], 20 );
+		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_scripts' ] );
 
 		// Add defer attribute to certain plugin bundles to improve admin load performance.
 		add_filter( 'script_loader_tag', [ $this, 'defer_scripts' ], 10, 2 );
@@ -129,7 +132,13 @@ final class Assets implements Registrable {
 		$this->register_style( self::ONBOARDING_SCRIPT_HANDLE, 'onboarding', [ 'wp-components' ] );
 
 		$this->register_style( self::ADMIN_STYLES_HANDLE, 'admin', [ 'wp-components' ] );
+	}
 
+	/**
+	 * Add scripts and styles to the page.
+	 */
+	public function enqueue_scripts(): void {
+		// @todo Only enqueue on OneMedia admin pages.
 		wp_enqueue_style( self::ADMIN_STYLES_HANDLE );
 	}
 

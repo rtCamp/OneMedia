@@ -1,12 +1,11 @@
 <?php
-
-declare(strict_types = 1);
-
 /**
  * Admin class to handle all the admin functionalities related to Media Sharing.
  *
  * @package OneMedia\Modules\Post_Types;
  */
+
+declare(strict_types = 1);
 
 namespace OneMedia\Modules\MediaSharing;
 
@@ -20,8 +19,6 @@ use OneMedia\Utils;
  * Class Admin
  */
 class Admin implements Registrable {
-	declare(strict_types = 1);
-
 	/**
 	 * {@inheritDoc}
 	 */

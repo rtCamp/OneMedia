@@ -1,12 +1,11 @@
 <?php
-
-declare(strict_types = 1);
-
 /**
  * This file contains the markup for onemedia best practices help content.
  *
  * @package OneMedia
  */
+
+declare(strict_types = 1);
 
 ?>
 

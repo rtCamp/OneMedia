@@ -164,7 +164,11 @@ final class Settings implements Registrable {
 	 * @param mixed $old_value The old value.
 	 * @param mixed $new_value The new value.
 	 */
-	public function on_site_type_change( $old_value, $new_value ): void {
+	public function on_site_type_change(
+		// phpcs:ignore SlevomatCodingStandard.Functions.UnusedParameter.UnusedParameter
+		$old_value,
+		$new_value
+	): void {
 		if ( self::SITE_TYPE_CONSUMER !== $new_value ) {
 			return;
 		}
@@ -440,7 +444,7 @@ final class Settings implements Registrable {
 	 *
 	 * The structure of this array is different on governing and brand sites.
 	 *
-	 * @return array Array of brand site's synced media.
+	 * @return array<int|string, mixed> Array of brand site's synced media.
 	 */
 	public static function get_brand_sites_synced_media(): array {
 		return get_option( self::BRAND_SITES_SYNCED_MEDIA, [] );

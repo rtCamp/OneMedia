@@ -50,7 +50,7 @@ final class Utils {
 	/**
 	 * Get supported mime types.
 	 *
-	 * @return array Array of supported mime types by the server.
+	 * @return array<string, string> Array of supported mime types by the server.
 	 */
 	public static function get_supported_mime_types(): array {
 		$wp_mimes = get_allowed_mime_types();
@@ -67,8 +67,8 @@ final class Utils {
 	/**
 	 * Return onemedia template content.
 	 *
-	 * @param string $slug Template path.
-	 * @param array  $vars Template variables.
+	 * @param string               $slug Template path.
+	 * @param array<string, mixed> $vars Template variables.
 	 *
 	 * @return string Template markup.
 	 */

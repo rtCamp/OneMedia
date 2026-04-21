@@ -144,10 +144,10 @@ class MediaReplacement {
 	/**
 	 * Replace image attributes in HTML content.
 	 *
-	 * @param array  $matches              The regex matches array.
-	 * @param string $attachment_permalink The new image source URL.
-	 * @param string $alt_text             The alt text for the image.
-	 * @param string $caption              The caption text for the image.
+	 * @param array<int, string> $matches              The regex matches array.
+	 * @param string             $attachment_permalink The new image source URL.
+	 * @param string             $alt_text             The alt text for the image.
+	 * @param string             $caption              The caption text for the image.
 	 *
 	 * @return string The processed HTML content.
 	 */

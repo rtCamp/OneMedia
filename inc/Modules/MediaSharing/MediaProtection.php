@@ -77,15 +77,20 @@ class MediaProtection implements Registrable {
 	/**
 	 * Prevent editing or deleting of synced media attachments on brand sites.
 	 *
-	 * @param array  $caps    Current user's capabilities.
-	 * @param string $cap     Capability being checked.
-	 * @param int    $user_id User ID.
-	 * @param array  $args    Arguments for the capability check.
+	 * @param array<int, string> $caps    Current user's capabilities.
+	 * @param string             $cap     Capability being checked.
+	 * @param int                $user_id User ID.
+	 * @param array<int, mixed>  $args    Arguments for the capability check.
 	 *
-	 * @return array|string[]
+	 * @return array<int, string>
 	 */
-	public function prevent_sync_media_editing( array $caps, string $cap, int $user_id, array $args ): array {
-
+	public function prevent_sync_media_editing(
+		array $caps,
+		string $cap,
+		// phpcs:ignore SlevomatCodingStandard.Functions.UnusedParameter.UnusedParameter
+		int $user_id,
+		array $args
+	): array {
 		if ( ! in_array( $cap, [ 'edit_post', 'delete_post' ], true ) ) {
 			return $caps;
 		}

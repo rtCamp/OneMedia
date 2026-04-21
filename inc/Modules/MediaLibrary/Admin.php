@@ -78,9 +78,9 @@ class Admin implements Registrable {
 	/**
 	 * Handle sync status filter in Ajax requests for media library.
 	 *
-	 * @param array $query WordPress query arguments.
+	 * @param array<string, mixed> $query WordPress query arguments.
 	 *
-	 * @return array Modified query arguments.
+	 * @return array<string, mixed> Modified query arguments.
 	 */
 	public function filter_ajax_query_attachments_args( array $query ): array {
 

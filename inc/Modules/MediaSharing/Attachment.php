@@ -188,8 +188,8 @@ class Attachment implements Registrable {
 	/**
 	 * Update OneMedia sync versions postmeta value.
 	 *
-	 * @param int   $attachment_id The attachment ID.
-	 * @param array $versions      The array of sync versions to set.
+	 * @param int                              $attachment_id The attachment ID.
+	 * @param array<int, array<string, mixed>> $versions      The array of sync versions to set.
 	 *
 	 * @return bool True if the update was successful, false otherwise.
 	 */
@@ -206,7 +206,7 @@ class Attachment implements Registrable {
 	 *
 	 * @param int $attachment_id The attachment ID.
 	 *
-	 * @return array The array of sync versions.
+	 * @return array<int, array<string, mixed>> The array of sync versions.
 	 */
 	public static function get_sync_attachment_versions( int $attachment_id ): array {
 		if ( ! $attachment_id ) {
@@ -226,7 +226,11 @@ class Attachment implements Registrable {
 	 *
 	 * @param int|null $attachment_id The attachment ID.
 	 *
-	 * @return array Array with 'success' boolean and 'failed_sites' array.
+	 * @return array{
+	 *     success: bool,
+	 *     failed_sites: array<int, array{site_name: string, url: string, message: string}>,
+	 *     message: string
+	 * } Array with 'success' boolean and 'failed_sites' array.
 	 */
 	public static function health_check_attachment_brand_sites( int|null $attachment_id ): array {
 		if ( ! $attachment_id ) {
@@ -345,7 +349,7 @@ class Attachment implements Registrable {
 	 *
 	 * @param int $attachment_id The attachment ID.
 	 *
-	 * @return array The array of sync site URLs.
+	 * @return array<int, string> The array of sync site URLs.
 	 */
 	private static function get_sync_site_urls_postmeta( int $attachment_id ): array {
 		$sites = self::get_sync_sites( $attachment_id );

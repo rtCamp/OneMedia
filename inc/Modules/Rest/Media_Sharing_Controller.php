@@ -1580,7 +1580,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 	 *
 	 * @param string $url The local URL to process.
 	 *
-	 * @return array|\WP_Error File details or error.
+	 * @return array<string, mixed>|\WP_Error File details or error.
 	 */
 	private function handle_local_url( string $url ): array|\WP_Error {
 		// Try direct file system access first (works in some hosting environments).
@@ -1642,7 +1642,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 	 * @param string $temp_file    Temporary file path.
 	 * @param bool   $put_contents Whether to put contents into the temp file.
 	 *
-	 * @return array|\WP_Error File details or error
+	 * @return array<string, mixed>|\WP_Error File details or error.
 	 */
 	private function fetch_remote_file( string $url, string $temp_file = '', bool $put_contents = false ): array|\WP_Error {
 		// If tempfile is empty, create a new one.
@@ -1709,11 +1709,11 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 	/**
 	 * Create a WordPress attachment from a file.
 	 *
-	 * @param array            $file_details File details from handle_local_url.
-	 * @param string           $title        Title for the attachment.
-	 * @param 'sync'|'no_sync' $sync_status  Sync status to be added as metadata.
+	 * @param array<string, mixed> $file_details File details from handle_local_url.
+	 * @param string               $title        Title for the attachment.
+	 * @param 'sync'|'no_sync'     $sync_status  Sync status to be added as metadata.
 	 *
-	 * @return int|\WP_Error Attachment ID or error
+	 * @return int|\WP_Error Attachment ID or error.
 	 */
 	private function create_attachment_from_file( array $file_details, string $title, string $sync_status ): int|\WP_Error {
 		// Get upload directory info.
@@ -1816,8 +1816,8 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 	/**
 	 * Add source metadata (title, alt text, caption, description) to the attachment.
 	 *
-	 * @param int   $attachment_id   Attachment ID to update.
-	 * @param array $source_metadata Source metadata from the original media.
+	 * @param int                  $attachment_id   Attachment ID to update.
+	 * @param array<string, mixed> $source_metadata Source metadata from the original media.
 	 */
 	private function add_source_metadata_to_file( int $attachment_id, array $source_metadata ): void {
 		if ( empty( $source_metadata ) || empty( $attachment_id ) || 'attachment' !== get_post_type( $attachment_id ) ) {
@@ -1862,7 +1862,7 @@ class Media_Sharing_Controller extends Abstract_REST_Controller {
 	 * This option contains the governing site to brand site attachment key map.
 	 * It's used for checking if an attachment is already synced or not on the brand site.
 	 *
-	 * @return array The attachment key map array.
+	 * @return array<int|string, mixed> The attachment key map array.
 	 */
 	private static function get_attachment_key_map(): array {
 		if ( ! Settings::is_consumer_site() ) {

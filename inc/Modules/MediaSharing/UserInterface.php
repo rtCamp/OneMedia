@@ -31,9 +31,9 @@ class UserInterface implements Registrable {
 	/**
 	 * Add sync column to media library.
 	 *
-	 * @param array $columns Array of columns.
+	 * @param array<string, string> $columns Array of columns.
 	 *
-	 * @return array Modified columns.
+	 * @return array<string, string> Modified columns.
 	 */
 	public function add_sync_column( array $columns ): array {
 		$columns['onemedia_sync_status'] = __( 'Sync Status', 'onemedia' );
@@ -65,10 +65,10 @@ class UserInterface implements Registrable {
 	/**
 	 * Filter media row actions to remove the delete action for attachments with the 'onemedia' term.
 	 *
-	 * @param array    $actions Array of action links.
-	 * @param \WP_Post $post    The post object.
+	 * @param array<string, string> $actions Array of action links.
+	 * @param \WP_Post              $post    The post object.
 	 *
-	 * @return array Modified actions.
+	 * @return array<string, string> Modified actions.
 	 */
 	public function filter_media_row_actions( array $actions, \WP_Post $post ): array {
 		if ( 'attachment' !== $post->post_type ) {

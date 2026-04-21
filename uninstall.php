@@ -131,7 +131,7 @@ function delete_plugin_data(): void {
 		PLUGIN_PREFIX . 'parent_site_url',
 		PLUGIN_PREFIX . 'consumer_api_key',
 
-		// Plugin specific options
+		// Plugin specific options.
 		PLUGIN_PREFIX . 'media_type_children',
 		PLUGIN_PREFIX . 'brand_sites_synced_media',
 		PLUGIN_PREFIX . 'attachment_key_map',

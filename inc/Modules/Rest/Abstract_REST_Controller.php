@@ -96,15 +96,27 @@ abstract class Abstract_REST_Controller extends \WP_REST_Controller implements R
 	/**
 	 * Check if two URLs belong to the same host.
 	 *
-	 * @param string $url  The URL to check.
-	 * @param string $host The host to compare against.
+	 * @param string   $url  The URL to check.
+	 * @param string   $host The host to compare against.
+	 * @param int|null $port Optional. The port to compare against.
 	 *
 	 * @return bool True if both URLs belong to the same domain, false otherwise.
 	 */
-	private function is_url_from_host( string $url, string $host ): bool {
+	private function is_url_from_host( string $url, string $host, ?int $port = null ): bool {
 		$parsed_url = wp_parse_url( $url );
 
-		return isset( $parsed_url['host'] ) && $parsed_url['host'] === $host;
+		// Compare both host and port to properly handle localhost with different ports.
+		if ( ! isset( $parsed_url['host'] ) || $parsed_url['host'] !== $host ) {
+			return false;
+		}
+
+		// If a port was provided, also compare ports.
+		if ( null !== $port ) {
+			$url_port = $parsed_url['port'] ?? 80;
+			return $url_port === $port;
+		}
+
+		return true;
 	}
 
 	/**
