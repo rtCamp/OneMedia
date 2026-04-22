@@ -8,13 +8,14 @@
  * @package OneMedia\Modules\Post_Types;
  */
 
+declare(strict_types = 1);
+
 namespace OneMedia\Modules\MediaSharing;
 
 /**
  * Class Admin
  */
 class MediaReplacement {
-
 	/**
 	 * Replace image across all post types.
 	 *
@@ -22,8 +23,6 @@ class MediaReplacement {
 	 * @param string $attachment_permalink The permalink of the attachment.
 	 * @param string $alt_text             The alt text for the image.
 	 * @param string $caption              The caption for the image.
-	 *
-	 * @return void
 	 */
 	public static function replace_image_across_all_post_types( int $attachment_id, string $attachment_permalink, string $alt_text = '', string $caption = '' ): void {
 		global $wpdb;
@@ -67,7 +66,7 @@ class MediaReplacement {
 			foreach ( $patterns as $pattern ) {
 				$updated_content = preg_replace_callback(
 					$pattern,
-					static fn ( $matches ) =>self::replace_image_content(
+					static fn ( $matches ) => self::replace_image_content(
 						$matches,
 						$attachment_permalink,
 						$alt_text,
@@ -123,7 +122,7 @@ class MediaReplacement {
 			foreach ( $patterns as $pattern ) {
 				$updated_meta = preg_replace_callback(
 					$pattern,
-					static fn ( $matches ) =>self::replace_image_content(
+					static fn ( $matches ) => self::replace_image_content(
 						$matches,
 						$attachment_permalink,
 						$alt_text,
@@ -145,10 +144,10 @@ class MediaReplacement {
 	/**
 	 * Replace image attributes in HTML content.
 	 *
-	 * @param array  $matches              The regex matches array.
-	 * @param string $attachment_permalink The new image source URL.
-	 * @param string $alt_text             The alt text for the image.
-	 * @param string $caption              The caption text for the image.
+	 * @param array<int, string> $matches              The regex matches array.
+	 * @param string             $attachment_permalink The new image source URL.
+	 * @param string             $alt_text             The alt text for the image.
+	 * @param string             $caption              The caption text for the image.
 	 *
 	 * @return string The processed HTML content.
 	 */

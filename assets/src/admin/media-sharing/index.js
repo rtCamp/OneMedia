@@ -1,12 +1,10 @@
 /**
  * WordPress dependencies
  */
-import {
-	useState,
-	useEffect,
-	useCallback,
-	useMemo,
-} from 'react';
+/**
+ * External dependencies
+ */
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
 	Button,
@@ -31,17 +29,31 @@ import versionIcon from './components/versionIcon';
 import BrowserUploaderButton from './components/browser-uploader';
 import ShareMediaModal from './components/ShareMediaModal';
 import VersionModal from './components/VersionModal';
-import { fetchSyncedSites as fetchSyncedSitesApi, fetchMediaItems as fetchMediaItemsApi, fetchBrandSites as fetchBrandSitesApi, shareMedia as shareMediaApi, uploadMedia } from '../../components/api';
-import { getNoticeClass, trimTitle, debounce, getFrameProperty, restrictMediaFrameUploadTypes, getAllowedMimeTypeExtensions } from '../../js/utils';
+import {
+	fetchSyncedSites as fetchSyncedSitesApi,
+	fetchMediaItems as fetchMediaItemsApi,
+	fetchBrandSites as fetchBrandSitesApi,
+	shareMedia as shareMediaApi,
+	uploadMedia,
+} from '../../components/api';
+import {
+	getNoticeClass,
+	trimTitle,
+	debounce,
+	getFrameProperty,
+	restrictMediaFrameUploadTypes,
+	getAllowedMimeTypeExtensions,
+} from '../../js/utils';
 import fallbackImage from '../../images/fallback-image.svg';
 
 const MEDIA_PER_PAGE = 12;
 const ONEMEDIA_PLUGIN_TAXONOMY_TERM = 'onemedia';
 const UPLOAD_NONCE = window.OneMediaMediaSharing?.uploadNonce || '';
 const ONEMEDIA_MEDIA_SHARING = window.OneMediaMediaSharing || {};
-const ALLOWED_MIME_TYPES_MAP = typeof window.OneMediaMediaFrame?.allowedMimeTypesMap !== 'undefined'
-	? window.OneMediaMediaFrame?.allowedMimeTypesMap
-	: [];
+const ALLOWED_MIME_TYPES_MAP =
+	typeof window.OneMediaMediaFrame?.allowedMimeTypesMap !== 'undefined'
+		? window.OneMediaMediaFrame?.allowedMimeTypesMap
+		: [];
 
 const MediaSharingApp = ( {
 	imageType = '',
@@ -67,7 +79,8 @@ const MediaSharingApp = ( {
 	const [ searchTerm, setSearchTerm ] = useState( '' );
 	const [ debouncedSearchTerm, setDebouncedSearchTerm ] = useState( '' );
 	const [ notice, setNotice ] = useState( { type: 'success', message: '' } );
-	const [ isShareMediaModalOpen, setIsShareMediaModalOpen ] = useState( false );
+	const [ isShareMediaModalOpen, setIsShareMediaModalOpen ] =
+		useState( false );
 	const [ isVersionModalOpen, setIsVersionModalOpen ] = useState( false );
 	const [ syncOption, setSyncOption ] = useState( 'sync' );
 
@@ -76,9 +89,9 @@ const MediaSharingApp = ( {
 	const localizationError = () => {
 		throw new Error(
 			__(
-				'OneMediaMediaSharing object not found. Make sure it\'s properly localized.',
-				'onemedia',
-			),
+				"OneMediaMediaSharing object not found. Make sure it's properly localized.",
+				'onemedia'
+			)
 		);
 	};
 
@@ -89,7 +102,7 @@ const MediaSharingApp = ( {
 				setSelectedMedia( {} );
 				setCurrentPage( 1 );
 			}, 1000 ),
-		[],
+		[]
 	);
 
 	const fetchSyncedSites = useCallback( async () => {
@@ -122,7 +135,7 @@ const MediaSharingApp = ( {
 			setLoading( false );
 			setInitLoading( false );
 		},
-		[ perPage, imageType ],
+		[ perPage, imageType ]
 	);
 
 	const fetchBrandSites = useCallback( async () => {
@@ -167,7 +180,10 @@ const MediaSharingApp = ( {
 
 		// Cleanup event listener on component unmount.
 		return () => {
-			document.removeEventListener( 'mediaReplaced', handleMediaReplaced );
+			document.removeEventListener(
+				'mediaReplaced',
+				handleMediaReplaced
+			);
 		};
 	}, [ currentPage, imageType, fetchMediaItems ] );
 
@@ -217,9 +233,15 @@ const MediaSharingApp = ( {
 				},
 			} );
 
-			restrictMediaFrameUploadTypes( editFrame, getAllowedMimeTypeExtensions( ALLOWED_MIME_TYPES_MAP ).join( ',' ), true );
+			restrictMediaFrameUploadTypes(
+				editFrame,
+				getAllowedMimeTypeExtensions( ALLOWED_MIME_TYPES_MAP ).join(
+					','
+				),
+				true
+			);
 
-			editFrame.on( 'open', function() {
+			editFrame.on( 'open', function () {
 				// Reset the selection state.
 				editFrame.state().get( 'selection' ).reset();
 				// Get the attachment model.
@@ -261,7 +283,7 @@ const MediaSharingApp = ( {
 				type: 'warning',
 				message: __(
 					'Please add at least one brand site from OneMedia Settings page',
-					'onemedia',
+					'onemedia'
 				),
 			} );
 			return;
@@ -269,7 +291,7 @@ const MediaSharingApp = ( {
 
 		// Check if any media is selected.
 		const hasSelectedMedia = Object.values( selectedMedia ).some(
-			( selected ) => selected,
+			( selected ) => selected
 		);
 
 		if ( ! hasSelectedMedia ) {
@@ -277,7 +299,7 @@ const MediaSharingApp = ( {
 				type: 'warning',
 				message: __(
 					'Please select at least one media item.',
-					'onemedia',
+					'onemedia'
 				),
 			} );
 			return;
@@ -287,12 +309,16 @@ const MediaSharingApp = ( {
 	};
 
 	const checkMediaRevisionExists = ( mediaId ) => {
-		const media = mediaItems.filter( ( item ) => item.id === mediaId )?.[ 0 ] || null;
+		const media =
+			mediaItems.filter( ( item ) => item.id === mediaId )?.[ 0 ] || null;
 		return media && media.revision && media.revision.length > 1;
 	};
 
 	const openVersionModal = async ( mediaId ) => {
-		const version = Object.values( mediaItems ).filter( ( item ) => item.id === mediaId )?.[ 0 ]?.revision || [];
+		const version =
+			Object.values( mediaItems ).filter(
+				( item ) => item.id === mediaId
+			)?.[ 0 ]?.revision || [];
 
 		if ( ! mediaId || version.length === 0 ) {
 			return;
@@ -318,7 +344,7 @@ const MediaSharingApp = ( {
 				type: 'warning',
 				message: __(
 					'Please select at least one brand site.',
-					'onemedia',
+					'onemedia'
 				),
 			} );
 			return;
@@ -331,7 +357,7 @@ const MediaSharingApp = ( {
 
 		// Get full media details for selected media.
 		const selectedMediaDetails = mediaItems.filter( ( media ) =>
-			selectedMediaIds.includes( media.id ),
+			selectedMediaIds.includes( media.id )
 		);
 
 		const payload = {
@@ -363,17 +389,18 @@ const MediaSharingApp = ( {
 					type: 'warning',
 					message: (
 						<div>
-							<span>{ __( 'Failed to sync media files to some brand sites:', 'onemedia' ) }</span>
+							<span>
+								{ __(
+									'Failed to sync media files to some brand sites:',
+									'onemedia'
+								) }
+							</span>
 							{ ( failedSites || [] ).map( ( site, idx ) => (
 								<div key={ idx }>
 									{ site?.is_mime_type_error ? (
-										<span>
-											{ site?.message }
-										</span>
+										<span>{ site?.message }</span>
 									) : (
-										<span>
-											{ site?.site_name }
-										</span>
+										<span>{ site?.site_name }</span>
 									) }
 								</div>
 							) ) }
@@ -434,13 +461,19 @@ const MediaSharingApp = ( {
 
 				setNotice( {
 					type: 'success',
-					message: __( 'Media version restored successfully!', 'onemedia' ),
+					message: __(
+						'Media version restored successfully!',
+						'onemedia'
+					),
 				} );
 			}
 		} catch ( error ) {
 			setNotice( {
 				type: 'error',
-				message: __( 'An error occurred while restoring media version.', 'onemedia' ),
+				message: __(
+					'An error occurred while restoring media version.',
+					'onemedia'
+				),
 			} );
 		} finally {
 			setLoading( false );
@@ -470,7 +503,8 @@ const MediaSharingApp = ( {
 				{ mediaItems.map( ( media ) => (
 					<div
 						key={ media.id }
-						className={ `onemedia-media-item ${ selectedMedia[ media.id ] ? 'selected' : ''
+						className={ `onemedia-media-item ${
+							selectedMedia[ media.id ] ? 'selected' : ''
 						}` }
 					>
 						<div
@@ -506,10 +540,11 @@ const MediaSharingApp = ( {
 											handleMediaSelect( media.id )
 										}
 										label=""
-										__nextHasNoMarginBottom={ true }
+										__nextHasNoMarginBottom
 									/>
 								</div>
-								{ ONEMEDIA_PLUGIN_TAXONOMY_TERM === imageType && (
+								{ ONEMEDIA_PLUGIN_TAXONOMY_TERM ===
+									imageType && (
 									<>
 										<div className="onemedia-media-edit-button">
 											<Button
@@ -518,21 +553,27 @@ const MediaSharingApp = ( {
 												icon={ pencil }
 												onClick={ ( e ) => {
 													e.stopPropagation();
-													handleEditMedia(
-														media.id,
-													);
+													handleEditMedia( media.id );
 												} }
-												title={ __( 'Edit Media', 'onemedia' ) }
+												title={ __(
+													'Edit Media',
+													'onemedia'
+												) }
 											>
 												{ __( 'Edit', 'onemedia' ) }
 											</Button>
 										</div>
-										{ checkMediaRevisionExists( media.id ) && (
+										{ checkMediaRevisionExists(
+											media.id
+										) && (
 											<Tooltip
 												text={ sprintf(
 													/* translators: %d: number of previous versions */
-													__( '%d previous version(s) available', 'onemedia' ),
-													media.revision.length - 1,
+													__(
+														'%d previous version(s) available',
+														'onemedia'
+													),
+													media.revision.length - 1
 												) }
 												placement="bottom"
 											>
@@ -540,7 +581,9 @@ const MediaSharingApp = ( {
 													className="onemedia-media-version-button"
 													onClick={ ( e ) => {
 														e.stopPropagation();
-														openVersionModal( media.id );
+														openVersionModal(
+															media.id
+														);
 													} }
 												>
 													<Icon
@@ -557,7 +600,9 @@ const MediaSharingApp = ( {
 									<Tooltip
 										text={
 											<span>
-												{ Object.values( syncedSites[ media.id ] ).map( ( site, idx ) => (
+												{ Object.values(
+													syncedSites[ media.id ]
+												).map( ( site, idx ) => (
 													<span key={ idx }>
 														{ site }
 														<br />
@@ -587,27 +632,39 @@ const MediaSharingApp = ( {
 		);
 	};
 
+	const selectedCount = getSelectedCount();
+	const selectedCountLabel =
+		selectedCount > 0
+			? sprintf(
+					/* translators: %d: number of selected items */
+					__( '%d items selected', 'onemedia' ),
+					selectedCount
+			  )
+			: null;
+
 	return (
 		<>
 			<>
 				{ /* Error notice */ }
-				{ notice?.message &&
+				{ notice?.message && (
 					<Snackbar
 						status={ notice?.type ?? 'success' }
-						isDismissible={ true }
+						isDismissible
 						onRemove={ () => setNotice( null ) }
 						className={ getNoticeClass( notice?.type ) }
 					>
 						{ notice?.message }
 					</Snackbar>
-				}
+				) }
 			</>
 			<div className="onemedia-media-sharing-app">
 				<Card>
 					<CardHeader>
 						<div className="onemedia-card-header">
 							<div className="onemedia-card-header-content">
-								<h2 className="onemedia-card-title">{ cardTitle }</h2>
+								<h2 className="onemedia-card-title">
+									{ cardTitle }
+								</h2>
 								<p className="onemedia-card-description">
 									{ cardDescription }
 								</p>
@@ -615,17 +672,21 @@ const MediaSharingApp = ( {
 							<div className="onemedia-card-header-actions-container">
 								<TextControl
 									className="onemedia-search-control"
-									placeholder={ __( 'Search media…', 'onemedia' ) }
+									placeholder={ __(
+										'Search media…',
+										'onemedia'
+									) }
 									value={ searchTerm }
 									onChange={ ( value ) => {
 										setSearchTerm( value );
 										handleDebouncedSearch( value );
 									} }
-									__next40pxDefaultSize={ true }
-									__nextHasNoMarginBottom={ true }
+									__next40pxDefaultSize
+									__nextHasNoMarginBottom
 								/>
 								<div className="onemedia-card-header-actions">
-									{ ONEMEDIA_PLUGIN_TAXONOMY_TERM === imageType ? (
+									{ ONEMEDIA_PLUGIN_TAXONOMY_TERM ===
+									imageType ? (
 										<BrowserUploaderButton
 											onAddMediaSuccess={ () => {
 												// Refresh media items after upload.
@@ -634,7 +695,7 @@ const MediaSharingApp = ( {
 												fetchMediaItems( currentPage );
 												fetchSyncedSites();
 											} }
-											isSyncMediaUpload={ true }
+											isSyncMediaUpload
 											addedMedia={ mediaItems }
 											setNotice={ setNotice }
 										/>
@@ -652,10 +713,7 @@ const MediaSharingApp = ( {
 										/>
 									) }
 									<div className="onemedia-selection-count">
-										{ getSelectedCount() > 0 &&
-											/* translators: %d: number of selected items */
-											sprintf( __( '%d items selected', 'onemedia' ), getSelectedCount() )
-										}
+										{ selectedCountLabel }
 									</div>
 								</div>
 							</div>
@@ -676,7 +734,9 @@ const MediaSharingApp = ( {
 										isSecondary
 										disabled={ 1 === currentPage }
 										onClick={ () =>
-											setCurrentPage( ( prev ) => prev - 1 )
+											setCurrentPage(
+												( prev ) => prev - 1
+											)
 										}
 									>
 										{ __( 'Previous', 'onemedia' ) }
@@ -686,14 +746,16 @@ const MediaSharingApp = ( {
 											/* translators: %1$d: current page number, %2$d: total pages */
 											__( '%1$d of %2$d', 'onemedia' ),
 											currentPage,
-											totalPages,
+											totalPages
 										) }
 									</span>
 									<Button
 										isSecondary
 										disabled={ currentPage >= totalPages }
 										onClick={ () =>
-											setCurrentPage( ( prev ) => prev + 1 )
+											setCurrentPage(
+												( prev ) => prev + 1
+											)
 										}
 									>
 										{ __( 'Next', 'onemedia' ) }
@@ -707,7 +769,10 @@ const MediaSharingApp = ( {
 										onClick={ openShareMediaModal }
 										disabled={ 0 === getSelectedCount() }
 									>
-										{ __( 'Share Selected Media', 'onemedia' ) }
+										{ __(
+											'Share Selected Media',
+											'onemedia'
+										) }
 									</Button>
 								</div>
 							</>
@@ -754,7 +819,7 @@ const MediaLibraryTabs = () => {
 			cardTitle: __( 'Non-Sync Media', 'onemedia' ),
 			cardDescription: __(
 				'This media will be shared in non synced mode.',
-				'onemedia',
+				'onemedia'
 			),
 		},
 		{
@@ -764,7 +829,7 @@ const MediaLibraryTabs = () => {
 			cardTitle: __( 'Sync Media', 'onemedia' ),
 			cardDescription: __(
 				'This media will be shared in synced mode.',
-				'onemedia',
+				'onemedia'
 			),
 		},
 	];

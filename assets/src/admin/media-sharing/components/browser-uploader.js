@@ -8,14 +8,26 @@ import { useState, useRef } from '@wordpress/element';
 /**
  * Internal dependencies
  */
-import { uploadMedia, updateExistingAttachment, checkIfAllSitesConnected, isSyncAttachment as isSyncAttachmentApi } from '../../../components/api';
-import { getAllowedMimeTypeExtensions, getFrameProperty, getAllowedMimeTypes, restrictMediaFrameUploadTypes, showSnackbarNotice } from '../../../js/utils';
+import {
+	uploadMedia,
+	updateExistingAttachment,
+	checkIfAllSitesConnected,
+	isSyncAttachment as isSyncAttachmentApi,
+} from '../../../components/api';
+import {
+	getAllowedMimeTypeExtensions,
+	getFrameProperty,
+	getAllowedMimeTypes,
+	restrictMediaFrameUploadTypes,
+	showSnackbarNotice,
+} from '../../../js/utils';
 
 //
 const UPLOAD_NONCE = window.OneMediaMediaFrame?.uploadNonce || '';
-const ALLOWED_MIME_TYPES_MAP = typeof window.OneMediaMediaFrame?.allowedMimeTypesMap !== 'undefined'
-	? window.OneMediaMediaFrame?.allowedMimeTypesMap
-	: [];
+const ALLOWED_MIME_TYPES_MAP =
+	typeof window.OneMediaMediaFrame?.allowedMimeTypesMap !== 'undefined'
+		? window.OneMediaMediaFrame?.allowedMimeTypesMap
+		: [];
 
 const BrowserUploaderButton = ( {
 	onAddMediaSuccess,
@@ -40,16 +52,19 @@ const BrowserUploaderButton = ( {
 
 	const failedSitesMessage = ( initialMessage, failedSites ) => (
 		<div>
-			<span>{ sprintf(
-				/* translators: %s: initial message. */
-				__( '%s Please check your connection for unreachable sites:', 'onemedia' ),
-				( initialMessage ),
-			) }</span>
+			<span>
+				{ sprintf(
+					/* translators: %s: initial message. */
+					__(
+						'%s Please check your connection for unreachable sites:',
+						'onemedia'
+					),
+					initialMessage
+				) }
+			</span>
 			{ ( failedSites || [] ).map( ( site, idx ) => (
 				<div key={ idx }>
-					<span>
-						{ site?.site_name }
-					</span>
+					<span>{ site?.site_name }</span>
 				</div>
 			) ) }
 		</div>
@@ -70,12 +85,16 @@ const BrowserUploaderButton = ( {
 		if ( isReplaceMedia && attachmentId ) {
 			const response = await checkIfAllSitesConnected( attachmentId );
 
-			if ( ! response || ! response?.success || response?.failed_sites?.length > 0 ) {
+			if (
+				! response ||
+				! response?.success ||
+				response?.failed_sites?.length > 0
+			) {
 				showSnackbarNotice( {
 					type: 'error',
 					message: failedSitesMessage(
 						__( 'Failed to replace media.', 'onemedia' ),
-						response?.failed_sites,
+						response?.failed_sites
 					),
 				} );
 				return;
@@ -113,7 +132,10 @@ const BrowserUploaderButton = ( {
 			},
 		} );
 
-		restrictMediaFrameUploadTypes( frame, getAllowedMimeTypeExtensions( ALLOWED_MIME_TYPES_MAP ).join( ',' ) );
+		restrictMediaFrameUploadTypes(
+			frame,
+			getAllowedMimeTypeExtensions( ALLOWED_MIME_TYPES_MAP ).join( ',' )
+		);
 
 		frame.on( 'open', () => {
 			const frameEl = frame.el;
@@ -137,24 +159,44 @@ const BrowserUploaderButton = ( {
 			setIsUploading( true );
 
 			try {
-				const healthCheckResponse = await checkIfAllSitesConnected( attachment.id );
+				const healthCheckResponse = await checkIfAllSitesConnected(
+					attachment.id
+				);
 
-				if ( ! healthCheckResponse || ! healthCheckResponse?.success || healthCheckResponse?.failed_sites?.length > 0 ) {
+				if (
+					! healthCheckResponse ||
+					! healthCheckResponse?.success ||
+					healthCheckResponse?.failed_sites?.length > 0
+				) {
 					throw new Error(
 						sprintf(
-						/* translators: %s: list of failed sites. */
-							__( 'Media conversion failed for some sites: %s', 'onemedia' ),
-							healthCheckResponse?.failed_sites?.map( ( site ) => site?.site_name ).join( ', ' ),
-						),
+							/* translators: %s: list of failed sites. */
+							__(
+								'Media conversion failed for some sites: %s',
+								'onemedia'
+							),
+							healthCheckResponse?.failed_sites
+								?.map( ( site ) => site?.site_name )
+								.join( ', ' )
+						)
 					);
 				}
 
-				const response = await updateExistingAttachment( attachment.id, isSyncMediaUpload, setNotice );
+				const response = await updateExistingAttachment(
+					attachment.id,
+					isSyncMediaUpload,
+					setNotice
+				);
 
 				if ( ! response || ! response.success ) {
 					setNotice( {
 						type: 'warning',
-						message: response?.message || __( 'Failed to update sync attachment.', 'onemedia' ),
+						message:
+							response?.message ||
+							__(
+								'Failed to update sync attachment.',
+								'onemedia'
+							),
 					} );
 					return;
 				}
@@ -165,12 +207,16 @@ const BrowserUploaderButton = ( {
 
 				setNotice( {
 					type: 'success',
-					message: response?.message || __( 'Sync media added successfully!', 'onemedia' ),
+					message:
+						response?.message ||
+						__( 'Sync media added successfully!', 'onemedia' ),
 				} );
 			} catch ( error ) {
 				setNotice( {
 					type: 'error',
-					message: error.message || __( 'Failed to update sync attachment.', 'onemedia' ),
+					message:
+						error.message ||
+						__( 'Failed to update sync attachment.', 'onemedia' ),
 				} );
 			} finally {
 				setIsUploading( false );
@@ -199,7 +245,10 @@ const BrowserUploaderButton = ( {
 			},
 		} );
 
-		restrictMediaFrameUploadTypes( frame, getAllowedMimeTypeExtensions( ALLOWED_MIME_TYPES_MAP ).join( ',' ) );
+		restrictMediaFrameUploadTypes(
+			frame,
+			getAllowedMimeTypeExtensions( ALLOWED_MIME_TYPES_MAP ).join( ',' )
+		);
 
 		frame.on( 'open', () => {
 			const frameEl = frame.el;
@@ -220,7 +269,9 @@ const BrowserUploaderButton = ( {
 				return;
 			}
 
-			const alreadyAdded = addedMedia?.some( ( media ) => media.id === attachment.id );
+			const alreadyAdded = addedMedia?.some(
+				( media ) => media.id === attachment.id
+			);
 			if ( alreadyAdded ) {
 				setNotice( {
 					type: 'warning',
@@ -229,11 +280,17 @@ const BrowserUploaderButton = ( {
 				return;
 			}
 
-			const isSyncAttachment = await isSyncAttachmentApi( attachment.id, setNotice );
+			const isSyncAttachment = await isSyncAttachmentApi(
+				attachment.id,
+				setNotice
+			);
 			if ( isSyncAttachment ) {
 				setNotice( {
 					type: 'warning',
-					message: __( 'Media is already added to "Sync Media" tab.', 'onemedia' ),
+					message: __(
+						'Media is already added to "Sync Media" tab.',
+						'onemedia'
+					),
 				} );
 				return;
 			}
@@ -278,10 +335,7 @@ const BrowserUploaderButton = ( {
 		// Create FormData for upload.
 		const formData = new FormData();
 		formData.append( 'file', file );
-		formData.append(
-			'action',
-			'onemedia_replace_media',
-		);
+		formData.append( 'action', 'onemedia_replace_media' );
 
 		// Add current media ID for replacement.
 		if ( isReplaceMedia && attachmentId ) {
@@ -305,7 +359,7 @@ const BrowserUploaderButton = ( {
 						type: 'success',
 						message: __(
 							'Media replaced successfully!',
-							'onemedia',
+							'onemedia'
 						),
 					} );
 				} else {
@@ -313,12 +367,14 @@ const BrowserUploaderButton = ( {
 						type: 'success',
 						message: __(
 							'Media uploaded successfully!',
-							'onemedia',
+							'onemedia'
 						),
 					} );
 				}
 			} else {
-				throw new Error( data.data.message || __( 'Upload failed', 'onemedia' ) );
+				throw new Error(
+					data.data.message || __( 'Upload failed', 'onemedia' )
+				);
 			}
 		} catch ( error ) {
 			if ( typeof setNotice === 'function' ) {
@@ -346,7 +402,9 @@ const BrowserUploaderButton = ( {
 				<input
 					className="onemedia-hidden-file-input"
 					type="file"
-					accept={ getAllowedMimeTypes( ALLOWED_MIME_TYPES_MAP ).join( ',' ) }
+					accept={ getAllowedMimeTypes( ALLOWED_MIME_TYPES_MAP ).join(
+						','
+					) }
 					ref={ fileInputRef }
 					onChange={ handleFileSelect }
 				/>

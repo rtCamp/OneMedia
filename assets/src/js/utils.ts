@@ -2,6 +2,9 @@
  * Utility functions
  */
 
+/**
+ * Internal dependencies
+ */
 import type { NoticeType } from '../admin/settings/page';
 
 declare global {
@@ -11,9 +14,9 @@ declare global {
 				queue: unknown;
 			};
 			media: {
-				attachment( id: number ): {
-					get( key: string ): unknown;
-				} | undefined;
+				attachment: (
+					id: number
+				) => { get: ( key: string ) => unknown } | undefined;
 			};
 		};
 	}
@@ -21,26 +24,26 @@ declare global {
 
 type WPMediaUploader = {
 	settings: {
-		multipart_params: Record<string, unknown>;
-	}
-	setOption(
+		multipart_params: Record< string, unknown >;
+	};
+	setOption: (
 		key: 'filters' | 'multi_selection' | string,
-		value: string | object | boolean,
-	): void;
+		value: string | object | boolean
+	) => void;
 };
 
 type WPMediaFrame = {
-	once( event: 'uploader:ready' | string, cb: () => void ): void;
+	once: ( event: 'uploader:ready' | string, cb: () => void ) => void;
 	uploader: {
 		uploader: {
 			uploader: WPMediaUploader;
 		};
 	};
-	on( event: 'ready' | string, cb: () => void ): void;
-	state(): {
-		get( key: 'library' | string ): {
-			observe( queue: unknown ): void;
-		} | undefined;
+	on: ( event: 'ready' | string, cb: () => void ) => void;
+	state: () => {
+		get: (
+			key: 'library' | string
+		) => { observe: ( queue: unknown ) => void } | undefined;
 	};
 };
 
@@ -71,7 +74,7 @@ const isValidUrl = ( url: string ): boolean => {
 	try {
 		const parsedUrl = new URL( url );
 		return isURL( parsedUrl.href );
-	} catch ( e ) {
+	} catch {
 		return false;
 	}
 };
@@ -82,7 +85,8 @@ const isValidUrl = ( url: string ): boolean => {
  * @param {string} url - The URL to process.
  * @return {string} The URL without trailing slashes.
  */
-const removeTrailingSlash = ( url: string ): string => url.replace( /\/+$/, '' );
+const removeTrailingSlash = ( url: string ): string =>
+	url.replace( /\/+$/, '' );
 
 /**
  * Returns the appropriate CSS class for a notice based on its type.
@@ -90,7 +94,7 @@ const removeTrailingSlash = ( url: string ): string => url.replace( /\/+$/, '' )
  * @param {string} type - The type of notice ('error', 'warning', 'success').
  * @return {string} The corresponding CSS class.
  */
-const getNoticeClass = ( type: NoticeType['type'] ): string => {
+const getNoticeClass = ( type: NoticeType[ 'type' ] ): string => {
 	if ( type === 'error' ) {
 		return 'onemedia-error-notice';
 	}
@@ -125,11 +129,11 @@ const trimTitle = ( title: string, maxLength: number = 25 ): string => {
  *
  * @return {Function} A debounced version of the provided function.
  */
-const debounce = <TArgs extends Array<string | number | boolean | object>>(
+const debounce = < TArgs extends Array< string | number | boolean | object > >(
 	func: ( ...args: TArgs ) => void,
-	wait: number,
+	wait: number
 ): ( ( ...args: TArgs ) => void ) => {
-	let timeout: ReturnType<typeof setTimeout> | undefined;
+	let timeout: ReturnType< typeof setTimeout > | undefined;
 	return function executedFunction( ...args: TArgs ) {
 		const later = () => {
 			clearTimeout( timeout );
@@ -150,8 +154,8 @@ const debounce = <TArgs extends Array<string | number | boolean | object>>(
  */
 const observeElement = (
 	selector: string,
-	onFound: ( elements: NodeListOf<Element> ) => void,
-	debounceDelay: number = 200,
+	onFound: ( elements: NodeListOf< Element > ) => void,
+	debounceDelay: number = 200
 ): MutationObserver => {
 	const debouncedOnFound = debounce( () => {
 		const elements = document.querySelectorAll( selector );
@@ -185,25 +189,33 @@ const observeElement = (
  * @param {string} propertyPath - Dot-separated path to the property, e.g. 'wp.media.view.AttachmentsBrowser'
  * @return {T | undefined} The value of the nested property, or undefined if not found.
  */
-function getFrameProperty<T = object>( propertyPath: string ): T | undefined {
+function getFrameProperty< T = object >( propertyPath: string ): T | undefined {
 	if ( typeof propertyPath !== 'string' || ! propertyPath ) {
 		return undefined;
 	}
 
 	try {
 		const keys = propertyPath.split( '.' );
-		let current: Record<string, unknown> = window as unknown as Record<string, unknown>;
+		let current: Record< string, unknown > = window as unknown as Record<
+			string,
+			unknown
+		>;
 
 		for ( const key of keys ) {
-			if ( current && ( typeof current === 'object' || typeof current === 'function' ) && key in current ) {
-				current = current[ key ] as Record<string, unknown>;
+			if (
+				current &&
+				( typeof current === 'object' ||
+					typeof current === 'function' ) &&
+				key in current
+			) {
+				current = current[ key ] as Record< string, unknown >;
 			} else {
 				return undefined;
 			}
 		}
 
 		return current as T;
-	} catch ( error ) {
+	} catch {
 		return undefined;
 	}
 }
@@ -239,11 +251,15 @@ const showSnackbarNotice = ( detail: NoticeType ): void => {
  *
  * @param {WPMediaFrame} frame        - The WordPress media frame to restrict.
  * @param {string}       allowedTypes - Comma-separated list of allowed file extensions.
- * @param {boolean}      is_sync      - Whether the upload is for sync (default false).
+ * @param {boolean}      isSync       - Whether the upload is for sync (default false).
  *
  * @return {void}
  */
-const restrictMediaFrameUploadTypes = ( frame : WPMediaFrame, allowedTypes: string, is_sync:boolean = false ) => {
+const restrictMediaFrameUploadTypes = (
+	frame: WPMediaFrame,
+	allowedTypes: string,
+	isSync: boolean = false
+) => {
 	/**
 	 * Using mime_type will restrict the upload types in media modal,
 	 * Which we don't want as we only need to restrict for OneMedia uploader frame.
@@ -256,13 +272,9 @@ const restrictMediaFrameUploadTypes = ( frame : WPMediaFrame, allowedTypes: stri
 		// Get existing multipart_params first
 		const existingParams = uploader.settings.multipart_params || {};
 
-		uploader.setOption( 'filters',
-			{
-				mime_types: [
-					{ extensions: allowedTypes },
-				],
-			},
-		);
+		uploader.setOption( 'filters', {
+			mime_types: [ { extensions: allowedTypes } ],
+		} );
 
 		// Trick to re-init field
 		uploader.setOption( 'multi_selection', false );
@@ -270,7 +282,7 @@ const restrictMediaFrameUploadTypes = ( frame : WPMediaFrame, allowedTypes: stri
 		// Set is_onemedia_sync param
 		uploader.setOption( 'multipart_params', {
 			...existingParams,
-			is_onemedia_sync: is_sync,
+			is_onemedia_sync: isSync,
 		} );
 	} );
 
@@ -279,7 +291,7 @@ const restrictMediaFrameUploadTypes = ( frame : WPMediaFrame, allowedTypes: stri
 	 *
 	 * @see https://core.trac.wordpress.org/ticket/34465
 	 */
-	frame.on( 'ready', function() {
+	frame.on( 'ready', function () {
 		const library = frame.state().get( 'library' );
 		if ( library && window.wp.Uploader && window.wp.Uploader.queue ) {
 			library.observe( window.wp.Uploader.queue );
@@ -291,7 +303,7 @@ const restrictMediaFrameUploadTypes = ( frame : WPMediaFrame, allowedTypes: stri
  * Get MIME types from a MIME map.
  * @param {Object} mimeMap
  */
-function getAllowedMimeTypes( mimeMap : Object ) : string[]|undefined {
+function getAllowedMimeTypes( mimeMap: Object ): string[] | undefined {
 	return [ ...new Set( Object.values( mimeMap ) ) ];
 }
 
@@ -299,9 +311,8 @@ function getAllowedMimeTypes( mimeMap : Object ) : string[]|undefined {
  * Get extensions from a MIME map.
  * @param {Object} mimeMap
  */
-function getAllowedMimeTypeExtensions( mimeMap : Object ) : string[] {
-	return Object.keys( mimeMap )
-		.flatMap( ( key ) => key.split( '|' ) );
+function getAllowedMimeTypeExtensions( mimeMap: Object ): string[] {
+	return Object.keys( mimeMap ).flatMap( ( key ) => key.split( '|' ) );
 }
 
 export {

@@ -53,8 +53,9 @@ const VersionModal = ( {
 	const [ selectedVersion, setSelectedVersion ] = useState( null );
 
 	const toggleSelect = useCallback(
-		( idx ) => setSelectedVersion( ( prev ) => ( prev === idx ? null : idx ) ),
-		[],
+		( idx ) =>
+			setSelectedVersion( ( prev ) => ( prev === idx ? null : idx ) ),
+		[]
 	);
 
 	const renderMediaGrid = useCallback( () => {
@@ -70,31 +71,33 @@ const VersionModal = ( {
 
 					const itemProps = isCurrent
 						? {
-							className: 'onemedia-media-item in-use',
-							role: 'group',
-							tabIndex: -1,
-							'aria-disabled': true,
-						}
+								className: 'onemedia-media-item in-use',
+								role: 'group',
+								tabIndex: -1,
+								'aria-disabled': true,
+						  }
 						: {
-							className: `onemedia-media-item ${ isSelected ? 'selected' : '' }`,
-							role: 'button',
-							tabIndex: 0,
-							onKeyDown: ( e ) => {
-								if ( e.key === 'Enter' || e.key === ' ' ) {
-									e.preventDefault();
-									toggleSelect( index );
-								}
-							},
-							'aria-pressed': isSelected,
-							onClick: () => toggleSelect( index ),
-						};
+								className: `onemedia-media-item ${
+									isSelected ? 'selected' : ''
+								}`,
+								role: 'button',
+								tabIndex: 0,
+								onKeyDown: ( e ) => {
+									if ( e.key === 'Enter' || e.key === ' ' ) {
+										e.preventDefault();
+										toggleSelect( index );
+									}
+								},
+								'aria-pressed': isSelected,
+								onClick: () => toggleSelect( index ),
+						  };
 
 					const lastUsedText = version?.last_used
 						? sprintf(
-							/* translators: %s: date */
-							__( 'Last used: %s', 'onemedia' ),
-							formatLastUsedDate( version?.last_used ),
-						)
+								/* translators: %s: date */
+								__( 'Last used: %s', 'onemedia' ),
+								formatLastUsedDate( version?.last_used )
+						  )
 						: __( 'No usage data', 'onemedia' );
 
 					const media = (
@@ -113,7 +116,9 @@ const VersionModal = ( {
 								/>
 								{ isCurrent && (
 									<div className="onemedia-in-use-overlay">
-										<span>{ __( 'In Use', 'onemedia' ) }</span>
+										<span>
+											{ __( 'In Use', 'onemedia' ) }
+										</span>
 									</div>
 								) }
 							</div>
@@ -124,7 +129,7 @@ const VersionModal = ( {
 										checked={ isSelected }
 										onChange={ () => toggleSelect( index ) }
 										label=""
-										__nextHasNoMarginBottom={ true }
+										__nextHasNoMarginBottom
 									/>
 								</div>
 							) }
@@ -152,7 +157,7 @@ const VersionModal = ( {
 		<Modal
 			title={ __( 'Attachment Version', 'onemedia' ) }
 			onRequestClose={ () => setIsVersionModalOpen( false ) }
-			shouldCloseOnClickOutside={ true }
+			shouldCloseOnClickOutside
 			size="medium"
 			className="onemedia-version-modal"
 		>
@@ -162,7 +167,10 @@ const VersionModal = ( {
 						{ __( 'Select a version to restore', 'onemedia' ) }
 					</h3>
 					<p className="onemedia-selected-media-description">
-						{ __( 'Choose from the list of available versions below.', 'onemedia' ) }
+						{ __(
+							'Choose from the list of available versions below.',
+							'onemedia'
+						) }
 					</p>
 				</div>
 
@@ -177,7 +185,12 @@ const VersionModal = ( {
 					</Button>
 					<Button
 						variant="primary"
-						onClick={ () => selectedVersion !== null && handleVersionSelect( attachmentVersions[ selectedVersion ] ) }
+						onClick={ () =>
+							selectedVersion !== null &&
+							handleVersionSelect(
+								attachmentVersions[ selectedVersion ]
+							)
+						}
 						isBusy={ loading }
 						disabled={ null === selectedVersion || loading }
 					>

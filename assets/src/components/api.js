@@ -9,7 +9,8 @@ import { __ } from '@wordpress/i18n';
 import { removeTrailingSlash } from '../js/utils';
 const ONEMEDIA_REST_API_NAMESPACE = 'onemedia';
 const ONEMEDIA_REST_API_VERSION = 'v1';
-const ONEMEDIA_REST_API_BASE = '/wp-json/' + ONEMEDIA_REST_API_NAMESPACE + '/' + ONEMEDIA_REST_API_VERSION;
+const ONEMEDIA_REST_API_BASE =
+	'/wp-json/' + ONEMEDIA_REST_API_NAMESPACE + '/' + ONEMEDIA_REST_API_VERSION;
 const {
 	restUrl: REST_URL,
 	restNonce: NONCE,
@@ -66,7 +67,11 @@ export const apiFetch = async ( {
 		} );
 		const responseData = await response.json();
 		if ( ! response.ok || ! 200 === response.status ) {
-			let message = responseData?.message || response?.message || errorMsg || __( 'An unexpected error occurred', 'onemedia' );
+			let message =
+				responseData?.message ||
+				response?.message ||
+				errorMsg ||
+				__( 'An unexpected error occurred', 'onemedia' );
 			if ( 404 === response.status ) {
 				message = __( 'Resource not found', 'onemedia' );
 			}
@@ -77,11 +82,16 @@ export const apiFetch = async ( {
 				} );
 			}
 			// Return the error response for handling in the caller.
-			return { ...responseData, message, success: responseData?.data?.success || false };
+			return {
+				...responseData,
+				message,
+				success: responseData?.data?.success || false,
+			};
 		}
 		return await responseData;
 	} catch ( error ) {
-		const message = errorMsg || error.message || __( 'An error occurred', 'onemedia' );
+		const message =
+			errorMsg || error.message || __( 'An error occurred', 'onemedia' );
 		if ( addNotice ) {
 			addNotice( {
 				type: 'error',
@@ -127,7 +137,10 @@ export const checkBrandSiteHealth = async ( url, apiKey, addNotice ) => {
 		nonce: '', // No nonce for cross-site requests.
 		apiKey,
 		addNotice,
-		errorMsg: __( 'Health check failed. Please ensure the site is accessible.', 'onemedia' ),
+		errorMsg: __(
+			'Health check failed. Please ensure the site is accessible.',
+			'onemedia'
+		),
 	} );
 	return response;
 };
@@ -257,7 +270,7 @@ export const fetchSyncedSites = async ( addNotice ) => {
 		addNotice,
 		errorMsg: __( 'Failed to fetch synced sites.', 'onemedia' ),
 	} );
-	const sites = ( data?.data || [] );
+	const sites = data?.data || [];
 	return sites;
 };
 
@@ -272,7 +285,13 @@ export const fetchSyncedSites = async ( addNotice ) => {
  * @param {Function} [options.addNotice] - Function to display notices.
  * @return {Promise<Object>} - Media items response.
  */
-export const fetchMediaItems = async ( { search, page, perPage, imageType, addNotice } ) => {
+export const fetchMediaItems = async ( {
+	search,
+	page,
+	perPage,
+	imageType,
+	addNotice,
+} ) => {
 	const params = {};
 	if ( page ) {
 		params.page = page;
@@ -321,8 +340,7 @@ export const shareMedia = async ( payload, addNotice ) => {
  */
 export const uploadMedia = async ( formData, addNotice ) => {
 	try {
-		const url =
-			`${ SHARING_AJAX_URL }`;
+		const url = `${ SHARING_AJAX_URL }`;
 
 		const response = await fetch( url, {
 			method: 'POST',
@@ -345,7 +363,9 @@ export const uploadMedia = async ( formData, addNotice ) => {
 		if ( addNotice ) {
 			addNotice( {
 				type: 'error',
-				message: error.message || __( 'An error occurred during media upload', 'onemedia' ),
+				message:
+					error.message ||
+					__( 'An error occurred during media upload', 'onemedia' ),
 			} );
 		}
 		return null;
@@ -360,7 +380,11 @@ export const uploadMedia = async ( formData, addNotice ) => {
  * @param {Function} addNotice         - Function to display notices.
  * @return {Promise<Object>} - API response.
  */
-export const updateExistingAttachment = async ( attachmentId, isSyncMediaUpload, addNotice ) => {
+export const updateExistingAttachment = async (
+	attachmentId,
+	isSyncMediaUpload,
+	addNotice
+) => {
 	return await apiFetch( {
 		endpoint: 'update-existing-attachment',
 		method: 'POST',

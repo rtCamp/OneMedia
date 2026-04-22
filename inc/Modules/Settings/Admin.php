@@ -3,8 +3,10 @@
  * Admin class.
  * This class handles the settings page for the OneMedia plugin,
  *
- * @package OneMedia
+ * @package OneMedia\Modules\Settings
  */
+
+declare(strict_types = 1);
 
 namespace OneMedia\Modules\Settings;
 
@@ -51,8 +53,6 @@ final class Admin implements Registrable {
 
 	/**
 	 * Add a settings page.
-	 *
-	 * @return void
 	 */
 	public function add_admin_menu(): void {
 		add_menu_page(
@@ -229,7 +229,11 @@ final class Admin implements Registrable {
 	 * @param string     $classes        Existing body classes.
 	 * @param \WP_Screen $current_screen Current screen object.
 	 */
-	private function add_body_class_for_modal( string $classes, \WP_Screen $current_screen ): string {
+	private function add_body_class_for_modal(
+		string $classes,
+		// phpcs:ignore SlevomatCodingStandard.Functions.UnusedParameter.UnusedParameter
+		\WP_Screen $current_screen
+	): string {
 		if ( ! $this->should_display_site_selection_modal() ) {
 			return $classes;
 		}

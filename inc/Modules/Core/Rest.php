@@ -5,7 +5,7 @@
  * @package OneMedia\Modules\Rest
  */
 
-declare( strict_types=1 );
+declare( strict_types = 1 );
 
 namespace OneMedia\Modules\Core;
 
@@ -15,7 +15,6 @@ use OneMedia\Contracts\Interfaces\Registrable;
  * Class REST
  */
 final class Rest implements Registrable {
-
 	/**
 	 * {@inheritDoc}
 	 */

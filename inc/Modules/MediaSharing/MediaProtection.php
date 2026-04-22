@@ -5,6 +5,8 @@
  * @package OneMedia
  */
 
+declare(strict_types = 1);
+
 namespace OneMedia\Modules\MediaSharing;
 
 use OneMedia\Contracts\Interfaces\Registrable;
@@ -14,7 +16,6 @@ use OneMedia\Modules\Settings\Settings;
  * Class CPT_Restriction
  */
 class MediaProtection implements Registrable {
-
 	/**
 	 * {@inheritDoc}
 	 */
@@ -32,8 +33,6 @@ class MediaProtection implements Registrable {
 	 * Add onemedia term to the attachment when added via the "Add Sync Media" button.
 	 *
 	 * @param int $attachment_id The ID of the attachment being added.
-	 *
-	 * @return void
 	 */
 	public function add_term_to_attachment( int $attachment_id ): void {
 		if ( ! wp_doing_ajax() ) {
@@ -59,8 +58,6 @@ class MediaProtection implements Registrable {
 	 *
 	 * This method displays an admin notice when a user attempts to delete media
 	 * that is assigned to the 'onemedia' term, informing them that deletion is not allowed.
-	 *
-	 * @return void
 	 */
 	public function show_deletion_notice(): void {
 		$onemedia_delete_transient = get_transient( 'onemedia_delete_notice' );
@@ -80,15 +77,20 @@ class MediaProtection implements Registrable {
 	/**
 	 * Prevent editing or deleting of synced media attachments on brand sites.
 	 *
-	 * @param array  $caps    Current user's capabilities.
-	 * @param string $cap     Capability being checked.
-	 * @param int    $user_id User ID.
-	 * @param array  $args    Arguments for the capability check.
+	 * @param array<int, string> $caps    Current user's capabilities.
+	 * @param string             $cap     Capability being checked.
+	 * @param int                $user_id User ID.
+	 * @param array<int, mixed>  $args    Arguments for the capability check.
 	 *
-	 * @return array|string[]
+	 * @return array<int, string>
 	 */
-	public function prevent_sync_media_editing( array $caps, string $cap, int $user_id, array $args ): array {
-
+	public function prevent_sync_media_editing(
+		array $caps,
+		string $cap,
+		// phpcs:ignore SlevomatCodingStandard.Functions.UnusedParameter.UnusedParameter
+		int $user_id,
+		array $args
+	): array {
 		if ( ! in_array( $cap, [ 'edit_post', 'delete_post' ], true ) ) {
 			return $caps;
 		}

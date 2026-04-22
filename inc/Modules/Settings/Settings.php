@@ -31,14 +31,16 @@ final class Settings implements Registrable {
 	 */
 	// Shared settings.
 	public const OPTION_SITE_TYPE = self::SETTING_PREFIX . 'site_type';
+
 	// Consumer settings.
 	public const OPTION_CONSUMER_API_KEY         = self::SETTING_PREFIX . 'consumer_api_key';
 	public const OPTION_CONSUMER_PARENT_SITE_URL = self::SETTING_PREFIX . 'parent_site_url';
+
 	// Governing settings.
 	public const OPTION_GOVERNING_SHARED_SITES = self::SETTING_PREFIX . 'shared_sites';
+
 	// Brand sites synced media option.
 	public const BRAND_SITES_SYNCED_MEDIA = self::SETTING_PREFIX . 'brand_sites_synced_media';
-
 
 	/**
 	 * Site type keys.
@@ -162,7 +164,11 @@ final class Settings implements Registrable {
 	 * @param mixed $old_value The old value.
 	 * @param mixed $new_value The new value.
 	 */
-	public function on_site_type_change( $old_value, $new_value ): void {
+	public function on_site_type_change(
+		// phpcs:ignore SlevomatCodingStandard.Functions.UnusedParameter.UnusedParameter
+		$old_value,
+		$new_value
+	): void {
 		if ( self::SITE_TYPE_CONSUMER !== $new_value ) {
 			return;
 		}
@@ -438,7 +444,7 @@ final class Settings implements Registrable {
 	 *
 	 * The structure of this array is different on governing and brand sites.
 	 *
-	 * @return array Array of brand site's synced media.
+	 * @return array<int|string, mixed> Array of brand site's synced media.
 	 */
 	public static function get_brand_sites_synced_media(): array {
 		return get_option( self::BRAND_SITES_SYNCED_MEDIA, [] );

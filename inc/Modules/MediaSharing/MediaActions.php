@@ -5,6 +5,8 @@
  * @package OneMedia\Modules\Post_Types;
  */
 
+declare(strict_types = 1);
+
 namespace OneMedia\Modules\MediaSharing;
 
 use OneMedia\Contracts\Interfaces\Registrable;
@@ -16,7 +18,6 @@ use OneMedia\Utils;
  * Class Admin
  */
 class MediaActions implements Registrable {
-
 	/**
 	 * Number of attachment versions to keep.
 	 *
@@ -58,10 +59,10 @@ class MediaActions implements Registrable {
 	/**
 	 * Add replace media button to media library react view.
 	 *
-	 * @param array    $form_fields Form fields.
-	 * @param \WP_Post $post        The WP_Post attachment object.
+	 * @param array<string, mixed> $form_fields Form fields.
+	 * @param \WP_Post             $post        The WP_Post attachment object.
 	 *
-	 * @return array Modified form fields.
+	 * @return array<string, mixed> Modified form fields.
 	 */
 	public function add_replace_media_button( array $form_fields, \WP_Post $post ): array {
 		if ( Settings::is_consumer_site() ) {
@@ -92,8 +93,6 @@ class MediaActions implements Registrable {
 	 * Remove sync meta when attachment is deleted.
 	 *
 	 * @param int $attachment_id Attachment ID.
-	 *
-	 * @return void
 	 */
 	public function remove_sync_meta( int $attachment_id ): void {
 		// On Governing Site.
@@ -186,8 +185,6 @@ class MediaActions implements Registrable {
 	 * Prevent updating attachment if connected sites are not available.
 	 *
 	 * @param int $post_id Post ID.
-	 *
-	 * @return void
 	 */
 	public function pre_update_sync_attachments( int $post_id ): void {
 		// Check if post type is attachment.
@@ -204,7 +201,7 @@ class MediaActions implements Registrable {
 		}
 
 		$health_check_connected_sites = Attachment::health_check_attachment_brand_sites( $post_id );
-		$success                      = isset( $health_check_connected_sites['success'] ) ? $health_check_connected_sites['success'] : false;
+		$success                      = $health_check_connected_sites['success'] ?? false;
 
 		// If any of the connected brand sites are not reachable, prevent updating the attachment.
 		if ( $success ) {
@@ -226,8 +223,6 @@ class MediaActions implements Registrable {
 
 	/**
 	 * Prevent saving attachment if connected sites are not available.
-	 *
-	 * @return void
 	 */
 	public function pre_update_sync_attachments_ajax(): void {
 		$attachment_id = isset( $_REQUEST['id'] ) ? intval( $_REQUEST['id'] ) : 0;
@@ -257,7 +252,7 @@ class MediaActions implements Registrable {
 		}
 
 		$health_check_connected_sites = Attachment::health_check_attachment_brand_sites( $attachment_id );
-		$success                      = isset( $health_check_connected_sites['success'] ) ? $health_check_connected_sites['success'] : false;
+		$success                      = $health_check_connected_sites['success'] ?? false;
 
 		// If any of the connected brand sites are not reachable, prevent updating the attachment.
 		if ( $success ) {
@@ -281,8 +276,6 @@ class MediaActions implements Registrable {
 	 * Update sync attachments on brand sites.
 	 *
 	 * @param int $attachment_id Attachment ID.
-	 *
-	 * @return void
 	 */
 	public function update_sync_attachments( int $attachment_id ): void {
 		// Check post is_onemedia_sync is set to be true.
@@ -361,8 +354,6 @@ class MediaActions implements Registrable {
 
 	/**
 	 * Handle media replacement via AJAX on governing site.
-	 *
-	 * @return void
 	 */
 	public function handle_media_replace(): void {
 		if ( ! current_user_can( 'manage_options' ) || ! check_ajax_referer( 'onemedia_upload_media' ) ) {
@@ -441,9 +432,9 @@ class MediaActions implements Registrable {
 	/**
 	 * Process and sanitize file data from either $_FILES or $_POST.
 	 *
-	 * @param array|null $input_file The raw input file data.
+	 * @param array<string, mixed>|null $input_file The raw input file data.
 	 *
-	 * @return array|\WP_Error Sanitized file array or WP_Error on failure.
+	 * @return array<string, mixed>|\WP_Error Sanitized file array or WP_Error on failure.
 	 */
 	public function sanitize_file_input( $input_file ): array|\WP_Error {
 		// Verify file input exists.
@@ -511,12 +502,12 @@ class MediaActions implements Registrable {
 	/**
 	 * Update attachment with new file.
 	 *
-	 * @param int   $attachment_id    The attachment ID.
-	 * @param array $file             The file data.
-	 * @param bool  $is_version_restore Whether this is a version restore operation.
-	 * @param array $version_data     Version data for restore operations.
+	 * @param int                  $attachment_id     The attachment ID.
+	 * @param array<string, mixed> $file              The file data.
+	 * @param bool                 $is_version_restore Whether this is a version restore operation.
+	 * @param array<string, mixed> $version_data      Version data for restore operations.
 	 *
-	 * @return array|\WP_Error Result data or WP_Error on failure.
+	 * @return array<string, mixed>|\WP_Error Result data or WP_Error on failure.
 	 */
 	public function update_attachment( int $attachment_id, array $file, bool $is_version_restore = false, array $version_data = [] ): array|\WP_Error {
 		// Get existing attachment data.
@@ -612,10 +603,10 @@ class MediaActions implements Registrable {
 	/**
 	 * Restore a specific version of an attachment.
 	 *
-	 * @param int   $attachment_id The attachment ID.
-	 * @param array $version_file  The version file data to restore.
+	 * @param int                  $attachment_id The attachment ID.
+	 * @param array<string, mixed> $version_file  The version file data to restore.
 	 *
-	 * @return array|\WP_Error Result data or WP_Error on failure.
+	 * @return array<string, mixed>|\WP_Error Result data or WP_Error on failure.
 	 */
 	public function restore_attachment_version( int $attachment_id, array $version_file ): array|\WP_Error {
 		// Get existing versions.
@@ -677,11 +668,10 @@ class MediaActions implements Registrable {
 	/**
 	 * Update attachment version history.
 	 *
-	 * @param int   $attachment_id The attachment ID.
-	 * @param array $file The file data.
-	 * @param array $update_result The result from update_attachment function.
-	 * @param array $original_data The original file information.
-	 * @return void
+	 * @param int                  $attachment_id The attachment ID.
+	 * @param array<string, mixed> $file          The file data.
+	 * @param array<string, mixed> $update_result The result from update_attachment function.
+	 * @param array<string, mixed> $original_data The original file information.
 	 */
 	public function update_attachment_versions( int $attachment_id, array $file, array $update_result, array $original_data ): void {
 		// Get existing versions.
@@ -766,10 +756,10 @@ class MediaActions implements Registrable {
 	/**
 	 * Add sync status meta to attachment data for JavaScript.
 	 *
-	 * @param array    $response   The prepared attachment data.
-	 * @param \WP_Post $attachment The attachment post object.
+	 * @param array<string, mixed> $response   The prepared attachment data.
+	 * @param \WP_Post             $attachment The attachment post object.
 	 *
-	 * @return array Modified attachment data with sync status.
+	 * @return array<string, mixed> Modified attachment data with sync status.
 	 */
 	public function add_sync_meta( $response, $attachment ) {
 		// If attachment ID is not set, return original response.

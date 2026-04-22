@@ -5,6 +5,8 @@
  * @package OneMedia
  */
 
+declare(strict_types = 1);
+
 ?>
 
 <div class="onemedia-help-content">

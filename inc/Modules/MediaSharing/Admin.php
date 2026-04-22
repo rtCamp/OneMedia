@@ -5,6 +5,8 @@
  * @package OneMedia\Modules\Post_Types;
  */
 
+declare(strict_types = 1);
+
 namespace OneMedia\Modules\MediaSharing;
 
 use OneMedia\Contracts\Interfaces\Registrable;
@@ -17,7 +19,6 @@ use OneMedia\Utils;
  * Class Admin
  */
 class Admin implements Registrable {
-
 	/**
 	 * {@inheritDoc}
 	 */
@@ -103,8 +104,6 @@ class Admin implements Registrable {
 
 	/**
 	 * Add help tabs to the media sharing page.
-	 *
-	 * @return void
 	 */
 	public function add_help_tabs(): void {
 		$screen = get_current_screen();
