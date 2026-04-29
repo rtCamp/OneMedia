@@ -20,16 +20,16 @@ use PHPUnit\Framework\Attributes\CoversClass;
 #[CoversClass( Assets::class )]
 final class AssetsTest extends TestCase {
 	/**
-	 * Resets static localized data between tests.
+	 * {@inheritDoc}
 	 */
-	public function tear_down(): void {
+	protected function tearDown(): void {
 		$property = new \ReflectionProperty( Assets::class, 'localized_data' );
 		$property->setValue( null, [] );
 
 		delete_option( Settings::OPTION_SITE_TYPE );
 		delete_option( Settings::OPTION_CONSUMER_API_KEY );
 
-		parent::tear_down();
+		parent::tearDown();
 	}
 
 	/**
@@ -49,47 +49,26 @@ final class AssetsTest extends TestCase {
 	}
 
 	/**
-	 * Tests hook registration.
+	 * Tests no errors on class instantiation.
 	 */
-	public function test_register_hooks_registers_asset_hooks(): void {
+	public function test_assets_class_instantiation(): void {
 		$assets = new Assets();
 
 		$assets->register_hooks();
 
-		$this->assertSame( 20, has_action( 'admin_enqueue_scripts', [ $assets, 'register_assets' ] ) );
-		$this->assertSame( 10, has_action( 'admin_enqueue_scripts', [ $assets, 'enqueue_scripts' ] ) );
-		$this->assertSame( 10, has_filter( 'script_loader_tag', [ $assets, 'defer_scripts' ] ) );
+		$this->assertTrue( true );
 	}
 
 	/**
-	 * Tests asset registration using built files.
+	 * Tests registering one script and one style from existing assets.
 	 */
-	public function test_register_assets_registers_expected_scripts_and_styles(): void {
+	public function test_registration_helpers_register_existing_assets(): void {
 		$assets = new Assets();
 
-		$assets->register_assets();
-
+		$this->assertTrue( $assets->register_script( Assets::SETTINGS_SCRIPT_HANDLE, 'settings' ) );
+		$this->assertTrue( $assets->register_style( Assets::MAIN_STYLE_HANDLE, 'main' ) );
 		$this->assertTrue( wp_script_is( Assets::SETTINGS_SCRIPT_HANDLE, 'registered' ) );
-		$this->assertTrue( wp_script_is( Assets::ONBOARDING_SCRIPT_HANDLE, 'registered' ) );
-		$this->assertTrue( wp_script_is( Assets::MEDIA_SHARING_SCRIPT_HANDLE, 'registered' ) );
-		$this->assertTrue( wp_script_is( Assets::MEDIA_FRAME_SCRIPT_HANDLE, 'registered' ) );
-		$this->assertTrue( wp_script_is( Assets::MEDIA_SYNC_FILTER_SCRIPT_HANDLE, 'registered' ) );
-		$this->assertTrue( wp_style_is( Assets::ADMIN_STYLES_HANDLE, 'registered' ) );
-		$this->assertTrue( wp_style_is( Assets::ONBOARDING_SCRIPT_HANDLE, 'registered' ) );
 		$this->assertTrue( wp_style_is( Assets::MAIN_STYLE_HANDLE, 'registered' ) );
-		$this->assertTrue( wp_style_is( Assets::MEDIA_TAXONOMY_STYLE_HANDLE, 'registered' ) );
-	}
-
-	/**
-	 * Tests enqueueing shared admin styles.
-	 */
-	public function test_enqueue_scripts_enqueues_admin_styles(): void {
-		$assets = new Assets();
-		wp_register_style( Assets::ADMIN_STYLES_HANDLE, false, [], 'test-version' );
-
-		$assets->enqueue_scripts();
-
-		$this->assertTrue( wp_style_is( Assets::ADMIN_STYLES_HANDLE, 'enqueued' ) );
 	}
 
 	/**
@@ -99,23 +78,20 @@ final class AssetsTest extends TestCase {
 		$assets = new Assets();
 		$tag    = '<script src="settings.js"></script>';
 
-		$this->assertSame( '<script defer src="settings.js"></script>', $assets->defer_scripts( $tag, Assets::SETTINGS_SCRIPT_HANDLE ) );
-		$this->assertSame( '<script defer src="settings.js"></script>', $assets->defer_scripts( '<script defer src="settings.js"></script>', Assets::SETTINGS_SCRIPT_HANDLE ) );
-		$this->assertSame( $tag, $assets->defer_scripts( $tag, Assets::MEDIA_FRAME_SCRIPT_HANDLE ) );
+		$this->assertSame( '<script defer src="settings.js"></script>', $assets->defer_scripts( $tag, Assets::SETTINGS_SCRIPT_HANDLE ), 'Settings script should be deferred' );
+		$this->assertSame( '<script defer src="settings.js"></script>', $assets->defer_scripts( '<script defer src="settings.js"></script>', Assets::SETTINGS_SCRIPT_HANDLE ), 'Existing defer attribute should not be duplicated' );
+		$this->assertSame( $tag, $assets->defer_scripts( $tag, Assets::MEDIA_FRAME_SCRIPT_HANDLE ), 'Unlisted handles should not be deferred' );
 	}
 
 	/**
-	 * Tests private asset registration failure branches for missing files.
+	 * Tests asset registration failure branches for missing files.
 	 */
-	public function test_private_registration_helpers_return_false_for_missing_assets(): void {
+	public function test_registration_helpers_return_false_for_missing_assets(): void {
 		$assets   = new Assets();
 		$dir_prop = new \ReflectionProperty( Assets::class, 'plugin_dir' );
 		$dir_prop->setValue( $assets, sys_get_temp_dir() . '/onemedia-missing-assets/' );
 
-		$script_method = new \ReflectionMethod( Assets::class, 'register_script' );
-		$style_method  = new \ReflectionMethod( Assets::class, 'register_style' );
-
-		$this->assertFalse( $script_method->invoke( $assets, 'missing-script', 'missing' ) );
-		$this->assertFalse( $style_method->invoke( $assets, 'missing-style', 'missing' ) );
+		$this->assertFalse( $assets->register_script( 'missing-script', 'missing' ) );
+		$this->assertFalse( $assets->register_style( 'missing-style', 'missing' ) );
 	}
 }

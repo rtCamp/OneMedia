@@ -19,13 +19,13 @@ use PHPUnit\Framework\Attributes\CoversClass;
 #[CoversClass( Autoloader::class )]
 final class AutoloaderTest extends TestCase {
 	/**
-	 * Reset static state after tests.
+	 * {@inheritDoc}
 	 */
-	public function tear_down(): void {
+	protected function tearDown(): void {
 		$property = new \ReflectionProperty( Autoloader::class, 'is_loaded' );
 		$property->setValue( null, false );
 
-		parent::tear_down();
+		parent::tearDown();
 	}
 
 	/**
@@ -48,5 +48,8 @@ final class AutoloaderTest extends TestCase {
 		$this->assertFalse( $method->invoke( null, sys_get_temp_dir() . '/missing-onemedia-autoload.php' ) );
 		$this->assertNotFalse( has_action( 'admin_notices' ) );
 		$this->assertNotFalse( has_action( 'network_admin_notices' ) );
+
+		$this->expectOutputRegex( '/Composer autoloader was not found/' );
+		do_action( 'admin_notices' );
 	}
 }

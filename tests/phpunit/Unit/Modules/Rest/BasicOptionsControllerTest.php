@@ -22,15 +22,15 @@ use WP_REST_Request;
 #[CoversClass( Basic_Options_Controller::class )]
 final class BasicOptionsControllerTest extends TestCase {
 	/**
-	 * Clean options.
+	 * {@inheritDoc}
 	 */
-	public function tear_down(): void {
+	protected function tearDown(): void {
 		delete_option( Settings::OPTION_SITE_TYPE );
 		delete_option( Settings::OPTION_CONSUMER_PARENT_SITE_URL );
 		delete_option( Settings::OPTION_GOVERNING_SHARED_SITES );
 		delete_option( Settings::OPTION_CONSUMER_API_KEY );
 
-		parent::tear_down();
+		parent::tearDown();
 	}
 
 	/**

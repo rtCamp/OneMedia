@@ -21,13 +21,14 @@ use PHPUnit\Framework\Attributes\CoversClass;
 #[CoversClass( MediaProtection::class )]
 final class MediaProtectionTest extends TestCase {
 	/**
-	 * Cleans options touched by these tests.
+	 * {@inheritDoc}
 	 */
-	public function tear_down(): void {
+	protected function tearDown(): void {
 		delete_option( Settings::OPTION_SITE_TYPE );
 		delete_transient( 'onemedia_delete_notice' );
+		wp_set_current_user( 0 );
 
-		parent::tear_down();
+		parent::tearDown();
 	}
 
 	/**
@@ -81,24 +82,24 @@ final class MediaProtectionTest extends TestCase {
 	}
 
 	/**
-	 * Tests synced attachment capability restrictions.
+	 * Tests synced attachment capability restrictions through WordPress capabilities.
 	 */
-	public function test_prevent_sync_media_editing_blocks_edit_and_delete_for_synced_attachments(): void {
+	public function test_user_can_blocks_edit_and_delete_for_synced_attachments(): void {
 		$protection    = new MediaProtection();
 		$attachment_id = self::factory()->attachment->create();
-		$caps          = [ 'edit_posts' ];
+		$user_id       = self::factory()->user->create( [ 'role' => 'administrator' ] );
+		wp_set_current_user( $user_id );
+		update_option( Settings::OPTION_SITE_TYPE, Settings::SITE_TYPE_CONSUMER, false );
+		$protection->register_hooks();
 
-		$this->assertSame( $caps, $protection->prevent_sync_media_editing( $caps, 'read', 1, [ $attachment_id ] ) );
-		$this->assertSame( $caps, $protection->prevent_sync_media_editing( $caps, 'edit_post', 1, [] ) );
-		$this->assertSame( $caps, $protection->prevent_sync_media_editing( $caps, 'edit_post', 1, [ self::factory()->post->create() ] ) );
-
+		$this->assertTrue( user_can( $user_id, 'edit_post', $attachment_id ) );
 		Attachment::set_is_synced( $attachment_id, true );
 
-		$this->assertSame( [ 'do_not_allow' ], $protection->prevent_sync_media_editing( $caps, 'edit_post', 1, [ $attachment_id ] ) );
-		$this->assertSame( [ 'do_not_allow' ], $protection->prevent_sync_media_editing( $caps, 'delete_post', 1, [ $attachment_id ] ) );
+		$this->assertFalse( user_can( $user_id, 'edit_post', $attachment_id ) );
+		$this->assertFalse( user_can( $user_id, 'delete_post', $attachment_id ) );
 
 		Attachment::set_is_synced( $attachment_id, false );
 
-		$this->assertSame( $caps, $protection->prevent_sync_media_editing( $caps, 'edit_post', 1, [ $attachment_id ] ) );
+		$this->assertTrue( user_can( $user_id, 'edit_post', $attachment_id ) );
 	}
 }

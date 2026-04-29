@@ -23,15 +23,15 @@ use WP_REST_Request;
 #[CoversClass( Media_Sharing_Controller::class )]
 final class MediaSharingControllerTest extends TestCase {
 	/**
-	 * Clean options.
+	 * {@inheritDoc}
 	 */
-	public function tear_down(): void {
+	protected function tearDown(): void {
 		delete_option( Settings::OPTION_SITE_TYPE );
 		delete_option( Settings::OPTION_GOVERNING_SHARED_SITES );
 		delete_option( Settings::BRAND_SITES_SYNCED_MEDIA );
 		delete_option( Media_Sharing_Controller::ATTACHMENT_KEY_MAP_OPTION );
 
-		parent::tear_down();
+		parent::tearDown();
 	}
 
 	/**
@@ -214,7 +214,7 @@ final class MediaSharingControllerTest extends TestCase {
 				'filename' => null,
 			];
 		};
-		add_filter( 'pre_http_request', $http_filter, 10, 3 );
+		add_filter( 'pre_http_request', $http_filter, 10, 0 );
 
 		$request = new WP_REST_Request( 'POST', '/onemedia/v1/sync-media' );
 		$request->set_param( 'brand_sites', [ 'https://brand.test/' ] );
@@ -410,7 +410,7 @@ final class MediaSharingControllerTest extends TestCase {
 				'filename' => null,
 			];
 		};
-		add_filter( 'pre_http_request', $failure_filter, 10, 3 );
+		add_filter( 'pre_http_request', $failure_filter, 10, 0 );
 		$this->assertSame( 'download_failed', $this->invoke_private_method( $controller, 'fetch_remote_file', [ 'https://example.test/file.jpg' ] )->get_error_code() );
 		remove_filter( 'pre_http_request', $failure_filter, 10 );
 
@@ -426,7 +426,7 @@ final class MediaSharingControllerTest extends TestCase {
 				'filename' => null,
 			];
 		};
-		add_filter( 'pre_http_request', $success_filter, 10, 3 );
+		add_filter( 'pre_http_request', $success_filter, 10, 0 );
 		$result = $this->invoke_private_method( $controller, 'fetch_remote_file', [ 'https://example.test/file.jpg', '', true ] );
 		remove_filter( 'pre_http_request', $success_filter, 10 );
 

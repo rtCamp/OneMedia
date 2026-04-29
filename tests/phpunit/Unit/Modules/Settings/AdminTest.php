@@ -20,13 +20,15 @@ use PHPUnit\Framework\Attributes\CoversClass;
 #[CoversClass( Admin::class )]
 final class AdminTest extends TestCase {
 	/**
-	 * Clean options.
+	 * {@inheritDoc}
 	 */
-	public function tear_down(): void {
+	protected function tearDown(): void {
 		delete_option( Settings::OPTION_SITE_TYPE );
 		delete_option( Settings::OPTION_GOVERNING_SHARED_SITES );
 
-		parent::tear_down();
+		set_current_screen( 'front' );
+
+		parent::tearDown();
 	}
 
 	/**
@@ -80,13 +82,17 @@ final class AdminTest extends TestCase {
 	}
 
 	/**
-	 * Tests private missing-sites body class helper.
+	 * Tests admin body classes for modal and missing sites.
 	 */
-	public function test_add_body_class_for_missing_sites_appends_only_when_empty(): void {
-		$admin  = new Admin();
-		$method = new \ReflectionMethod( $admin, 'add_body_class_for_missing_sites' );
+	public function test_add_body_classes_appends_modal_and_missing_site_classes(): void {
+		$admin = new Admin();
 
-		$this->assertStringContainsString( 'onemedia-missing-brand-sites', $method->invoke( $admin, 'base' ) );
+		set_current_screen( 'plugins' );
+
+		$classes = $admin->add_body_classes( 'base' );
+
+		$this->assertStringContainsString( 'onemedia-site-selection-modal', $classes );
+		$this->assertStringContainsString( 'onemedia-missing-brand-sites', $classes );
 
 		Settings::set_shared_sites(
 			[
@@ -98,6 +104,8 @@ final class AdminTest extends TestCase {
 			]
 		);
 
-		$this->assertSame( 'base', $method->invoke( $admin, 'base' ) );
+		update_option( Settings::OPTION_SITE_TYPE, Settings::SITE_TYPE_GOVERNING, false );
+
+		$this->assertSame( 'base', $admin->add_body_classes( 'base' ) );
 	}
 }

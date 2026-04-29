@@ -21,14 +21,14 @@ use PHPUnit\Framework\Attributes\CoversClass;
 #[CoversClass( MediaActions::class )]
 final class MediaActionsTest extends TestCase {
 	/**
-	 * Clean options.
+	 * {@inheritDoc}
 	 */
-	public function tear_down(): void {
+	protected function tearDown(): void {
 		delete_option( Settings::OPTION_SITE_TYPE );
 		delete_option( Settings::BRAND_SITES_SYNCED_MEDIA );
 		delete_option( Settings::OPTION_GOVERNING_SHARED_SITES );
 
-		parent::tear_down();
+		parent::tearDown();
 	}
 
 	/**

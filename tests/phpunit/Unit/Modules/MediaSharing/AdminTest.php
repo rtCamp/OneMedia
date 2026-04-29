@@ -20,12 +20,12 @@ use PHPUnit\Framework\Attributes\CoversClass;
 #[CoversClass( Admin::class )]
 final class AdminTest extends TestCase {
 	/**
-	 * Clean options.
+	 * {@inheritDoc}
 	 */
-	public function tear_down(): void {
+	protected function tearDown(): void {
 		delete_option( Settings::OPTION_SITE_TYPE );
 
-		parent::tear_down();
+		parent::tearDown();
 	}
 
 	/**

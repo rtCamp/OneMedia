@@ -21,12 +21,12 @@ use WP_Query;
 #[CoversClass( Admin::class )]
 final class AdminTest extends TestCase {
 	/**
-	 * Clean request globals.
+	 * {@inheritDoc}
 	 */
-	public function tear_down(): void {
+	protected function tearDown(): void {
 		unset( $_REQUEST['query'], $_REQUEST['_ajax_nonce'], $_GET[ Attachment::SYNC_STATUS_POSTMETA_KEY ], $_GET['onemedia_sync_nonce'] );
 
-		parent::tear_down();
+		parent::tearDown();
 	}
 
 	/**
@@ -54,20 +54,20 @@ final class AdminTest extends TestCase {
 
 		$_REQUEST['query'] = [ 'onemedia_sync_status' => Attachment::SYNC_STATUS_SYNC ];
 		$result            = $admin->filter_ajax_query_attachments_args( $query );
-		$this->assertSame( Attachment::IS_SYNC_POSTMETA_KEY, $result['meta_query'][0]['key'] );
-		$this->assertSame( '1', $result['meta_query'][0]['value'] );
+		$this->assertSame( Attachment::IS_SYNC_POSTMETA_KEY, $result['meta_query'][0]['key'], 'Synced filter should query the OneMedia sync meta key' );
+		$this->assertSame( '1', $result['meta_query'][0]['value'], 'Synced filter should match synced media' );
 
 		$_REQUEST['query'] = [ 'onemedia_sync_status' => Attachment::SYNC_STATUS_NO_SYNC ];
 		$result            = $admin->filter_ajax_query_attachments_args( $query );
-		$this->assertSame( 'OR', $result['meta_query']['relation'] );
+		$this->assertSame( 'OR', $result['meta_query']['relation'], 'Unsynced filter should include false and missing sync meta' );
 
 		$_REQUEST['query'] = [ 'is_onemedia_sync' => 'true' ];
 		$result            = $admin->filter_ajax_query_attachments_args( $query );
-		$this->assertSame( '1', $result['meta_query'][0]['value'] );
+		$this->assertSame( '1', $result['meta_query'][0]['value'], 'Boolean synced query should match synced media' );
 
 		$_REQUEST['query'] = [ 'is_onemedia_sync' => 'false' ];
 		$result            = $admin->filter_ajax_query_attachments_args( $query );
-		$this->assertSame( 'OR', $result['meta_query']['relation'] );
+		$this->assertSame( 'OR', $result['meta_query']['relation'], 'Boolean unsynced query should include false and missing sync meta' );
 	}
 
 	/**
@@ -89,19 +89,43 @@ final class AdminTest extends TestCase {
 	}
 
 	/**
-	 * Tests parse-query early return when request is not filterable.
+	 * Tests upload filter output with a selected sync status.
 	 */
-	public function test_filter_sync_attachments_returns_without_upload_filter_request(): void {
+	public function test_add_sync_filter_outputs_selected_sync_status(): void {
 		global $pagenow;
 
 		$previous_pagenow = $pagenow;
-		$pagenow          = 'index.php'; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Test fixture sets the current admin page.
-		$query            = new WP_Query();
+		$pagenow          = 'upload.php'; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Test fixture sets the current admin page.
+
+		$_GET['onemedia_sync_nonce']                  = wp_create_nonce( 'onemedia_sync_filter' );
+		$_GET[ Attachment::SYNC_STATUS_POSTMETA_KEY ] = Attachment::SYNC_STATUS_SYNC;
+
+		ob_start();
+		( new Admin() )->add_sync_filter();
+		$output = ob_get_clean();
+
+		$pagenow = $previous_pagenow; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Restore test global.
+
+		$this->assertStringContainsString( 'value="' . Attachment::SYNC_STATUS_SYNC . '"  selected=\'selected\'', (string) $output );
+	}
+
+	/**
+	 * Tests parse-query sync status filtering.
+	 */
+	public function test_filter_sync_attachments_sets_meta_query_for_sync_filter(): void {
+		global $pagenow;
+
+		$previous_pagenow                             = $pagenow;
+		$pagenow                                      = 'upload.php'; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Test fixture sets the current admin page.
+		$query                                        = new WP_Query();
+		$_GET['onemedia_sync_nonce']                  = wp_create_nonce( 'onemedia_sync_filter' );
+		$_GET[ Attachment::SYNC_STATUS_POSTMETA_KEY ] = Attachment::SYNC_STATUS_SYNC;
 
 		( new Admin() )->filter_sync_attachments( $query );
 
 		$pagenow = $previous_pagenow; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Restore test global.
 
-		$this->assertSame( '', $query->get( 'meta_query' ) );
+		$this->assertSame( Attachment::IS_SYNC_POSTMETA_KEY, $query->get( 'meta_query' )[0]['key'] );
+		$this->assertSame( '1', $query->get( 'meta_query' )[0]['value'] );
 	}
 }

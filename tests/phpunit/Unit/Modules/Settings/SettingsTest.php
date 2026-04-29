@@ -20,16 +20,16 @@ use PHPUnit\Framework\Attributes\CoversClass;
 #[CoversClass( Settings::class )]
 final class SettingsTest extends TestCase {
 	/**
-	 * Cleans options touched by these tests.
+	 * {@inheritDoc}
 	 */
-	public function tear_down(): void {
+	protected function tearDown(): void {
 		delete_option( Settings::OPTION_SITE_TYPE );
 		delete_option( Settings::OPTION_CONSUMER_API_KEY );
 		delete_option( Settings::OPTION_CONSUMER_PARENT_SITE_URL );
 		delete_option( Settings::OPTION_GOVERNING_SHARED_SITES );
 		delete_option( Settings::BRAND_SITES_SYNCED_MEDIA );
 
-		parent::tear_down();
+		parent::tearDown();
 	}
 
 	/**
@@ -49,31 +49,27 @@ final class SettingsTest extends TestCase {
 	 * Tests setting registration for both site modes.
 	 */
 	public function test_register_settings_registers_mode_specific_options(): void {
-		global $wp_registered_settings;
-
 		update_option( Settings::OPTION_SITE_TYPE, Settings::SITE_TYPE_CONSUMER, false );
 
 		( new Settings() )->register_settings();
 
-		$this->assertArrayHasKey( Settings::OPTION_SITE_TYPE, $wp_registered_settings );
-		$this->assertArrayHasKey( Settings::OPTION_CONSUMER_API_KEY, $wp_registered_settings );
-		$this->assertArrayHasKey( Settings::OPTION_CONSUMER_PARENT_SITE_URL, $wp_registered_settings );
-		$this->assertArrayNotHasKey( Settings::OPTION_GOVERNING_SHARED_SITES, $wp_registered_settings );
-		$this->assertSame( Settings::SITE_TYPE_CONSUMER, $wp_registered_settings[ Settings::OPTION_SITE_TYPE ]['sanitize_callback']( Settings::SITE_TYPE_CONSUMER ) );
-		$this->assertSame( '', $wp_registered_settings[ Settings::OPTION_SITE_TYPE ]['sanitize_callback']( 'invalid' ) );
-		$this->assertSame( 'https://example.com/path', $wp_registered_settings[ Settings::OPTION_CONSUMER_PARENT_SITE_URL ]['sanitize_callback']( 'https://example.com/path/' ) );
-		$this->assertNull( $wp_registered_settings[ Settings::OPTION_CONSUMER_PARENT_SITE_URL ]['sanitize_callback']( [] ) );
+		$registered_settings = get_registered_settings();
 
-		unset(
-			$wp_registered_settings[ Settings::OPTION_CONSUMER_API_KEY ],
-			$wp_registered_settings[ Settings::OPTION_CONSUMER_PARENT_SITE_URL ]
-		);
+		$this->assertArrayHasKey( Settings::OPTION_SITE_TYPE, $registered_settings );
+		$this->assertArrayHasKey( Settings::OPTION_CONSUMER_API_KEY, $registered_settings );
+		$this->assertArrayHasKey( Settings::OPTION_CONSUMER_PARENT_SITE_URL, $registered_settings );
+		$this->assertArrayNotHasKey( Settings::OPTION_GOVERNING_SHARED_SITES, $registered_settings );
+		$this->assertSame( Settings::SITE_TYPE_CONSUMER, sanitize_option( Settings::OPTION_SITE_TYPE, Settings::SITE_TYPE_CONSUMER ) );
+		$this->assertSame( '', sanitize_option( Settings::OPTION_SITE_TYPE, 'invalid' ) );
+		$this->assertSame( 'https://example.com/path', sanitize_option( Settings::OPTION_CONSUMER_PARENT_SITE_URL, 'https://example.com/path/' ) );
+		$this->assertNull( sanitize_option( Settings::OPTION_CONSUMER_PARENT_SITE_URL, [] ) );
 
 		update_option( Settings::OPTION_SITE_TYPE, Settings::SITE_TYPE_GOVERNING, false );
 
 		( new Settings() )->register_settings();
+		$registered_settings = get_registered_settings();
 
-		$this->assertArrayHasKey( Settings::OPTION_GOVERNING_SHARED_SITES, $wp_registered_settings );
+		$this->assertArrayHasKey( Settings::OPTION_GOVERNING_SHARED_SITES, $registered_settings );
 	}
 
 	/**

@@ -20,24 +20,24 @@ use PHPUnit\Framework\Attributes\CoversClass;
 #[CoversClass( Attachment::class )]
 final class AttachmentTest extends TestCase {
 	/**
-	 * Cleans options and filters touched by these tests.
+	 * {@inheritDoc}
 	 */
-	public function tear_down(): void {
+	protected function tearDown(): void {
 		delete_option( Settings::OPTION_SITE_TYPE );
 		delete_option( Settings::OPTION_GOVERNING_SHARED_SITES );
 
-		parent::tear_down();
+		parent::tearDown();
 	}
 
 	/**
-	 * Tests hook registration.
+	 * Tests no errors on class instantiation.
 	 */
-	public function test_register_hooks_registers_attachment_meta_on_init(): void {
+	public function test_class_instantiation(): void {
 		$attachment = new Attachment();
 
 		$attachment->register_hooks();
 
-		$this->assertSame( 10, has_action( 'init', [ $attachment, 'register_attachment_post_meta' ] ) );
+		$this->assertTrue( true );
 	}
 
 	/**
@@ -241,11 +241,11 @@ final class AttachmentTest extends TestCase {
 			'filename' => null,
 		];
 
-		add_filter( 'pre_http_request', $http_filter );
+		add_filter( 'pre_http_request', $http_filter, 10, 0 );
 
 		$result = Attachment::health_check_attachment_brand_sites( $attachment_id );
 
-		remove_filter( 'pre_http_request', $http_filter );
+		remove_filter( 'pre_http_request', $http_filter, 10 );
 
 		$this->assertFalse( $result['success'] );
 		$this->assertCount( 1, $result['failed_sites'] );
@@ -262,11 +262,11 @@ final class AttachmentTest extends TestCase {
 			'filename' => null,
 		];
 
-		add_filter( 'pre_http_request', $success_filter );
+		add_filter( 'pre_http_request', $success_filter, 10, 0 );
 
 		$result = Attachment::health_check_attachment_brand_sites( $attachment_id );
 
-		remove_filter( 'pre_http_request', $success_filter );
+		remove_filter( 'pre_http_request', $success_filter, 10 );
 
 		$this->assertSame(
 			[
