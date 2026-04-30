@@ -68,11 +68,13 @@ final class AssetsTest extends TestCase {
 		$assets        = new Assets();
 		$script_method = new \ReflectionMethod( Assets::class, 'register_script' );
 		$style_method  = new \ReflectionMethod( Assets::class, 'register_style' );
+		$script_handle = 'onemedia-test-settings';
+		$style_handle  = 'onemedia-test-main';
 
-		$this->assertTrue( $script_method->invoke( $assets, Assets::SETTINGS_SCRIPT_HANDLE, 'settings' ) );
-		$this->assertTrue( $style_method->invoke( $assets, Assets::MAIN_STYLE_HANDLE, 'main' ) );
-		$this->assertTrue( wp_script_is( Assets::SETTINGS_SCRIPT_HANDLE, 'registered' ) );
-		$this->assertTrue( wp_style_is( Assets::MAIN_STYLE_HANDLE, 'registered' ) );
+		$this->assertTrue( $script_method->invoke( $assets, $script_handle, 'settings' ) );
+		$this->assertTrue( $style_method->invoke( $assets, $style_handle, 'main' ) );
+		$this->assertTrue( wp_script_is( $script_handle, 'registered' ) );
+		$this->assertTrue( wp_style_is( $style_handle, 'registered' ) );
 	}
 
 	/**
