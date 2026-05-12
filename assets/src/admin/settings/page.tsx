@@ -15,27 +15,13 @@ import apiFetch from '@wordpress/api-fetch';
 import SiteTable from '../../components/SiteTable';
 import SiteModal from '../../components/SiteModal';
 import SiteSettings from '../../components/SiteSettings';
-import type { SiteType } from '../onboarding/page';
-
-export interface NoticeType {
-	type: 'success' | 'error' | 'warning' | 'info';
-	message: string;
-}
-
-export interface BrandSite {
-	id?: string;
-	name: string;
-	url: string;
-	api_key: string;
-}
-
-export const defaultBrandSite: BrandSite = {
-	name: '',
-	url: '',
-	api_key: '',
-};
-
-export type EditingIndex = number | null;
+import type { NoticeState } from '../../types/common';
+import {
+	defaultBrandSite,
+	type BrandSite,
+	type EditingIndex,
+	type SiteType,
+} from '../../types/settings';
 
 const NONCE = window.OneMediaSettings.restNonce;
 const SITE_TYPE = ( window.OneMediaSettings.siteType as SiteType ) || '';
@@ -51,7 +37,7 @@ const SettingsPage = () => {
 	const [ editingIndex, setEditingIndex ] = useState< EditingIndex >( null );
 	const [ sites, setSites ] = useState< BrandSite[] >( [] );
 	const [ formData, setFormData ] = useState< BrandSite >( defaultBrandSite );
-	const [ notice, setNotice ] = useState< NoticeType | null >( null );
+	const [ notice, setNotice ] = useState< NoticeState | null >( null );
 
 	useEffect( () => {
 		apiFetch< { shared_sites?: BrandSite[] } >( {
@@ -151,19 +137,22 @@ const SettingsPage = () => {
 
 	return (
 		<>
-			{ !! notice && notice?.message?.length > 0 && (
-				<Snackbar
-					explicitDismiss={ false }
-					onRemove={ () => setNotice( null ) }
-					className={
-						notice?.type === 'error'
-							? 'onemedia-error-notice'
-							: 'onemedia-success-notice'
-					}
-				>
-					{ notice?.message }
-				</Snackbar>
-			) }
+			{ !! notice &&
+				( typeof notice.message === 'string'
+					? notice.message.length > 0
+					: Boolean( notice.message ) ) && (
+					<Snackbar
+						explicitDismiss={ false }
+						onRemove={ () => setNotice( null ) }
+						className={
+							notice?.type === 'error'
+								? 'onemedia-error-notice'
+								: 'onemedia-success-notice'
+						}
+					>
+						{ notice?.message }
+					</Snackbar>
+				) }
 
 			{ SITE_TYPE === 'brand-site' && <SiteSettings /> }
 

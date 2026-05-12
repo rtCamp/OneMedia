@@ -5,47 +5,9 @@
 /**
  * Internal dependencies
  */
-import type { NoticeType } from '../admin/settings/page';
-
-declare global {
-	interface Window {
-		wp: {
-			Uploader: {
-				queue: unknown;
-			};
-			media: {
-				attachment: (
-					id: number
-				) => { get: ( key: string ) => unknown } | undefined;
-			};
-		};
-	}
-}
-
-type WPMediaUploader = {
-	settings: {
-		multipart_params: Record< string, unknown >;
-	};
-	setOption: (
-		key: 'filters' | 'multi_selection' | string,
-		value: string | object | boolean
-	) => void;
-};
-
-type WPMediaFrame = {
-	once: ( event: 'uploader:ready' | string, cb: () => void ) => void;
-	uploader: {
-		uploader: {
-			uploader: WPMediaUploader;
-		};
-	};
-	on: ( event: 'ready' | string, cb: () => void ) => void;
-	state: () => {
-		get: (
-			key: 'library' | string
-		) => { observe: ( queue: unknown ) => void } | undefined;
-	};
-};
+import type { NoticeState } from '../types/common';
+import type { MimeTypeMap } from '../types/media-sharing';
+import type { WPMediaFrame } from '../types/wordpress';
 
 /**
  * Validates if a given string is a valid URL.
@@ -78,7 +40,7 @@ const removeTrailingSlash = ( url: string ): string =>
  * @param {string} type - The type of notice ('error', 'warning', 'success').
  * @return {string} The corresponding CSS class.
  */
-const getNoticeClass = ( type: NoticeType[ 'type' ] ): string => {
+const getNoticeClass = ( type: NoticeState[ 'type' ] ): string => {
 	if ( type === 'error' ) {
 		return 'onemedia-error-notice';
 	}
@@ -204,9 +166,9 @@ function getFrameProperty< T = object >( propertyPath: string ): T | undefined {
 /**
  * Show a snackbar notice with the specified type and message.
  *
- * @param {NoticeType} detail - The detail object containing type and message.
+ * @param {NoticeState} detail - The detail object containing type and message.
  */
-const showSnackbarNotice = ( detail: NoticeType ): void => {
+const showSnackbarNotice = ( detail: NoticeState ): void => {
 	const type = detail.type || 'error';
 	const message = detail.message || '';
 
@@ -270,7 +232,12 @@ const restrictMediaFrameUploadTypes = (
 	 */
 	frame.on( 'ready', function () {
 		const library = frame.state().get( 'library' );
-		if ( library && window.wp.Uploader && window.wp.Uploader.queue ) {
+		if (
+			library &&
+			'observe' in library &&
+			window.wp.Uploader &&
+			window.wp.Uploader.queue
+		) {
 			library.observe( window.wp.Uploader.queue );
 		}
 	} );
@@ -280,7 +247,7 @@ const restrictMediaFrameUploadTypes = (
  * Get MIME types from a MIME map.
  * @param {Object} mimeMap
  */
-function getAllowedMimeTypes( mimeMap: Object ): string[] | undefined {
+function getAllowedMimeTypes( mimeMap: MimeTypeMap ): string[] {
 	return [ ...new Set( Object.values( mimeMap ) ) ];
 }
 
@@ -288,7 +255,7 @@ function getAllowedMimeTypes( mimeMap: Object ): string[] | undefined {
  * Get extensions from a MIME map.
  * @param {Object} mimeMap
  */
-function getAllowedMimeTypeExtensions( mimeMap: Object ): string[] {
+function getAllowedMimeTypeExtensions( mimeMap: MimeTypeMap ): string[] {
 	return Object.keys( mimeMap ).flatMap( ( key ) => key.split( '|' ) );
 }
 

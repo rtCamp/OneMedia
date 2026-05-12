@@ -16,7 +16,7 @@ import { __ } from '@wordpress/i18n';
 /**
  * Internal dependencies
  */
-import type { BrandSite, EditingIndex } from '../admin/settings/page';
+import type { BrandSite, EditingIndex } from '../types/settings';
 
 const SiteTable = ( {
 	sites,

@@ -62,7 +62,7 @@ const scripts = {
 			'assets',
 			'src',
 			'admin/media-sharing',
-			'index.js'
+			'index.tsx'
 		),
 		settings: path.resolve(
 			process.cwd(),

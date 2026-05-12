@@ -3,7 +3,7 @@
  */
 import { Button } from '@wordpress/components';
 import { __, sprintf } from '@wordpress/i18n';
-import { useState, useRef } from '@wordpress/element';
+import { useRef, useState } from '@wordpress/element';
 
 /**
  * Internal dependencies
@@ -21,36 +21,44 @@ import {
 	restrictMediaFrameUploadTypes,
 	showSnackbarNotice,
 } from '../../../js/utils';
+import type {
+	BrowserUploaderButtonProps,
+	FailedSite,
+	MimeTypeMap,
+} from '../../../types/media-sharing';
+import type {
+	WPMediaAttachmentData,
+	WPMediaFrame,
+} from '../../../types/wordpress';
 
-//
-const UPLOAD_NONCE = window.OneMediaMediaFrame?.uploadNonce || '';
-const ALLOWED_MIME_TYPES_MAP =
-	typeof window.OneMediaMediaFrame?.allowedMimeTypesMap !== 'undefined'
-		? window.OneMediaMediaFrame?.allowedMimeTypesMap
-		: [];
+const UPLOAD_NONCE = window.OneMediaMediaFrame.uploadNonce || '';
+const ALLOWED_MIME_TYPES_MAP: MimeTypeMap =
+	window.OneMediaMediaFrame.allowedMimeTypesMap ?? {};
 
 const BrowserUploaderButton = ( {
 	onAddMediaSuccess,
-	isSyncMediaUpload,
+	isSyncMediaUpload = false,
 	attachmentId,
-	addedMedia,
+	addedMedia = [],
 	setNotice,
-} ) => {
+}: BrowserUploaderButtonProps ) => {
 	const [ isUploading, setIsUploading ] = useState( false );
-	const fileInputRef = useRef( null );
+	const fileInputRef = useRef< HTMLInputElement | null >( null );
 
-	const isReplaceMedia = !! attachmentId;
+	const isReplaceMedia = Boolean( attachmentId );
 
-	let buttonText;
+	let buttonText: string = __( 'Add Non Sync Media', 'onemedia' );
+
 	if ( isSyncMediaUpload ) {
 		buttonText = __( 'Add Sync Media', 'onemedia' );
 	} else if ( isReplaceMedia ) {
 		buttonText = __( 'Replace Media', 'onemedia' );
-	} else {
-		buttonText = __( 'Add Non Sync Media', 'onemedia' );
 	}
 
-	const failedSitesMessage = ( initialMessage, failedSites ) => (
+	const failedSitesMessage = (
+		initialMessage: string,
+		failedSites: FailedSite[] = []
+	) => (
 		<div>
 			<span>
 				{ sprintf(
@@ -62,16 +70,15 @@ const BrowserUploaderButton = ( {
 					initialMessage
 				) }
 			</span>
-			{ ( failedSites || [] ).map( ( site, idx ) => (
-				<div key={ idx }>
-					<span>{ site?.site_name }</span>
+			{ failedSites.map( ( site, index ) => (
+				<div key={ index }>
+					<span>{ site.site_name }</span>
 				</div>
 			) ) }
 		</div>
 	);
 
-	const handleButtonClick = async () => {
-		// Media library not available
+	const handleButtonClick = async (): Promise< void > => {
 		if ( ! getFrameProperty( 'wp.media' ) ) {
 			setNotice( {
 				type: 'error',
@@ -81,20 +88,17 @@ const BrowserUploaderButton = ( {
 			return;
 		}
 
-		// Handle replace media
 		if ( isReplaceMedia && attachmentId ) {
-			const response = await checkIfAllSitesConnected( attachmentId );
+			const numericAttachmentId = Number( attachmentId );
+			const response =
+				await checkIfAllSitesConnected( numericAttachmentId );
 
-			if (
-				! response ||
-				! response?.success ||
-				response?.failed_sites?.length > 0
-			) {
+			if ( ! response.success || response.failed_sites.length > 0 ) {
 				showSnackbarNotice( {
 					type: 'error',
 					message: failedSitesMessage(
 						__( 'Failed to replace media.', 'onemedia' ),
-						response?.failed_sites
+						response.failed_sites
 					),
 				} );
 				return;
@@ -104,18 +108,15 @@ const BrowserUploaderButton = ( {
 			return;
 		}
 
-		// Invalid replace media state
 		if ( isReplaceMedia ) {
 			return;
 		}
 
-		// Handle sync media upload
 		if ( isSyncMediaUpload ) {
 			openSyncMediaFrame();
 			return;
 		}
 
-		// Handle non-sync media upload
 		openNonSyncMediaFrame();
 	};
 
@@ -130,7 +131,7 @@ const BrowserUploaderButton = ( {
 				type: getAllowedMimeTypes( ALLOWED_MIME_TYPES_MAP ),
 				is_onemedia_sync: false,
 			},
-		} );
+		} ) as WPMediaFrame;
 
 		restrictMediaFrameUploadTypes(
 			frame,
@@ -138,17 +139,22 @@ const BrowserUploaderButton = ( {
 		);
 
 		frame.on( 'open', () => {
-			const frameEl = frame.el;
-			if ( frameEl ) {
-				frameEl.classList.add( 'onemedia-select-sync-media-frame' );
+			if ( frame.el ) {
+				frame.el.classList.add( 'onemedia-select-sync-media-frame' );
 			}
 		} );
 
 		frame.on( 'select', async () => {
 			const selection = frame.state().get( 'selection' );
-			const attachment = selection.first().toJSON();
+			if ( ! selection || ! ( 'first' in selection ) ) {
+				return;
+			}
 
-			if ( ! attachment || ! attachment.url ) {
+			const attachment = selection
+				.first()
+				.toJSON() as WPMediaAttachmentData;
+
+			if ( ! attachment.url ) {
 				setNotice( {
 					type: 'error',
 					message: __( 'No image selected.', 'onemedia' ),
@@ -164,9 +170,8 @@ const BrowserUploaderButton = ( {
 				);
 
 				if (
-					! healthCheckResponse ||
-					! healthCheckResponse?.success ||
-					healthCheckResponse?.failed_sites?.length > 0
+					! healthCheckResponse.success ||
+					healthCheckResponse.failed_sites.length > 0
 				) {
 					throw new Error(
 						sprintf(
@@ -175,9 +180,10 @@ const BrowserUploaderButton = ( {
 								'Media conversion failed for some sites: %s',
 								'onemedia'
 							),
-							healthCheckResponse?.failed_sites
-								?.map( ( site ) => site?.site_name )
-								.join( ', ' )
+							healthCheckResponse.failed_sites
+								.map( ( site ) => site.site_name )
+								.filter( Boolean )
+								.join( ', ' ) || ''
 						)
 					);
 				}
@@ -188,35 +194,42 @@ const BrowserUploaderButton = ( {
 					setNotice
 				);
 
-				if ( ! response || ! response.success ) {
+				if ( ! response.success ) {
 					setNotice( {
 						type: 'warning',
 						message:
-							response?.message ||
-							__(
-								'Failed to update sync attachment.',
-								'onemedia'
-							),
+							typeof response.message === 'string'
+								? response.message
+								: __(
+										'Failed to update sync attachment.',
+										'onemedia'
+								  ),
 					} );
 					return;
 				}
 
-				if ( onAddMediaSuccess ) {
-					onAddMediaSuccess();
-				}
+				onAddMediaSuccess?.();
 
 				setNotice( {
 					type: 'success',
 					message:
-						response?.message ||
-						__( 'Sync media added successfully!', 'onemedia' ),
+						typeof response.message === 'string'
+							? response.message
+							: __(
+									'Sync media added successfully!',
+									'onemedia'
+							  ),
 				} );
 			} catch ( error ) {
 				setNotice( {
 					type: 'error',
 					message:
-						error.message ||
-						__( 'Failed to update sync attachment.', 'onemedia' ),
+						error instanceof Error
+							? error.message
+							: __(
+									'Failed to update sync attachment.',
+									'onemedia'
+							  ),
 				} );
 			} finally {
 				setIsUploading( false );
@@ -224,9 +237,7 @@ const BrowserUploaderButton = ( {
 		} );
 
 		frame.on( 'close', () => {
-			if ( onAddMediaSuccess ) {
-				onAddMediaSuccess();
-			}
+			onAddMediaSuccess?.();
 		} );
 
 		frame.open();
@@ -243,7 +254,7 @@ const BrowserUploaderButton = ( {
 				type: getAllowedMimeTypes( ALLOWED_MIME_TYPES_MAP ),
 				is_onemedia_sync: false,
 			},
-		} );
+		} ) as WPMediaFrame;
 
 		restrictMediaFrameUploadTypes(
 			frame,
@@ -251,17 +262,24 @@ const BrowserUploaderButton = ( {
 		);
 
 		frame.on( 'open', () => {
-			const frameEl = frame.el;
-			if ( frameEl ) {
-				frameEl.classList.add( 'onemedia-select-non-sync-media-frame' );
+			if ( frame.el ) {
+				frame.el.classList.add(
+					'onemedia-select-non-sync-media-frame'
+				);
 			}
 		} );
 
 		frame.on( 'select', async () => {
 			const selection = frame.state().get( 'selection' );
-			const attachment = selection.first().toJSON();
+			if ( ! selection || ! ( 'first' in selection ) ) {
+				return;
+			}
 
-			if ( ! attachment || ! attachment.url ) {
+			const attachment = selection
+				.first()
+				.toJSON() as WPMediaAttachmentData;
+
+			if ( ! attachment.url ) {
 				setNotice( {
 					type: 'error',
 					message: __( 'No image selected.', 'onemedia' ),
@@ -269,7 +287,7 @@ const BrowserUploaderButton = ( {
 				return;
 			}
 
-			const alreadyAdded = addedMedia?.some(
+			const alreadyAdded = addedMedia.some(
 				( media ) => media.id === attachment.id
 			);
 			if ( alreadyAdded ) {
@@ -280,11 +298,11 @@ const BrowserUploaderButton = ( {
 				return;
 			}
 
-			const isSyncAttachment = await isSyncAttachmentApi(
+			const attachmentIsSync = await isSyncAttachmentApi(
 				attachment.id,
 				setNotice
 			);
-			if ( isSyncAttachment ) {
+			if ( attachmentIsSync ) {
 				setNotice( {
 					type: 'warning',
 					message: __(
@@ -302,23 +320,66 @@ const BrowserUploaderButton = ( {
 		} );
 
 		frame.on( 'close', () => {
-			if ( onAddMediaSuccess ) {
-				onAddMediaSuccess();
-			}
+			onAddMediaSuccess?.();
 		} );
 
 		frame.open();
 	};
-	const handleFileSelect = ( event ) => {
-		const file = event.target.files[ 0 ];
+
+	const uploadFile = async ( file: File ) => {
+		const formData = new FormData();
+		formData.append( 'file', file );
+		formData.append( 'action', 'onemedia_replace_media' );
+
+		if ( isReplaceMedia && attachmentId ) {
+			formData.append( 'current_media_id', String( attachmentId ) );
+		}
+
+		if ( UPLOAD_NONCE ) {
+			formData.append( '_ajax_nonce', UPLOAD_NONCE );
+		}
+
+		try {
+			const data = await uploadMedia( formData, setNotice );
+			if ( data?.success ) {
+				onAddMediaSuccess?.();
+				setNotice( {
+					type: 'success',
+					message: isReplaceMedia
+						? __( 'Media replaced successfully!', 'onemedia' )
+						: __( 'Media uploaded successfully!', 'onemedia' ),
+				} );
+			} else {
+				throw new Error(
+					data?.data?.message || __( 'Upload failed', 'onemedia' )
+				);
+			}
+		} catch ( error ) {
+			setNotice( {
+				type: 'error',
+				message:
+					error instanceof Error
+						? error.message
+						: __( 'An error occurred during upload.', 'onemedia' ),
+			} );
+		} finally {
+			setIsUploading( false );
+			if ( fileInputRef.current ) {
+				fileInputRef.current.value = '';
+			}
+		}
+	};
+
+	const handleFileSelect = (
+		event: React.ChangeEvent< HTMLInputElement >
+	) => {
+		const file = event.target.files?.[ 0 ];
 		if ( ! file ) {
 			return;
 		}
 
 		const mimeTypes = getAllowedMimeTypes( ALLOWED_MIME_TYPES_MAP );
-
-		// Validate file type.
-		if ( ! mimeTypes.length > 0 || ! mimeTypes.includes( file.type ) ) {
+		if ( mimeTypes.length === 0 || ! mimeTypes.includes( file.type ) ) {
 			setNotice( {
 				type: 'error',
 				message: __( 'Please select a valid image file.', 'onemedia' ),
@@ -326,78 +387,12 @@ const BrowserUploaderButton = ( {
 			return;
 		}
 
-		// Start upload
 		setIsUploading( true );
-		uploadFile( file );
-	};
-
-	const uploadFile = async ( file ) => {
-		// Create FormData for upload.
-		const formData = new FormData();
-		formData.append( 'file', file );
-		formData.append( 'action', 'onemedia_replace_media' );
-
-		// Add current media ID for replacement.
-		if ( isReplaceMedia && attachmentId ) {
-			formData.append( 'current_media_id', attachmentId );
-		}
-
-		// Add WordPress nonce for security.
-		if ( UPLOAD_NONCE ) {
-			formData.append( '_ajax_nonce', UPLOAD_NONCE );
-		}
-
-		try {
-			// Upload to WordPress AJAX URL.
-			const data = await uploadMedia( formData, setNotice );
-			if ( data && data?.success ) {
-				if ( onAddMediaSuccess ) {
-					onAddMediaSuccess();
-				}
-				if ( isReplaceMedia ) {
-					setNotice( {
-						type: 'success',
-						message: __(
-							'Media replaced successfully!',
-							'onemedia'
-						),
-					} );
-				} else {
-					setNotice( {
-						type: 'success',
-						message: __(
-							'Media uploaded successfully!',
-							'onemedia'
-						),
-					} );
-				}
-			} else {
-				throw new Error(
-					data.data.message || __( 'Upload failed', 'onemedia' )
-				);
-			}
-		} catch ( error ) {
-			if ( typeof setNotice === 'function' ) {
-				setNotice( {
-					type: 'error',
-					message:
-						error.message ||
-						__( 'An error occurred during upload.', 'onemedia' ),
-				} );
-			}
-		} finally {
-			setIsUploading( false );
-
-			// Reset file input.
-			if ( fileInputRef.current ) {
-				fileInputRef.current.value = '';
-			}
-		}
+		void uploadFile( file );
 	};
 
 	return (
 		<>
-			{ /* Hidden file input */ }
 			{ ! isSyncMediaUpload && (
 				<input
 					className="onemedia-hidden-file-input"
@@ -410,10 +405,11 @@ const BrowserUploaderButton = ( {
 				/>
 			) }
 
-			{ /* Upload button */ }
 			<Button
 				variant="primary"
-				onClick={ handleButtonClick }
+				onClick={ () => {
+					void handleButtonClick();
+				} }
 				isBusy={ isUploading }
 				disabled={ isUploading }
 			>

@@ -21,7 +21,7 @@ import { __ } from '@wordpress/i18n';
 /**
  * Internal dependencies
  */
-import type { NoticeType } from '../admin/settings/page';
+import type { NoticeState } from '../types/common';
 
 const API_NAMESPACE = window.OneMediaSettings.restUrl + '/onemedia/v1';
 const NONCE = window.OneMediaSettings.restNonce;
@@ -30,7 +30,7 @@ const API_KEY = window.OneMediaSettings.api_key;
 const SiteSettings = () => {
 	const [ apiKey, setApiKey ] = useState( '' );
 	const [ isLoading, setIsLoading ] = useState( false );
-	const [ notice, setNotice ] = useState< NoticeType | null >( null );
+	const [ notice, setNotice ] = useState< NoticeState | null >( null );
 	const [ governingSite, setGoverningSite ] = useState( '' );
 	const [ showDisconnectionModal, setShowDisconnectionModal ] =
 		useState( false );
