@@ -245,7 +245,7 @@ const restrictMediaFrameUploadTypes = (
 
 /**
  * Get MIME types from a MIME map.
- * @param {Object} mimeMap
+ * @param {MimeTypeMap} mimeMap
  */
 function getAllowedMimeTypes( mimeMap: MimeTypeMap ): string[] {
 	return [ ...new Set( Object.values( mimeMap ) ) ];
@@ -253,7 +253,7 @@ function getAllowedMimeTypes( mimeMap: MimeTypeMap ): string[] {
 
 /**
  * Get extensions from a MIME map.
- * @param {Object} mimeMap
+ * @param {MimeTypeMap} mimeMap
  */
 function getAllowedMimeTypeExtensions( mimeMap: MimeTypeMap ): string[] {
 	return Object.keys( mimeMap ).flatMap( ( key ) => key.split( '|' ) );

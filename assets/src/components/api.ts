@@ -32,8 +32,6 @@ import type { BrandSite, SiteType } from '../types/settings';
 
 const ONEMEDIA_REST_API_NAMESPACE = 'onemedia';
 const ONEMEDIA_REST_API_VERSION = 'v1';
-const ONEMEDIA_REST_API_BASE =
-	'/wp-json/' + ONEMEDIA_REST_API_NAMESPACE + '/' + ONEMEDIA_REST_API_VERSION;
 
 const {
 	restUrl: REST_URL = '',
@@ -122,7 +120,7 @@ export const apiFetch = async <
 	} = options;
 
 	try {
-		let url = `${ baseurl }/onemedia/v1/${ endpoint }`;
+		let url = `${ baseurl }/${ ONEMEDIA_REST_API_NAMESPACE }/${ ONEMEDIA_REST_API_VERSION }/${ endpoint }`;
 
 		if ( Object.keys( params ).length > 0 ) {
 			url += `?${ getQueryString( params ) }`;
@@ -221,7 +219,7 @@ export const checkBrandSiteHealth = async (
 	addNotice?: ApiFetchOptions[ 'addNotice' ]
 ): Promise< AttachmentHealthResponse > => {
 	const response = await apiFetch< AttachmentHealthResponse >( {
-		baseurl: removeTrailingSlash( url ) + ONEMEDIA_REST_API_BASE,
+		baseurl: removeTrailingSlash( url ) + '/wp-json',
 		endpoint: 'health-check',
 		method: 'GET',
 		nonce: '',
