@@ -24,11 +24,11 @@ import { Icon, pencil } from '@wordpress/icons';
 /**
  * Internal dependencies
  */
-import syncIcon from './components/syncIcon';
-import versionIcon from './components/versionIcon';
+import syncIcon from './components/sync-icon';
+import versionIcon from './components/version-icon';
 import BrowserUploaderButton from './components/browser-uploader';
-import ShareMediaModal from './components/ShareMediaModal';
-import VersionModal from './components/VersionModal';
+import ShareMediaModal from './components/share-media-modal';
+import VersionModal from './components/version-modal';
 import {
 	fetchSyncedSites as fetchSyncedSitesApi,
 	fetchMediaItems as fetchMediaItemsApi,

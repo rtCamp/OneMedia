@@ -12,9 +12,9 @@ import apiFetch from '@wordpress/api-fetch';
 /**
  * Internal dependencies
  */
-import SiteTable from '../../components/SiteTable';
-import SiteModal from '../../components/SiteModal';
-import SiteSettings from '../../components/SiteSettings';
+import SiteTable from '../../components/site-table';
+import SiteModal from '../../components/site-modal';
+import SiteSettings from '../../components/site-settings';
 import type { NoticeState } from '../../types/notice';
 import {
 	type BrandSite,
