@@ -29,6 +29,7 @@ import versionIcon from './components/version-icon';
 import BrowserUploaderButton from './components/browser-uploader';
 import ShareMediaModal from './components/share-media-modal';
 import VersionModal from './components/version-modal';
+import fallbackImage from '../../images/fallback-image.svg';
 import {
 	fetchSyncedSites as fetchSyncedSitesApi,
 	fetchMediaItems as fetchMediaItemsApi,
@@ -59,15 +60,9 @@ import type {
 } from '../../types/media-sharing';
 import type { WPMediaAttachmentModel } from '../../types/wordpress';
 
-const fallbackImage = new URL(
-	'../../images/fallback-image.svg',
-	import.meta.url
-).toString();
-
 const MEDIA_PER_PAGE = 12;
 const ONEMEDIA_PLUGIN_TAXONOMY_TERM = 'onemedia';
 const UPLOAD_NONCE = window.OneMediaMediaSharing.uploadNonce || '';
-const ONEMEDIA_MEDIA_SHARING = window.OneMediaMediaSharing;
 const ALLOWED_MIME_TYPES_MAP: MimeTypeMap =
 	window.OneMediaMediaFrame.allowedMimeTypesMap ?? {};
 
@@ -103,16 +98,7 @@ const MediaSharingApp = ( {
 	const [ isVersionModalOpen, setIsVersionModalOpen ] = useState( false );
 	const [ syncOption, setSyncOption ] = useState< SyncOption >( 'sync' );
 
-	const perPage = MEDIA_PER_PAGE;
-
-	const localizationError = (): never => {
-		throw new Error(
-			__(
-				"OneMediaMediaSharing object not found. Make sure it's properly localized.",
-				'onemedia'
-			)
-		);
-	};
+	const perPage = MEDIA_PER_PAGE; // Show more items in grid.
 
 	const handleDebouncedSearch = useMemo(
 		() =>
@@ -135,10 +121,6 @@ const MediaSharingApp = ( {
 			setInitLoading( true );
 			setNotice( null );
 
-			if ( ! ONEMEDIA_MEDIA_SHARING ) {
-				localizationError();
-			}
-
 			const data = await fetchMediaItemsApi( {
 				search,
 				page,
@@ -156,10 +138,6 @@ const MediaSharingApp = ( {
 	);
 
 	const fetchBrandSites = useCallback( async () => {
-		if ( ! ONEMEDIA_MEDIA_SHARING ) {
-			localizationError();
-		}
-
 		const sitesData = await fetchBrandSitesApi( setNotice );
 		setBrandSites( sitesData );
 
@@ -342,10 +320,6 @@ const MediaSharingApp = ( {
 	};
 
 	const handleShareMedia = async () => {
-		if ( ! ONEMEDIA_MEDIA_SHARING ) {
-			localizationError();
-		}
-
 		const selectedBrandSites = Object.entries( selectedSites )
 			.filter( ( [ , isSelected ] ) => isSelected )
 			.map( ( [ url ] ) => url );

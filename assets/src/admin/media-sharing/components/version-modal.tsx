@@ -15,13 +15,9 @@ import { __, sprintf } from '@wordpress/i18n';
 /**
  * Internal dependencies
  */
+import fallbackImage from '../../../images/fallback-image.svg';
 import { trimTitle } from '../../../js/utils';
 import type { VersionModalProps } from '../../../types/media-sharing';
-
-const fallbackImage = new URL(
-	'../../../images/fallback-image.svg',
-	import.meta.url
-).toString();
 
 const formatLastUsedDate = ( timestamp?: number ): string => {
 	if ( ! timestamp ) {
