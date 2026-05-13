@@ -13,6 +13,14 @@ import {
 	__experimentalHStack as HStack,
 } from '@wordpress/components';
 
+/**
+ * Internal dependencies
+ */
+import type {
+	ShareMediaModalProps,
+	SelectedSitesMap,
+} from '../../../types/media-sharing';
+
 const ShareMediaModal = ( {
 	setIsShareMediaModalOpen,
 	getSelectedCount,
@@ -24,7 +32,7 @@ const ShareMediaModal = ( {
 	getSelectedSitesCount,
 	loading,
 	setNotice,
-} ) => {
+}: ShareMediaModalProps ) => {
 	const allSelected =
 		brandSites.length > 0 && getSelectedSitesCount() === brandSites.length;
 
@@ -35,6 +43,13 @@ const ShareMediaModal = ( {
 			message: __( 'No brand sites found.', 'onemedia' ),
 		} );
 	}
+
+	const buildSelectionState = ( isSelected: boolean ): SelectedSitesMap => {
+		return brandSites.reduce< SelectedSitesMap >( ( accumulator, site ) => {
+			accumulator[ site.url ] = isSelected;
+			return accumulator;
+		}, {} );
+	};
 
 	return (
 		<Modal
@@ -54,7 +69,7 @@ const ShareMediaModal = ( {
 								'onemedia'
 							),
 							getSelectedCount(),
-							'sync' === syncOption
+							syncOption === 'sync'
 								? __( 'Sync', 'onemedia' )
 								: __( 'Non Sync', 'onemedia' )
 						) }
@@ -73,21 +88,10 @@ const ShareMediaModal = ( {
 							label={ __( 'Select All Sites', 'onemedia' ) }
 							checked={ allSelected }
 							onChange={ () => {
-								if ( allSelected ) {
-									// Unselect all.
-									const reset = {};
-									brandSites.forEach( ( site ) => {
-										reset[ site.url ] = false;
-									} );
-									handleSiteSelect( reset, true );
-								} else {
-									// Select all.
-									const selectAll = {};
-									brandSites.forEach( ( site ) => {
-										selectAll[ site.url ] = true;
-									} );
-									handleSiteSelect( selectAll, true );
-								}
+								handleSiteSelect(
+									buildSelectionState( ! allSelected ),
+									true
+								);
 							} }
 							__nextHasNoMarginBottom
 						/>
@@ -95,11 +99,10 @@ const ShareMediaModal = ( {
 							className="onemedia-clear-selection-button"
 							variant="link"
 							onClick={ () => {
-								const reset = {};
-								brandSites.forEach( ( site ) => {
-									reset[ site.url ] = false;
-								} );
-								handleSiteSelect( reset, true );
+								handleSiteSelect(
+									buildSelectionState( false ),
+									true
+								);
 							} }
 							disabled={ getSelectedSitesCount() === 0 }
 						>
@@ -118,12 +121,14 @@ const ShareMediaModal = ( {
 										key={ site.url }
 										role="button"
 										tabIndex={ 0 }
-										onKeyDown={ ( e ) => {
+										onKeyDown={ (
+											event: React.KeyboardEvent< HTMLDivElement >
+										) => {
 											if (
-												e.key === 'Enter' ||
-												e.key === ' '
+												event.key === 'Enter' ||
+												event.key === ' '
 											) {
-												e.preventDefault();
+												event.preventDefault();
 												handleSiteSelect( site.url );
 											}
 										} }
@@ -137,32 +142,21 @@ const ShareMediaModal = ( {
 									>
 										<CheckboxControl
 											className="onemedia-site-checkbox"
-											label={
-												// Adding an onclick on label to handle checkbox event.
-												// eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
-												<div
-													onClick={ () =>
-														handleSiteSelect(
-															site.url
-														)
-													}
-												>
-													<div className="onemedia-site-checkbox-item-name">
-														{ site.name }
-													</div>
-													<div className="onemedia-site-checkbox-item-url">
-														{ site.url }
-													</div>
-												</div>
-											}
+											label=""
 											checked={
 												!! selectedSites[ site.url ]
 											}
-											onChange={ () => {
-												// Already handled in parent div's onClick.
-											} }
+											onChange={ () => undefined }
 											__nextHasNoMarginBottom
 										/>
+										<div className="onemedia-site-checkbox-item">
+											<div className="onemedia-site-checkbox-item-name">
+												{ site.name }
+											</div>
+											<div className="onemedia-site-checkbox-item-url">
+												{ site.url }
+											</div>
+										</div>
 									</div>
 								) ) }
 							</VStack>

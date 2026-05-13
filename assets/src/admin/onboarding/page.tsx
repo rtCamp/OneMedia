@@ -16,15 +16,14 @@ import {
 	SelectControl,
 } from '@wordpress/components';
 
-const BRAND_SITE = 'brand-site';
-const GOVERNING_SITE = 'governing-site';
+/**
+ * Internal dependencies
+ */
+import { type SiteType } from '../../types/settings';
+import type { NoticeState } from '../../types/notice';
 
-export type SiteType = typeof BRAND_SITE | typeof GOVERNING_SITE;
-
-interface NoticeState {
-	type: 'success' | 'error' | 'warning' | 'info';
-	message: string;
-}
+const BRAND_SITE: SiteType = 'brand-site';
+const GOVERNING_SITE: SiteType = 'governing-site';
 
 const nonce = window.OneMediaOnboarding.nonce;
 const setupUrl = window.OneMediaOnboarding[ 'setup_url' ];

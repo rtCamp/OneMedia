@@ -15,16 +15,11 @@ import { __, sprintf } from '@wordpress/i18n';
 /**
  * Internal dependencies
  */
-import { trimTitle } from '../../../js/utils';
 import fallbackImage from '../../../images/fallback-image.svg';
+import { trimTitle } from '../../../js/utils';
+import type { VersionModalProps } from '../../../types/media-sharing';
 
-/**
- * Format a Unix timestamp (in seconds) into a human-readable date and time.
- *
- * @param {number} timestamp - The Unix timestamp (in seconds).
- * @return {string} Formatted string like "12:45 PM on 15 Oct 2025".
- */
-const formatLastUsedDate = ( timestamp ) => {
+const formatLastUsedDate = ( timestamp?: number ): string => {
 	if ( ! timestamp ) {
 		return '';
 	}
@@ -41,6 +36,7 @@ const formatLastUsedDate = ( timestamp ) => {
 		month: 'short',
 		year: 'numeric',
 	} );
+
 	return `${ timePart } on ${ datePart }`;
 };
 
@@ -49,17 +45,19 @@ const VersionModal = ( {
 	attachmentVersions = [],
 	handleVersionSelect,
 	loading,
-} ) => {
-	const [ selectedVersion, setSelectedVersion ] = useState( null );
-
-	const toggleSelect = useCallback(
-		( idx ) =>
-			setSelectedVersion( ( prev ) => ( prev === idx ? null : idx ) ),
-		[]
+}: VersionModalProps ) => {
+	const [ selectedVersion, setSelectedVersion ] = useState< number | null >(
+		null
 	);
 
+	const toggleSelect = useCallback( ( index: number ) => {
+		setSelectedVersion( ( previous ) =>
+			previous === index ? null : index
+		);
+	}, [] );
+
 	const renderMediaGrid = useCallback( () => {
-		if ( 0 === attachmentVersions.length ) {
+		if ( attachmentVersions.length === 0 ) {
 			return <p>{ __( 'No versions available.', 'onemedia' ) }</p>;
 		}
 
@@ -72,7 +70,7 @@ const VersionModal = ( {
 					const itemProps = isCurrent
 						? {
 								className: 'onemedia-media-item in-use',
-								role: 'group',
+								role: 'group' as const,
 								tabIndex: -1,
 								'aria-disabled': true,
 						  }
@@ -80,11 +78,16 @@ const VersionModal = ( {
 								className: `onemedia-media-item ${
 									isSelected ? 'selected' : ''
 								}`,
-								role: 'button',
+								role: 'button' as const,
 								tabIndex: 0,
-								onKeyDown: ( e ) => {
-									if ( e.key === 'Enter' || e.key === ' ' ) {
-										e.preventDefault();
+								onKeyDown: (
+									event: React.KeyboardEvent< HTMLDivElement >
+								) => {
+									if (
+										event.key === 'Enter' ||
+										event.key === ' '
+									) {
+										event.preventDefault();
 										toggleSelect( index );
 									}
 								},
@@ -92,66 +95,68 @@ const VersionModal = ( {
 								onClick: () => toggleSelect( index ),
 						  };
 
-					const lastUsedText = version?.last_used
+					const lastUsedText = version.last_used
 						? sprintf(
 								/* translators: %s: date */
 								__( 'Last used: %s', 'onemedia' ),
-								formatLastUsedDate( version?.last_used )
+								formatLastUsedDate( version.last_used )
 						  )
 						: __( 'No usage data', 'onemedia' );
 
-					const media = (
-						<div className="onemedia-media-container">
-							<div className="onemedia-version-thumbnail">
-								<img
-									data-id={ version?.file?.attachment_id }
-									src={ version?.file?.url }
-									alt={ version?.file?.alt }
-									loading="lazy"
-									onError={ ( e ) => {
-										e.target.onerror = null; // Prevent infinite loop.
-										e.target.src = fallbackImage;
-										e.target.style.padding = '0px 20%';
-									} }
-								/>
-								{ isCurrent && (
-									<div className="onemedia-in-use-overlay">
-										<span>
-											{ __( 'In Use', 'onemedia' ) }
-										</span>
-									</div>
-								) }
-							</div>
-
-							{ ! isCurrent && (
-								<div className="onemedia-version-checkbox">
-									<CheckboxControl
-										checked={ isSelected }
-										onChange={ () => toggleSelect( index ) }
-										label=""
-										__nextHasNoMarginBottom
-									/>
-								</div>
-							) }
-
-							<div className="onemedia-version-last-used">
-								{ lastUsedText }
-							</div>
-						</div>
-					);
-
 					return (
 						<div key={ index } { ...itemProps }>
-							{ media }
+							<div className="onemedia-media-container">
+								<div className="onemedia-version-thumbnail">
+									<img
+										data-id={ version.file?.attachment_id }
+										src={ version.file?.url }
+										alt={ version.file?.alt || '' }
+										loading="lazy"
+										onError={ (
+											event: React.SyntheticEvent< HTMLImageElement >
+										) => {
+											event.currentTarget.onerror = null;
+											event.currentTarget.src =
+												fallbackImage;
+											event.currentTarget.style.padding =
+												'0px 20%';
+										} }
+									/>
+									{ isCurrent && (
+										<div className="onemedia-in-use-overlay">
+											<span>
+												{ __( 'In Use', 'onemedia' ) }
+											</span>
+										</div>
+									) }
+								</div>
+
+								{ ! isCurrent && (
+									<div className="onemedia-version-checkbox">
+										<CheckboxControl
+											checked={ isSelected }
+											onChange={ () =>
+												toggleSelect( index )
+											}
+											label=""
+											__nextHasNoMarginBottom
+										/>
+									</div>
+								) }
+
+								<div className="onemedia-version-last-used">
+									{ lastUsedText }
+								</div>
+							</div>
 							<div className="onemedia-media-title">
-								{ trimTitle( version?.file?.name ) }
+								{ trimTitle( version.file?.name || '' ) }
 							</div>
 						</div>
 					);
 				} ) }
 			</div>
 		);
-	}, [ attachmentVersions, selectedVersion ] ); // eslint-disable-line react-hooks/exhaustive-deps
+	}, [ attachmentVersions, selectedVersion, toggleSelect ] );
 
 	return (
 		<Modal
@@ -185,14 +190,21 @@ const VersionModal = ( {
 					</Button>
 					<Button
 						variant="primary"
-						onClick={ () =>
-							selectedVersion !== null &&
-							handleVersionSelect(
-								attachmentVersions[ selectedVersion ]
-							)
-						}
+						onClick={ () => {
+							if ( selectedVersion === null ) {
+								return;
+							}
+
+							const version =
+								attachmentVersions[ selectedVersion ];
+							if ( ! version ) {
+								return;
+							}
+
+							void handleVersionSelect( version );
+						} }
 						isBusy={ loading }
-						disabled={ null === selectedVersion || loading }
+						disabled={ selectedVersion === null || loading }
 					>
 						{ loading ? <Spinner /> : __( 'Restore', 'onemedia' ) }
 					</Button>

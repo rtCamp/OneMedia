@@ -18,7 +18,7 @@ import { __ } from '@wordpress/i18n';
  * Internal dependencies
  */
 import { isValidUrl } from '../js/utils';
-import type { defaultBrandSite } from '../admin/settings/page';
+import type { BrandSite } from '../types/settings';
 
 interface ErrorsType {
 	name: string;
@@ -36,13 +36,13 @@ const SiteModal = ( {
 	sites,
 	originalData,
 }: {
-	formData: typeof defaultBrandSite;
-	setFormData: ( data: typeof defaultBrandSite ) => void;
+	formData: BrandSite;
+	setFormData: ( data: BrandSite ) => void;
 	onSubmit: () => Promise< boolean >;
 	onClose: () => void;
 	editing: boolean;
-	sites: ( typeof defaultBrandSite )[];
-	originalData: typeof defaultBrandSite | undefined;
+	sites: BrandSite[];
+	originalData: BrandSite | undefined;
 } ) => {
 	const [ errors, setErrors ] = useState< ErrorsType >( {
 		name: '',
