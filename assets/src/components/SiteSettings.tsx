@@ -21,7 +21,7 @@ import { __ } from '@wordpress/i18n';
 /**
  * Internal dependencies
  */
-import type { NoticeState } from '../types/common';
+import type { NoticeState } from '../types/notice';
 
 const API_NAMESPACE = window.OneMediaSettings.restUrl + '/onemedia/v1';
 const NONCE = window.OneMediaSettings.restNonce;

@@ -15,13 +15,18 @@ import apiFetch from '@wordpress/api-fetch';
 import SiteTable from '../../components/SiteTable';
 import SiteModal from '../../components/SiteModal';
 import SiteSettings from '../../components/SiteSettings';
-import type { NoticeState } from '../../types/common';
+import type { NoticeState } from '../../types/notice';
 import {
-	defaultBrandSite,
 	type BrandSite,
 	type EditingIndex,
 	type SiteType,
 } from '../../types/settings';
+
+const defaultBrandSite: BrandSite = {
+	name: '',
+	url: '',
+	api_key: '',
+};
 
 const NONCE = window.OneMediaSettings.restNonce;
 const SITE_TYPE = ( window.OneMediaSettings.siteType as SiteType ) || '';

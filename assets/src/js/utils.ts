@@ -5,7 +5,7 @@
 /**
  * Internal dependencies
  */
-import type { NoticeState } from '../types/common';
+import type { NoticeState } from '../types/notice';
 import type { MimeTypeMap } from '../types/media-sharing';
 import type { WPMediaFrame } from '../types/wordpress';
 

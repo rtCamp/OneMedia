@@ -1,7 +1,7 @@
 /**
  * Internal dependencies
  */
-import type { NoticeState } from './common';
+import type { NoticeState } from './notice';
 import type { BrandSite, SiteType } from './settings';
 
 export type AddNotice = ( notice: NoticeState | null ) => void;
@@ -184,35 +184,4 @@ export interface VersionModalProps {
 		version: AttachmentVersion
 	) => Promise< void > | void;
 	loading: boolean;
-}
-
-export interface BrowserUploaderButtonProps {
-	onAddMediaSuccess?: () => void;
-	isSyncMediaUpload?: boolean;
-	attachmentId?: number | string;
-	addedMedia?: MediaItem[];
-	setNotice: AddNotice;
-}
-
-export interface OneMediaMediaFrameConfig {
-	restUrl: string;
-	restNonce: string;
-	apiKey: string;
-	ajaxUrl: string;
-	uploadNonce?: string;
-	allowedMimeTypesMap?: MimeTypeMap;
-	siteType: SiteType;
-}
-
-export interface OneMediaMediaSharingConfig {
-	uploadNonce?: string;
-}
-
-export interface OneMediaMediaUploadConfig {
-	isMediaPage?: boolean;
-	allLabel?: string;
-	syncLabel?: string;
-	notSyncLabel?: string;
-	nonce?: string;
-	syncStatus?: string;
 }

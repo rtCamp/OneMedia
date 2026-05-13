@@ -14,6 +14,7 @@ import {
 	checkIfAllSitesConnected,
 	isSyncAttachment as isSyncAttachmentApi,
 } from '../../../components/api';
+
 import {
 	getAllowedMimeTypeExtensions,
 	getFrameProperty,
@@ -21,15 +22,21 @@ import {
 	restrictMediaFrameUploadTypes,
 	showSnackbarNotice,
 } from '../../../js/utils';
+
 import type {
-	BrowserUploaderButtonProps,
+	AddNotice,
 	FailedSite,
+	MediaItem,
 	MimeTypeMap,
 } from '../../../types/media-sharing';
-import type {
-	WPMediaAttachmentData,
-	WPMediaFrame,
-} from '../../../types/wordpress';
+
+interface BrowserUploaderButtonProps {
+	onAddMediaSuccess?: () => void;
+	isSyncMediaUpload?: boolean;
+	attachmentId?: number | string;
+	addedMedia?: MediaItem[];
+	setNotice: AddNotice;
+}
 
 const UPLOAD_NONCE = window.OneMediaMediaFrame.uploadNonce || '';
 const ALLOWED_MIME_TYPES_MAP: MimeTypeMap =
@@ -131,7 +138,7 @@ const BrowserUploaderButton = ( {
 				type: getAllowedMimeTypes( ALLOWED_MIME_TYPES_MAP ),
 				is_onemedia_sync: false,
 			},
-		} ) as WPMediaFrame;
+		} );
 
 		restrictMediaFrameUploadTypes(
 			frame,
@@ -150,9 +157,7 @@ const BrowserUploaderButton = ( {
 				return;
 			}
 
-			const attachment = selection
-				.first()
-				.toJSON() as WPMediaAttachmentData;
+			const attachment = selection.first().toJSON();
 
 			if ( ! attachment.url ) {
 				setNotice( {
@@ -254,7 +259,7 @@ const BrowserUploaderButton = ( {
 				type: getAllowedMimeTypes( ALLOWED_MIME_TYPES_MAP ),
 				is_onemedia_sync: false,
 			},
-		} ) as WPMediaFrame;
+		} );
 
 		restrictMediaFrameUploadTypes(
 			frame,
@@ -275,9 +280,7 @@ const BrowserUploaderButton = ( {
 				return;
 			}
 
-			const attachment = selection
-				.first()
-				.toJSON() as WPMediaAttachmentData;
+			const attachment = selection.first().toJSON();
 
 			if ( ! attachment.url ) {
 				setNotice( {

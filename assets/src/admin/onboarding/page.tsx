@@ -19,12 +19,11 @@ import {
 /**
  * Internal dependencies
  */
-import {
-	BRAND_SITE,
-	GOVERNING_SITE,
-	type SiteType,
-} from '../../types/settings';
-import type { NoticeState } from '../../types/common';
+import { type SiteType } from '../../types/settings';
+import type { NoticeState } from '../../types/notice';
+
+const BRAND_SITE: SiteType = 'brand-site';
+const GOVERNING_SITE: SiteType = 'governing-site';
 
 const nonce = window.OneMediaOnboarding.nonce;
 const setupUrl = window.OneMediaOnboarding[ 'setup_url' ];

@@ -44,7 +44,7 @@ import {
 	restrictMediaFrameUploadTypes,
 	getAllowedMimeTypeExtensions,
 } from '../../js/utils';
-import type { NoticeState } from '../../types/common';
+import type { NoticeState } from '../../types/notice';
 import type { BrandSite } from '../../types/settings';
 import type {
 	AttachmentVersion,
@@ -57,10 +57,7 @@ import type {
 	SyncOption,
 	SyncedSitesMap,
 } from '../../types/media-sharing';
-import type {
-	WPMediaAttachmentModel,
-	WPMediaFrame,
-} from '../../types/wordpress';
+import type { WPMediaAttachmentModel } from '../../types/wordpress';
 
 const fallbackImage = new URL(
 	'../../images/fallback-image.svg',
@@ -253,7 +250,7 @@ const MediaSharingApp = ( {
 				type: 'image',
 				is_onemedia_sync: true,
 			},
-		} ) as WPMediaFrame;
+		} );
 
 		restrictMediaFrameUploadTypes(
 			editFrame,

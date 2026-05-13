@@ -47,13 +47,3 @@ export interface WPMediaFrame {
 	once: ( event: string, callback: () => void ) => void;
 	open: () => void;
 }
-
-export interface OneMediaWordPressGlobal {
-	Uploader: {
-		queue: unknown;
-	};
-	media: {
-		( options: Record< string, unknown > ): WPMediaFrame;
-		attachment: ( id: number | string ) => WPMediaAttachmentModel;
-	};
-}
