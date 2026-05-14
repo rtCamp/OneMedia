@@ -85,14 +85,14 @@ const scripts = {
 			'assets',
 			'src',
 			'js',
-			'media-sync-filter.js'
+			'media-sync-filter.ts'
 		),
 		'media-frame': path.resolve(
 			process.cwd(),
 			'assets',
 			'src',
 			'js',
-			'media-frame.js'
+			'media-frame.ts'
 		),
 	},
 	module: {
