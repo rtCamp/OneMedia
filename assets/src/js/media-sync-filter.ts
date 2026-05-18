@@ -155,6 +155,8 @@ function initSyncMediaFilter() {
 	const syncStatusKey = mediaUploadConfig.syncStatus ?? '';
 	const originalAttachmentsBrowser = media.view.AttachmentsBrowser;
 
+	// Create a custom filter view.
+
 	const SyncFilterView = media.View.extend( {
 		tagName: 'label',
 		className: 'attachment-filters onemedia-sync-filter-wrapper',
@@ -167,6 +169,7 @@ function initSyncMediaFilter() {
 		createSelect( this: SyncFilterViewInstance ) {
 			this.$el.html( '' );
 
+			// Create select element.
 			this.select = document.createElement( 'select' );
 			this.select.className = 'attachment-filters onemedia-sync-filter';
 			this.select.innerHTML = `
@@ -175,22 +178,26 @@ function initSyncMediaFilter() {
 				<option value="no_sync">${ notSyncLabel }</option>
 			`;
 
+			// Get saved value from URL or previous state.
 			const urlParams = new URLSearchParams( window.location.search );
 			const savedFilter =
 				( urlParams.get( syncStatusKey ) as SyncFilterValue | null ) ??
 				'';
 			this.select.value = savedFilter;
 
+			// Set initial model value.
 			if ( savedFilter ) {
 				this.model.set( syncStatusKey, savedFilter );
 			}
 
 			this.$el.append( this.select );
 
+			// Add event listener.
 			this.select.addEventListener( 'change', () => {
 				const value = this.select.value as SyncFilterValue;
 				this.model.set( syncStatusKey, value );
 
+				// Update URL.
 				if ( window.history.replaceState ) {
 					const url = new URL( window.location.href );
 					if ( value ) {
@@ -209,10 +216,13 @@ function initSyncMediaFilter() {
 		},
 	} );
 
+	// Extend the AttachmentsBrowser to include our filter.
 	media.view.AttachmentsBrowser = originalAttachmentsBrowser.extend( {
 		createToolbar( this: AttachmentsBrowserInstance ) {
+			// Call original method.
 			originalAttachmentsBrowser.prototype.createToolbar.call( this );
 
+			// Add our filter to the toolbar.
 			this.toolbar.set(
 				'onemediaSyncFilter',
 				new SyncFilterView( {
@@ -224,6 +234,7 @@ function initSyncMediaFilter() {
 		},
 	} );
 
+	// Modify the query to handle our filter.
 	const originalAjax = media.ajax;
 	media.ajax = function (
 		this: unknown,
@@ -233,8 +244,10 @@ function initSyncMediaFilter() {
 		if ( action === 'query-attachments' ) {
 			const syncStatus = options.data.query.onemedia_sync_status;
 
+			// Add nonce to the request.
 			options.data._ajax_nonce = nonce;
 
+			// Convert our filter parameter to WordPress meta_query format.
 			if ( syncStatus === 'sync' ) {
 				options.data.query.meta_query = [
 					{
@@ -244,6 +257,7 @@ function initSyncMediaFilter() {
 					},
 				];
 			} else if ( syncStatus === 'no_sync' ) {
+				// We need to send a properly formatted meta_query.
 				options.data.query.meta_query = {
 					relation: 'OR',
 					0: {
@@ -258,12 +272,15 @@ function initSyncMediaFilter() {
 				};
 			}
 
+			// Clean up our custom parameter to avoid conflicts.
 			delete options.data.query.onemedia_sync_status;
 		}
 
+		// Call the original Ajax method.
 		return originalAjax.call( this, action, options );
 	};
 
+	// Make sure filters are applied on initial load.
 	const initialFilter = new URLSearchParams( window.location.search ).get(
 		syncStatusKey
 	) as SyncFilterValue | null;
@@ -273,6 +290,7 @@ function initSyncMediaFilter() {
 	}
 }
 
+// Initialize the filter.
 domReady( () => {
 	initSyncMediaFilter();
 } );
