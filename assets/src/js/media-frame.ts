@@ -55,10 +55,6 @@ interface MediaReplacedDetail {
 	attachmentId?: string;
 }
 
-interface SnackbarNoticeDetail {
-	detail?: NoticeState;
-}
-
 interface JsonErrorResponse {
 	data?: {
 		message?: string;
@@ -365,10 +361,10 @@ function initSnackBarNotice() {
 		// Listen for custom notice events.
 		useEffect( () => {
 			const handleNoticeEvent = ( event: Event ) => {
-				const detail = ( event as CustomEvent< SnackbarNoticeDetail > )
-					.detail?.detail;
-				if ( detail ) {
-					setNotice( detail );
+				const eventNotice = ( event as CustomEvent< NoticeState > )
+					.detail;
+				if ( eventNotice?.message ) {
+					setNotice( eventNotice );
 				}
 			};
 
