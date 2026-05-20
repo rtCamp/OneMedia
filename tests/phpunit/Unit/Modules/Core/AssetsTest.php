@@ -22,10 +22,11 @@ final class AssetsTest extends TestCase {
 	 * Tests register_hooks adds both enqueue actions and the script tag filter.
 	 */
 	public function test_register_hooks_adds_enqueue_actions(): void {
-		( new Assets() )->register_hooks();
+		$assets = new Assets();
+		$assets->register_hooks();
 
-		$this->assertNotFalse( has_action( 'admin_enqueue_scripts' ) );
-		$this->assertNotFalse( has_filter( 'script_loader_tag' ) );
+		$this->assertNotFalse( has_action( 'admin_enqueue_scripts', [ $assets, 'register_assets' ] ) );
+		$this->assertNotFalse( has_filter( 'script_loader_tag', [ $assets, 'defer_scripts' ] ) );
 	}
 
 	/**

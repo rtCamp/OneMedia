@@ -22,9 +22,10 @@ final class RestTest extends TestCase {
 	 * Tests register_hooks adds the CORS filter.
 	 */
 	public function test_register_hooks_adds_cors_filter(): void {
-		( new Rest() )->register_hooks();
+		$rest = new Rest();
+		$rest->register_hooks();
 
-		$this->assertNotFalse( has_filter( 'rest_allowed_cors_headers' ) );
+		$this->assertNotFalse( has_filter( 'rest_allowed_cors_headers', [ $rest, 'allowed_cors_headers' ] ) );
 	}
 
 	/**

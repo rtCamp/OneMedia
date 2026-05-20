@@ -19,13 +19,15 @@ use PHPUnit\Framework\Attributes\CoversClass;
 #[CoversClass( Settings::class )]
 final class SettingsTest extends TestCase {
 	/**
-	 * Tests register_hooks adds admin_init and rest_api_init actions.
+	 * Tests register_hooks adds admin_init, rest_api_init, and update_option actions.
 	 */
 	public function test_register_hooks_adds_actions(): void {
-		( new Settings() )->register_hooks();
+		$settings = new Settings();
+		$settings->register_hooks();
 
-		$this->assertNotFalse( has_action( 'admin_init' ) );
-		$this->assertNotFalse( has_action( 'rest_api_init' ) );
+		$this->assertNotFalse( has_action( 'admin_init', [ $settings, 'register_settings' ] ) );
+		$this->assertNotFalse( has_action( 'rest_api_init', [ $settings, 'register_settings' ] ) );
+		$this->assertNotFalse( has_action( 'update_option_' . Settings::OPTION_SITE_TYPE, [ $settings, 'on_site_type_change' ] ) );
 	}
 
 	/**
