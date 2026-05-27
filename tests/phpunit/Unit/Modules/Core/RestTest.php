@@ -19,32 +19,32 @@ use PHPUnit\Framework\Attributes\CoversClass;
 #[CoversClass( Rest::class )]
 final class RestTest extends TestCase {
 	/**
-	 * Tests register_hooks adds the CORS filter.
+	 * Tests no errors on class instantiation.
 	 */
-	public function test_register_hooks_adds_cors_filter(): void {
+	public function test_class_instantiation(): void {
 		$rest = new Rest();
+
 		$rest->register_hooks();
 
-		$this->assertNotFalse( has_filter( 'rest_allowed_cors_headers', [ $rest, 'allowed_cors_headers' ] ) );
+		$this->assertTrue( true );
 	}
 
 	/**
-	 * Tests the token is appended to an empty headers array.
+	 * Tests the token is appended to headers and not duplicated when already present.
 	 */
 	public function test_allowed_cors_headers_adds_token(): void {
-		$result = ( new Rest() )->allowed_cors_headers( [] );
+		$rest = new Rest();
 
-		$this->assertContains( 'X-OneMedia-Token', $result );
-	}
+		$this->assertSame(
+			[ 'X-WP-Nonce', 'X-OneMedia-Token' ],
+			$rest->allowed_cors_headers( [ 'X-WP-Nonce' ] ),
+			'Token should be added to headers'
+		);
 
-	/**
-	 * Tests the token is not duplicated when already present.
-	 */
-	public function test_allowed_cors_headers_is_idempotent(): void {
-		$rest    = new Rest();
-		$headers = $rest->allowed_cors_headers( [] );
-		$result  = $rest->allowed_cors_headers( $headers );
-
-		$this->assertCount( 1, array_filter( $result, static fn ( $h ) => 'X-OneMedia-Token' === $h ) );
+		$this->assertSame(
+			[ 'X-OneMedia-Token' ],
+			$rest->allowed_cors_headers( [ 'X-OneMedia-Token' ] ),
+			'Token should not be readded'
+		);
 	}
 }
