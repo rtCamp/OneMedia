@@ -41,6 +41,7 @@ final class SettingsTest extends TestCase {
 		delete_option( Settings::OPTION_CONSUMER_API_KEY );
 		delete_option( Settings::OPTION_CONSUMER_PARENT_SITE_URL );
 		delete_option( Settings::OPTION_GOVERNING_SHARED_SITES );
+		delete_option( Settings::BRAND_SITES_SYNCED_MEDIA );
 
 		parent::tearDown();
 	}
@@ -289,6 +290,106 @@ final class SettingsTest extends TestCase {
 		$this->assertIsString( $stored_api_key );
 		$this->assertNotSame( '', $stored_api_key );
 		$this->assertSame( Settings::get_api_key(), Encryptor::decrypt( $stored_api_key ) );
+	}
+
+	/**
+	 * Tests get_brand_site_api_key returns empty string when not a governing site.
+	 */
+	public function test_get_brand_site_api_key_returns_empty_when_not_governing(): void {
+		update_option( Settings::OPTION_SITE_TYPE, Settings::SITE_TYPE_CONSUMER );
+
+		$this->assertSame( '', Settings::get_brand_site_api_key( 'https://brand-one.example' ) );
+	}
+
+	/**
+	 * Tests get_brand_site_api_key returns the key for a known brand site URL.
+	 */
+	public function test_get_brand_site_api_key_returns_key_for_known_site(): void {
+		update_option( Settings::OPTION_SITE_TYPE, Settings::SITE_TYPE_GOVERNING );
+		Settings::set_shared_sites(
+			[
+				[
+					'id'      => 'brand-1',
+					'name'    => 'Brand One',
+					'url'     => 'https://brand-one.example',
+					'api_key' => 'brand-one-key',
+				],
+			]
+		);
+
+		$this->assertSame( 'brand-one-key', Settings::get_brand_site_api_key( 'https://brand-one.example' ) );
+	}
+
+	/**
+	 * Tests get_sitename_by_url returns the name from shared sites on a governing site.
+	 */
+	public function test_get_sitename_by_url_returns_name_for_governing_site(): void {
+		update_option( Settings::OPTION_SITE_TYPE, Settings::SITE_TYPE_GOVERNING );
+		Settings::set_shared_sites(
+			[
+				[
+					'id'      => 'brand-1',
+					'name'    => 'Brand One',
+					'url'     => 'https://brand-one.example',
+					'api_key' => 'brand-one-key',
+				],
+			]
+		);
+
+		$this->assertSame( 'Brand One', Settings::get_sitename_by_url( 'https://brand-one.example' ) );
+	}
+
+	/**
+	 * Tests get_sitename_by_url derives name from hostname on a consumer site.
+	 */
+	public function test_get_sitename_by_url_derives_name_from_hostname_for_consumer(): void {
+		update_option( Settings::OPTION_SITE_TYPE, Settings::SITE_TYPE_CONSUMER );
+
+		$this->assertSame( 'My Site', Settings::get_sitename_by_url( 'https://my-site.example.com' ) );
+	}
+
+	/**
+	 * Tests get_brand_site_api_key returns empty string when URL is not in shared sites.
+	 */
+	public function test_get_brand_site_api_key_returns_empty_for_unknown_site(): void {
+		update_option( Settings::OPTION_SITE_TYPE, Settings::SITE_TYPE_GOVERNING );
+
+		$this->assertSame( '', Settings::get_brand_site_api_key( 'https://unknown.example' ) );
+	}
+
+	/**
+	 * Tests get_sitename_by_url returns empty string when governing site has no match.
+	 */
+	public function test_get_sitename_by_url_returns_empty_for_unknown_url_on_governing_site(): void {
+		update_option( Settings::OPTION_SITE_TYPE, Settings::SITE_TYPE_GOVERNING );
+
+		$this->assertSame( '', Settings::get_sitename_by_url( 'https://unknown.example' ) );
+	}
+
+	/**
+	 * Tests get_sitename_by_url returns empty string when URL has no host on consumer site.
+	 */
+	public function test_get_sitename_by_url_returns_empty_for_invalid_url_on_consumer_site(): void {
+		update_option( Settings::OPTION_SITE_TYPE, Settings::SITE_TYPE_CONSUMER );
+
+		$this->assertSame( '', Settings::get_sitename_by_url( 'not-a-valid-url' ) );
+	}
+
+	/**
+	 * Tests get_brand_sites_synced_media returns empty array when not set.
+	 */
+	public function test_get_brand_sites_synced_media_returns_empty_when_not_set(): void {
+		$this->assertSame( [], Settings::get_brand_sites_synced_media() );
+	}
+
+	/**
+	 * Tests get_brand_sites_synced_media returns stored value.
+	 */
+	public function test_get_brand_sites_synced_media_returns_stored_value(): void {
+		$data = [ 'https://brand.example/' => [ 'attachment_1' => 42 ] ];
+		update_option( Settings::BRAND_SITES_SYNCED_MEDIA, $data );
+
+		$this->assertSame( $data, Settings::get_brand_sites_synced_media() );
 	}
 
 	/**
